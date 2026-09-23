@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+    <rect width="200" height="200" rx="16" fill="#FEF3C7"/>
+    <!-- Betel nut palms (Tamol gas) -->
+    <line x1="40" y1="180" x2="40" y2="40" stroke="#78350F" stroke-width="4"/>
+    <path d="M40 40 Q20 30 15 45 M40 40 Q60 30 65 45 M40 40 Q35 15 40 10" stroke="#15803D" stroke-width="3" fill="none"/>
+    <!-- Tin roof Assamese courtyard house -->
+    <polygon points="70,90 125,55 180,90" fill="#94A3B8" stroke="#475569" stroke-width="3"/>
+    <rect x="80" y="90" width="90" height="60" fill="#F8FAFC" stroke="#475569" stroke-width="3"/>
+    <!-- Wooden door & windows -->
+    <rect x="115" y="110" width="20" height="40" fill="#9A3412"/>
+    <rect x="90" y="105" width="16" height="16" fill="#38BDF8" stroke="#475569" stroke-width="2"/>
+    <rect x="145" y="105" width="16" height="16" fill="#38BDF8" stroke="#475569" stroke-width="2"/>
+    <!-- Courtyard ground -->
+    <rect x="0" y="150" width="200" height="50" fill="#BBF7D0"/>
+  </svg>

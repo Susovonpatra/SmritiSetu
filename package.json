@@ -1,0 +1,12 @@
+{
+  "name": "smritisetu-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "frontend": "npm run dev --prefix client",
+    "backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix client",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev": "npx -y concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+  }
+}

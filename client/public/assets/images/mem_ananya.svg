@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+    <rect width="200" height="200" rx="16" fill="#EFF6FF"/>
+    <circle cx="100" cy="75" r="38" fill="#FCD34D"/>
+    <!-- Hair -->
+    <path d="M60 75 C60 35 140 35 140 75 C140 90 135 110 135 120 L125 105 L75 105 L65 120 Z" fill="#1E293B"/>
+    <!-- Face details -->
+    <circle cx="88" cy="75" r="4" fill="#0F172A"/>
+    <circle cx="112" cy="75" r="4" fill="#0F172A"/>
+    <path d="M92 90 Q100 100 108 90" fill="none" stroke="#DC2626" stroke-width="3" stroke-linecap="round"/>
+    <!-- Body / Kurti -->
+    <path d="M50 170 C50 130 75 120 100 120 C125 120 150 130 150 170 Z" fill="#0284C7"/>
+    <!-- Scarf / Dupatta -->
+    <path d="M70 120 L100 150 L130 120" fill="none" stroke="#F43F5E" stroke-width="8"/>
+  </svg>

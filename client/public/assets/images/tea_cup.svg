@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+    <!-- Hot Assam Morning Tea -->
+    <!-- Saucer -->
+    <ellipse cx="100" cy="165" rx="65" ry="14" fill="#E2E8F0" stroke="#94A3B8" stroke-width="3"/>
+    <ellipse cx="100" cy="163" rx="45" ry="8" fill="#CBD5E1"/>
+    <!-- Cup -->
+    <path d="M55 85 Q58 145 100 145 Q142 145 145 85 Z" fill="#F8FAFC" stroke="#475569" stroke-width="3"/>
+    <!-- Liquid tea -->
+    <ellipse cx="100" cy="85" rx="45" ry="12" fill="#78350F" stroke="#475569" stroke-width="2"/>
+    <ellipse cx="100" cy="85" rx="35" ry="8" fill="#9A3412"/>
+    <!-- Cup Handle -->
+    <path d="M142 95 Q170 100 165 125 Q160 140 135 135" fill="none" stroke="#475569" stroke-width="4"/>
+    <!-- Steam wisps -->
+    <path d="M85 65 Q95 45 85 25" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+    <path d="M105 70 Q115 50 105 30" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+    <path d="M125 65 Q135 45 125 35" fill="none" stroke="#94A3B8" stroke-width="3" stroke-linecap="round"/>
+  </svg>

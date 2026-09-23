@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --canvas-bg: #FFFDF7;
+    --text-primary: #0A0A0A;
+  }
+
+  body {
+    background-color: var(--canvas-bg);
+    color: var(--text-primary);
+    font-size: 20px;
+    line-height: 1.6;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Minimum 72px touch targets for all interactive elements */
+  button, 
+  [role="button"],
+  input, 
+  select,
+  textarea {
+    min-height: 72px;
+    font-size: 20px;
+  }
+}
+
+/* Accessible high-contrast focus and click states */
+:focus-visible {
+  outline: 4px solid #065F46 !important;
+  outline-offset: 4px !important;
+}
+
+/* Geriatric touch cards */
+.touch-card {
+  min-height: 80px;
+  min-width: 80px;
+  border: 3px solid #27272A;
+  border-radius: 18px;
+  background-color: #FFFFFF;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: 0 4px 0 #27272A;
+}
+
+.touch-card:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #27272A;
+}
+
+.touch-card.selected {
+  border-color: #065F46;
+  background-color: #ECFDF5;
+  box-shadow: 0 4px 0 #065F46;
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+    <!-- Base pedestal -->
+    <ellipse cx="100" cy="175" rx="55" ry="12" fill="#CA8A04" stroke="#854D0E" stroke-width="3"/>
+    <path d="M75 175 Q100 150 94 110 L106 110 Q100 150 125 175 Z" fill="#EAB308" stroke="#854D0E" stroke-width="2"/>
+    <!-- Tray bowl -->
+    <ellipse cx="100" cy="110" rx="75" ry="22" fill="#FACC15" stroke="#854D0E" stroke-width="3"/>
+    <ellipse cx="100" cy="106" rx="65" ry="16" fill="#EAB308"/>
+    <!-- Dome Cover (Xorai lid) -->
+    <path d="M45 106 C45 60 70 40 100 35 C130 40 155 60 155 106 Z" fill="#FACC15" stroke="#854D0E" stroke-width="3"/>
+    <!-- Crown Finial / Kalasa -->
+    <path d="M96 35 L104 35 L106 18 L100 10 L94 18 Z" fill="#CA8A04" stroke="#854D0E" stroke-width="2"/>
+    <circle cx="100" cy="10" r="4" fill="#DC2626"/>
+    <!-- Decorative bands -->
+    <line x1="55" y1="80" x2="145" y2="80" stroke="#854D0E" stroke-width="2" stroke-dasharray="5,4"/>
+  </svg>

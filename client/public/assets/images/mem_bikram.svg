@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+    <rect width="200" height="200" rx="16" fill="#F0FDF4"/>
+    <circle cx="100" cy="75" r="38" fill="#FDE68A"/>
+    <!-- Hair & Moustache -->
+    <path d="M65 65 C65 40 135 40 135 65 Z" fill="#1E293B"/>
+    <circle cx="88" cy="75" r="4" fill="#0F172A"/>
+    <circle cx="112" cy="75" r="4" fill="#0F172A"/>
+    <!-- Classic Assamese Moustache -->
+    <path d="M85 88 Q100 84 100 90 Q100 84 115 88" fill="none" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/>
+    <!-- Shirt -->
+    <path d="M45 170 C45 125 75 115 100 115 C125 115 155 125 155 170 Z" fill="#065F46"/>
+    <!-- Collar -->
+    <polygon points="100,135 85,115 115,115" fill="#FFFFFF"/>
+  </svg>

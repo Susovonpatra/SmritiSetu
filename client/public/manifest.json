@@ -1,0 +1,16 @@
+{
+  "short_name": "SmritiSetu",
+  "name": "SmritiSetu - Dementia Cognitive Platform",
+  "icons": [
+    {
+      "src": "/assets/images/japi.svg",
+      "type": "image/svg+xml",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#FFFDF7",
+  "theme_color": "#065F46",
+  "display": "standalone",
+  "orientation": "any"
+}

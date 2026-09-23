@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+    <!-- Morning Medicine Strip & Glass of Water -->
+    <!-- Blister pack pill strip -->
+    <rect x="25" y="70" width="100" height="100" rx="8" fill="#E2E8F0" stroke="#64748B" stroke-width="3"/>
+    <!-- Pills -->
+    <circle cx="50" cy="95" r="12" fill="#EF4444" stroke="#B91C1C" stroke-width="2"/>
+    <circle cx="100" cy="95" r="12" fill="#3B82F6" stroke="#1D4ED8" stroke-width="2"/>
+    <circle cx="50" cy="145" r="12" fill="#10B981" stroke="#047857" stroke-width="2"/>
+    <circle cx="100" cy="145" r="12" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+    <!-- Glass of Water -->
+    <path d="M135 60 L145 165 L175 165 L185 60 Z" fill="#E0F2FE" stroke="#0284C7" stroke-width="3"/>
+    <path d="M140 100 L144 160 L176 160 L180 100 Z" fill="#38BDF8" opacity="0.6"/>
+  </svg>

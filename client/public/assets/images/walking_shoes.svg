@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+    <!-- Morning Walk: Walking stick & Shoes -->
+    <!-- Walking Stick -->
+    <path d="M40 30 C30 30 25 45 35 60 L80 180" fill="none" stroke="#78350F" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="80" cy="180" r="5" fill="#18181B"/>
+    <!-- Walking Shoe -->
+    <path d="M75 140 L100 115 L125 120 L155 145 L175 155 L175 170 L75 170 Z" fill="#0284C7" stroke="#0369A1" stroke-width="3"/>
+    <rect x="70" y="165" width="110" height="12" rx="4" fill="#FFFFFF" stroke="#0369A1" stroke-width="2"/>
+    <!-- Shoe laces -->
+    <line x1="110" y1="125" x2="125" y2="135" stroke="#FFFFFF" stroke-width="3"/>
+    <line x1="115" y1="135" x2="135" y2="145" stroke="#FFFFFF" stroke-width="3"/>
+    <!-- Morning Sun icon in corner -->
+    <circle cx="155" cy="45" r="16" fill="#FBBF24"/>
+    <path d="M155 20 L155 25 M155 65 L155 70 M130 45 L135 45 M175 45 L180 45" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+  </svg>
