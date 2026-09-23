@@ -1,0 +1,19 @@
+# SmritiSetu gitignore
+.env
+.env.*
+!.env.example
+**/.env
+__pycache__/
+**/__pycache__/
+*.pyc
+*.db
+*.sqlite
+node_modules/
+client/node_modules/
+client/dist/
+venv/
+backend/venv/
+.DS_Store
+Thumbs.db
+*.log
+logs/
