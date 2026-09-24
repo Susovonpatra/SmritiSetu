@@ -1,5 +1,7 @@
 import React from 'react';
 import { Wifi, WifiOff, RefreshCw, ShieldCheck, Heart, Sparkles, Brain, Users, Phone, LayoutGrid } from 'lucide-react';
+import { DementiaLanguageToggle } from './DementiaLanguageToggle';
+import { useLocale } from '../context/LocaleContext';
 
 export function Navbar({
   currentView,
@@ -12,21 +14,24 @@ export function Navbar({
   onOpenConsent,
   consentSigned
 }) {
+  const { t, activeLang, regionInfo } = useLocale();
+
   return (
     <header className="sticky top-0 z-40 bg-[#FFFDF7] border-b-4 border-zinc-900 shadow-md">
-      {/* Top Banner: Status & Language Bar */}
+      {/* Top Banner: Status & Dementia-Accessible 2-Way Language Bar */}
       <div className="bg-zinc-900 text-white px-4 py-2 flex flex-wrap items-center justify-between gap-3 text-sm font-bold">
+        {/* Connection & Offline Sync Status */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5">
             {isOnline ? (
               <span className="flex items-center gap-1 text-emerald-400">
                 <Wifi className="w-4 h-4" />
-                <span>Online (Sync Active)</span>
+                <span>{t('nav.online')} (Sync Active)</span>
               </span>
             ) : (
               <span className="flex items-center gap-1 text-amber-400">
                 <WifiOff className="w-4 h-4" />
-                <span>Offline Mode (Dexie Local Hub)</span>
+                <span>{t('nav.offline')} (Dexie Local Hub)</span>
               </span>
             )}
           </div>
@@ -34,47 +39,32 @@ export function Navbar({
             onClick={onTriggerSync}
             disabled={isSyncing}
             className="flex items-center gap-1 text-xs bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-lg border border-zinc-700"
-            title="Sync Dexie to FastAPI"
+            title="Sync Dexie to Server"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-emerald-400' : ''}`} />
-            <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
+            <span>{isSyncing ? 'Syncing...' : t('nav.sync')}</span>
           </button>
         </div>
 
-        {/* Dialect Selector & Consent Button */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 bg-zinc-800 p-0.5 rounded-lg border border-zinc-700">
-            <span className="text-xs text-zinc-400 pl-2">Dialect:</span>
-            {['Assamese', 'Manipuri', 'English'].map((lang) => (
-              <button
-                key={lang}
-                onClick={() => onSelectDialect(lang)}
-                className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
-                  dialect === lang
-                    ? 'bg-emerald-700 text-white shadow-sm'
-                    : 'text-zinc-300 hover:text-white'
-                }`}
-              >
-                {lang === 'Assamese' ? 'অসমীয়া' : lang === 'Manipuri' ? 'মৈতৈলোন্' : 'EN'}
-              </button>
-            ))}
-          </div>
+        {/* Location-Aware Dementia Language Switcher & Consent Button */}
+        <div className="flex flex-wrap items-center gap-3">
+          <DementiaLanguageToggle />
 
           <button
             onClick={onOpenConsent}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border transition-all ${
               consentSigned 
                 ? 'bg-emerald-950 text-emerald-300 border-emerald-700 hover:bg-emerald-900' 
                 : 'bg-amber-950 text-amber-300 border-amber-700 hover:bg-amber-900 animate-pulse'
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>{consentSigned ? 'DPDP Consent: Signed' : 'Sign DPDP Consent'}</span>
+            <span>{consentSigned ? t('nav.consentSigned') : t('nav.signConsent')}</span>
           </button>
         </div>
       </div>
 
-      {/* Main Bar: Brand & Tab Switcher (Minimum 72px buttons for accessibility) */}
+      {/* Main Bar: Brand & Tab Switcher (Minimum 72px touch targets for accessibility) */}
       <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
         {/* Brand */}
         <div 
@@ -82,14 +72,14 @@ export function Navbar({
           className="flex items-center gap-3 cursor-pointer group"
         >
           <div className="w-14 h-14 rounded-2xl bg-emerald-800 text-white flex items-center justify-center font-black text-2xl border-2 border-zinc-900 shadow-[0_3px_0_#18181B] group-hover:scale-105 transition-transform">
-            স্মৃতি
+            {regionInfo.nativeName ? regionInfo.nativeName.substring(0, 2) : 'ସ୍ମୃ'}
           </div>
           <div>
             <h1 className="text-2xl font-black text-zinc-950 tracking-tight leading-none">
-              স্মৃতিসেতু <span className="text-emerald-800">SmritiSetu</span>
+              {regionInfo.nativeName ? regionInfo.nativeName : 'ସ୍ମୃତିସେତୁ'} <span className="text-emerald-800">SmritiSetu</span>
             </h1>
             <p className="text-xs font-bold text-zinc-600 tracking-wide mt-1">
-              NER Elderly Dementia &amp; Cognitive Support Hub
+              {t('brandSubtitle')}
             </p>
           </div>
         </div>
@@ -105,7 +95,7 @@ export function Navbar({
             }`}
           >
             <Brain className="w-5 h-5 text-emerald-400" />
-            <span>{dialect === 'Assamese' ? 'জ্ঞান খেল (Games)' : 'Cognitive Games'}</span>
+            <span>{t('nav.cognitiveGames')}</span>
           </button>
 
           <button
@@ -117,7 +107,7 @@ export function Navbar({
             }`}
           >
             <Heart className="w-5 h-5 text-rose-300" />
-            <span>{dialect === 'Assamese' ? 'সোঁৱৰণি ভঁৰাল' : 'Memory Vault'}</span>
+            <span>{t('nav.memoryVault')}</span>
           </button>
 
           <button
@@ -129,7 +119,7 @@ export function Navbar({
             }`}
           >
             <Users className="w-5 h-5 text-indigo-300" />
-            <span>Caregiver Analytics</span>
+            <span>{t('nav.caregiverAnalytics')}</span>
           </button>
 
           <button
@@ -141,7 +131,7 @@ export function Navbar({
             }`}
           >
             <ShieldCheck className="w-5 h-5 text-teal-300" />
-            <span>ASHA Triage</span>
+            <span>{t('nav.ashaTriage')}</span>
           </button>
 
           <button
@@ -153,7 +143,7 @@ export function Navbar({
             }`}
           >
             <Phone className="w-5 h-5 text-amber-300" />
-            <span>2G IVR Phone</span>
+            <span>{t('nav.ivrPhone')}</span>
           </button>
 
           <button
@@ -165,7 +155,7 @@ export function Navbar({
             }`}
           >
             <LayoutGrid className="w-5 h-5 text-zinc-400" />
-            <span>3-Tier Architecture</span>
+            <span>{t('nav.architecture')}</span>
           </button>
         </nav>
       </div>

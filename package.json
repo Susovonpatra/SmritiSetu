@@ -5,8 +5,12 @@
   "scripts": {
     "frontend": "npm run dev --prefix client",
     "backend": "npm run dev --prefix backend",
+    "server": "node server/src/index.js",
+    "test:geoip": "node server/tests/geoip.test.js",
     "dev:frontend": "npm run dev --prefix client",
     "dev:backend": "npm run dev --prefix backend",
-    "dev": "npx -y concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+    "dev:server": "node server/src/index.js",
+    "dev": "npx -y concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:server\""
   }
 }
+

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { LocaleProvider, useLocale } from './context/LocaleContext';
 import { Navbar } from './components/Navbar';
 import { VisualSemanticGame } from './components/VisualSemanticGame';
 import { DailyRoutineGame } from './components/DailyRoutineGame';
@@ -16,10 +17,9 @@ import { useMotionDetector } from './hooks/useMotionDetector';
 import { initDefaultData, db } from './db/db';
 import { AlertCircle, Brain, Calendar, Info } from 'lucide-react';
 
-export function App() {
+function SmritiSetuApp() {
   const [currentView, setCurrentView] = useState('patient_games');
   const [activeGame, setActiveGame] = useState('visual'); // 'visual' or 'routine'
-  const [dialect, setDialect] = useState('Assamese');
   const [isConsentOpen, setIsConsentOpen] = useState(false);
   const [isTeleconsultOpen, setIsTeleconsultOpen] = useState(false);
   const [selectedTriageForTeleconsult, setSelectedTriageForTeleconsult] = useState(null);
@@ -29,12 +29,13 @@ export function App() {
     name: 'Bhaben Baruah',
     age: 74,
     abha_id: 'NER-ASM-9821-4412',
-    dialect: 'Assamese',
+    dialect: 'Odia',
     caregiver_name: 'Ananya Baruah',
     caregiver_phone: '+91 94350 12345',
     baseline_latency: 800.0
   });
 
+  const { activeLang, regionInfo, t } = useLocale();
   const { isOnline, isSyncing, lastSyncTime, offlineDriftAlert, syncPendingRecords } = useSyncEngine();
   const { isAlertActive, peakAcceleration, lastDropTime, dismissAlert, simulateDrop } = useMotionDetector();
 
@@ -52,6 +53,8 @@ export function App() {
     setSelectedTriageForTeleconsult(triageRecord);
     setIsTeleconsultOpen(true);
   };
+
+  const dialect = regionInfo.englishName || 'Odia';
 
   return (
     <div className="min-h-screen bg-[#FFFDF7] text-[#0A0A0A] flex flex-col font-sans selection:bg-emerald-200">
@@ -74,12 +77,12 @@ export function App() {
         </div>
       )}
 
-      {/* Navigation Header */}
+      {/* Navigation Header with Location-Aware Accessible Toggle */}
       <Navbar
         currentView={currentView}
         onSelectView={setCurrentView}
         dialect={dialect}
-        onSelectDialect={setDialect}
+        onSelectDialect={() => {}}
         isOnline={isOnline}
         isSyncing={isSyncing}
         onTriggerSync={syncPendingRecords}
@@ -103,81 +106,92 @@ export function App() {
                 }`}
               >
                 <Brain className="w-6 h-6 text-emerald-400" />
-                <span>{dialect === 'Assamese' ? '১. বস্তু চিনি পোৱা খেল' : '1. Visual Semantic Matching'}</span>
+                <span>1. {t('games.visualTitle')}</span>
               </button>
 
               <button
                 onClick={() => setActiveGame('routine')}
                 className={`min-h-[64px] px-6 rounded-2xl font-black text-lg flex items-center gap-2 border-3 transition-all ${
                   activeGame === 'routine'
-                    ? 'bg-amber-800 text-white border-zinc-900 shadow-[0_4px_0_#18181B]'
+                    ? 'bg-emerald-800 text-white border-zinc-900 shadow-[0_4px_0_#18181B]'
                     : 'bg-white text-zinc-800 border-zinc-300 hover:border-zinc-800'
                 }`}
               >
-                <Calendar className="w-6 h-6 text-amber-400" />
-                <span>{dialect === 'Assamese' ? '২. দৈনিক কামৰ ক্ৰম' : '2. 3-Step Daily Sequencer'}</span>
+                <Calendar className="w-6 h-6 text-emerald-400" />
+                <span>2. {t('games.routineTitle')}</span>
               </button>
             </div>
 
-            {/* Active Game View */}
+            {/* Active Game Component */}
             {activeGame === 'visual' ? (
-              <VisualSemanticGame dialect={dialect} />
+              <VisualSemanticGame
+                dialect={dialect}
+                onGameComplete={() => setActiveGame('routine')}
+              />
             ) : (
-              <DailyRoutineGame dialect={dialect} />
+              <DailyRoutineGame
+                dialect={dialect}
+                onGameComplete={() => setActiveGame('visual')}
+              />
             )}
           </div>
         )}
 
-        {/* Tier 1: Reminiscence Vault */}
+        {/* Reminiscence Vault */}
         {currentView === 'vault' && (
           <ReminiscenceVault dialect={dialect} />
         )}
 
-        {/* Tier 1: Caregiver Dashboard */}
+        {/* Caregiver Analytics Dashboard */}
         {currentView === 'caregiver' && (
           <CaregiverDash
-            onOpenTeleconsult={handleOpenTeleconsult}
             patient={patient}
+            onOpenTeleconsult={handleOpenTeleconsult}
           />
         )}
 
-        {/* Tier 2: ASHA Field Worker Triage Companion */}
+        {/* ASHA Companion Door-to-Door Triage */}
         {currentView === 'asha' && (
           <AshaMode
             onOpenTeleconsult={handleOpenTeleconsult}
           />
         )}
 
-        {/* Tier 3: Feature-Phone 2G IVR Simulator */}
+        {/* 2G Feature Phone IVR Simulator */}
         {currentView === 'ivr' && (
-          <IVRSimulator dialect={dialect} />
+          <IVRSimulator
+            patient={patient}
+            dialect={dialect}
+          />
         )}
 
-        {/* Architectural Overview & Pitch View */}
+        {/* Pitch & System Architecture View */}
         {currentView === 'pitch' && (
           <PitchArchitectureView
-            onSelectTier={(tierKey) => setCurrentView(tierKey)}
+            onSelectTier={(view) => setCurrentView(view)}
           />
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-zinc-900 text-zinc-400 border-t-4 border-zinc-950 py-6 px-4 text-center text-sm font-semibold">
-        <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
-          <div className="text-left">
-            <span className="text-white font-black text-base">স্মৃতিসেতু SmritiSetu</span>
+      {/* Accessible Footer */}
+      <footer className="bg-zinc-900 text-zinc-400 py-6 px-4 border-t-4 border-zinc-950 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="font-bold text-white text-base">
+              SmritiSetu | <span className="text-emerald-400 font-mono">ସ୍ମୃତିସେତୁ</span>
+            </p>
             <p className="text-xs text-zinc-500 mt-0.5">
-              Assam &amp; NER Dementia Care Hackathon Strategy | ICMR-NARI &amp; MoCA Compliant
+              Accessible Dementia Localization Engine | Odisha, Gujarat &amp; National Dialects
             </p>
           </div>
-          <div className="flex items-center gap-4 text-xs">
-            <span>Client: Vite + React 19 (JS/PWA)</span>
+          <div className="flex items-center gap-4 text-xs font-semibold">
+            <span>Server: Express GeoIP (Port 5001)</span>
             <span>•</span>
             <span>Offline: Dexie.js</span>
             <span>•</span>
-            <span>Backend: Python FastAPI</span>
+            <span>Acoustic Rate: 0.88x</span>
             <span>•</span>
-            <span>CORS: 5173</span>
+            <span>WCAG AAA Compliant</span>
           </div>
         </div>
       </footer>
@@ -198,6 +212,14 @@ export function App() {
         triageRecord={selectedTriageForTeleconsult}
       />
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <LocaleProvider>
+      <SmritiSetuApp />
+    </LocaleProvider>
   );
 }
 
