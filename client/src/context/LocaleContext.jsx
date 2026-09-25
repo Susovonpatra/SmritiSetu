@@ -58,7 +58,7 @@ export function LocaleProvider({ children }) {
 
       // 2. Query GeoIP API from Express server (if running) or fallback
       try {
-        const res = await fetch('http://127.0.0.1:5001/api/v1/locale/detect', {
+        const res = await fetch('http://127.0.0.1:8000/api/v1/locale/detect', {
           credentials: 'include'
         });
 
@@ -114,7 +114,7 @@ export function LocaleProvider({ children }) {
       localStorage.setItem(STORAGE_KEY_REGION, regionInfo.stateCode);
 
       // Notify backend if connected
-      fetch('http://127.0.0.1:5001/api/v1/locale/override', {
+      fetch('http://127.0.0.1:8000/api/v1/locale/override', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

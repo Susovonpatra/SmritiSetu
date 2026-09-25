@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.models.database import engine, Base, SessionLocal
 from app.models.schemas import Patient, TelemetryLog, AshaQueue, ConsentRecord
-from app.api import consent, telemetry, memory, asha, tts, ivr, esanjeevani
+from app.api import consent, telemetry, memory, asha, tts, ivr, esanjeevani, locale
 import datetime
 
 # Create database tables
@@ -96,6 +96,7 @@ app.include_router(telemetry.router, prefix=settings.API_V1_STR)
 app.include_router(memory.router, prefix=settings.API_V1_STR)
 app.include_router(asha.router, prefix=settings.API_V1_STR)
 app.include_router(tts.router, prefix=settings.API_V1_STR)
+app.include_router(locale.router, prefix=settings.API_V1_STR)
 app.include_router(ivr.router, prefix=settings.API_V1_STR)
 app.include_router(esanjeevani.router)
 

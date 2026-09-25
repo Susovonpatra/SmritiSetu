@@ -185,7 +185,7 @@ function SmritiSetuApp() {
             </p>
           </div>
           <div className="flex items-center gap-4 text-xs font-semibold">
-            <span>Server: Express GeoIP (Port 5001)</span>
+            <span>Server: FastAPI Unified (Port 8000)</span>
             <span>•</span>
             <span>Offline: Dexie.js</span>
             <span>•</span>

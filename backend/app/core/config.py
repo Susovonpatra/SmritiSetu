@@ -27,4 +27,8 @@ class Settings(BaseModel):
     BHASHINI_USER_ID: str = os.getenv("BHASHINI_USER_ID", "")
     BHASHINI_INFERENCE_URL: str = os.getenv("BHASHINI_INFERENCE_URL", "https://dhruva-api.bhashini.gov.in/services/inference/pipeline")
 
+    # ElevenLabs TTS config
+    ELEVENLABS_API_KEY: str = os.getenv("ELEVENLABS_API_KEY", "")
+
+
 settings = Settings()
