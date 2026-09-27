@@ -1,7 +1,8 @@
 import React from 'react';
-import { Wifi, WifiOff, RefreshCw, ShieldCheck, Heart, Sparkles, Brain, Users, Phone, LayoutGrid } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, ShieldCheck, Heart, Sparkles, Brain, Users, Phone, LayoutGrid, Key, Shield } from 'lucide-react';
 import { DementiaLanguageToggle } from './DementiaLanguageToggle';
 import { useLocale } from '../context/LocaleContext';
+import { useDualAuth } from '../context/DualAuthContext';
 
 export function Navbar({
   currentView,
@@ -15,6 +16,7 @@ export function Navbar({
   consentSigned
 }) {
   const { t, activeLang, regionInfo } = useLocale();
+  const { caretakerUser, patientSession } = useDualAuth();
 
   return (
     <header className="sticky top-0 z-40 bg-[#FFFDF7] border-b-4 border-zinc-900 shadow-md">
@@ -46,8 +48,33 @@ export function Navbar({
           </button>
         </div>
 
-        {/* Location-Aware Dementia Language Switcher & Consent Button */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Portal Shortcuts & Language Switcher */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Quick Dual Portal Switchers */}
+          <button
+            onClick={() => onSelectView('caretaker_portal')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black border transition-all ${
+              currentView === 'caretaker_portal' || caretakerUser
+                ? 'bg-indigo-900 text-indigo-200 border-indigo-500'
+                : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+            }`}
+          >
+            <Shield className="w-3 h-3 text-indigo-400" />
+            <span>{caretakerUser ? `Caretaker: ${caretakerUser.user_metadata?.full_name || caretakerUser.email?.split('@')[0]}` : 'Caretaker Portal'}</span>
+          </button>
+
+          <button
+            onClick={() => onSelectView('patient_portal')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black border transition-all ${
+              currentView === 'patient_portal' || patientSession
+                ? 'bg-emerald-900 text-emerald-200 border-emerald-500'
+                : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700'
+            }`}
+          >
+            <Heart className="w-3 h-3 text-emerald-400 fill-emerald-400" />
+            <span>{patientSession ? `Patient: ${patientSession.patient_name}` : 'Patient Portal'}</span>
+          </button>
+
           <DementiaLanguageToggle />
 
           <button
@@ -86,6 +113,31 @@ export function Navbar({
 
         {/* Tab Navigation (Large Touch-Friendly Buttons) */}
         <nav className="flex flex-wrap items-center gap-2">
+          {/* Dual Portal Tabs */}
+          <button
+            onClick={() => onSelectView('caretaker_portal')}
+            className={`min-h-[58px] px-4 rounded-2xl font-black text-base flex items-center gap-2 border-3 transition-all ${
+              currentView === 'caretaker_portal'
+                ? 'bg-indigo-900 text-white border-zinc-900 shadow-[0_4px_0_#18181B]'
+                : 'bg-white text-indigo-900 border-indigo-300 hover:border-zinc-900'
+            }`}
+          >
+            <Shield className="w-5 h-5 text-indigo-400" />
+            <span>Caretaker Portal</span>
+          </button>
+
+          <button
+            onClick={() => onSelectView('patient_portal')}
+            className={`min-h-[58px] px-4 rounded-2xl font-black text-base flex items-center gap-2 border-3 transition-all ${
+              currentView === 'patient_portal'
+                ? 'bg-emerald-800 text-white border-zinc-900 shadow-[0_4px_0_#18181B]'
+                : 'bg-white text-emerald-900 border-emerald-300 hover:border-zinc-900'
+            }`}
+          >
+            <Key className="w-5 h-5 text-emerald-600" />
+            <span>Patient Portal</span>
+          </button>
+
           <button
             onClick={() => onSelectView('patient_games')}
             className={`min-h-[58px] px-4 rounded-2xl font-black text-base flex items-center gap-2 border-3 transition-all ${
@@ -162,3 +214,4 @@ export function Navbar({
     </header>
   );
 }
+

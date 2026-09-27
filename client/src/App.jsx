@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LocaleProvider, useLocale } from './context/LocaleContext';
+import { DualAuthProvider, useDualAuth } from './context/DualAuthContext';
 import { Navbar } from './components/Navbar';
 import { VisualSemanticGame } from './components/VisualSemanticGame';
 import { DailyRoutineGame } from './components/DailyRoutineGame';
@@ -11,6 +12,8 @@ import { PitchArchitectureView } from './components/PitchArchitectureView';
 import { ConsentModal } from './components/ConsentModal';
 import { EsanjeevaniModal } from './components/EsanjeevaniModal';
 import { MotionAlertBanner } from './components/MotionAlertBanner';
+import { CaretakerPortal } from './components/CaretakerPortal';
+import { PatientPortal } from './components/PatientPortal';
 
 import { useSyncEngine } from './hooks/useSyncEngine';
 import { useMotionDetector } from './hooks/useMotionDetector';
@@ -165,6 +168,23 @@ function SmritiSetuApp() {
           />
         )}
 
+        {/* Caretaker Portal View */}
+        {currentView === 'caretaker_portal' && (
+          <CaretakerPortal
+            onNavigateToPatientPortal={() => setCurrentView('patient_portal')}
+            onOpenAnalytics={() => setCurrentView('caregiver')}
+          />
+        )}
+
+        {/* Patient Portal View */}
+        {currentView === 'patient_portal' && (
+          <PatientPortal
+            onLaunchGame={() => setCurrentView('patient_games')}
+            onLaunchVault={() => setCurrentView('vault')}
+            onNavigateToCaretaker={() => setCurrentView('caretaker_portal')}
+          />
+        )}
+
         {/* Pitch & System Architecture View */}
         {currentView === 'pitch' && (
           <PitchArchitectureView
@@ -217,9 +237,11 @@ function SmritiSetuApp() {
 
 export function App() {
   return (
-    <LocaleProvider>
-      <SmritiSetuApp />
-    </LocaleProvider>
+    <DualAuthProvider>
+      <LocaleProvider>
+        <SmritiSetuApp />
+      </LocaleProvider>
+    </DualAuthProvider>
   );
 }
 
