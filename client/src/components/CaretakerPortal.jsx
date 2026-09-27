@@ -12,8 +12,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Copy,
-  ExternalLink,
-  Sparkles
+  ExternalLink
 } from 'lucide-react';
 
 export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) {
@@ -58,9 +57,9 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
           fullName,
           phoneNumber
         });
-        if (error) throw error;
+        if (error) throw new Error('Invalid credentials or account creation failed.');
         if (!data.session) {
-          setSuccessMsg('Account created! Please check your email to verify, or sign in.');
+          setSuccessMsg('Account created! Please sign in with your credentials.');
         } else {
           setSuccessMsg('Caretaker account registered successfully!');
         }
@@ -88,7 +87,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
       const res = await updatePatientAccessPassword(patientPassword);
       setPassUpdateStatus({
         type: 'success',
-        text: res?.message || 'Patient access password successfully saved & hashed with bcrypt!'
+        text: res?.message || 'Patient access password successfully updated!'
       });
     } catch (err) {
       setPassUpdateStatus({
@@ -101,7 +100,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
   };
 
   const handleCopyCredentials = () => {
-    const text = `Caretaker Email: ${caretakerUser?.email}\nPatient Password: ${patientPassword || '(Set by you)'}\nPortal URL: /patient/dashboard`;
+    const text = `Caretaker Email: ${caretakerUser?.email}\nPatient Password: ${patientPassword || '(Set by you)'}\nPortal URL: /patient_portal`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -110,8 +109,8 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
   if (isCaretakerLoading) {
     return (
       <div className="py-20 text-center">
-        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="font-bold text-zinc-700">Verifying Caretaker Session...</p>
+        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+        <p className="font-semibold text-slate-600 text-sm">Verifying Caretaker Session...</p>
       </div>
     );
   }
@@ -125,33 +124,33 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
     return (
       <div className="w-full max-w-5xl mx-auto space-y-6">
         {/* Header Bar */}
-        <div className="bg-indigo-900 text-white rounded-3xl p-6 sm:p-8 border-4 border-zinc-900 shadow-[0_6px_0_#18181B] flex flex-wrap items-center justify-between gap-4">
+        <div className="bg-slate-900 text-white rounded-2xl p-6 sm:p-8 border border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 bg-indigo-800/80 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-indigo-200 mb-2 border border-indigo-700">
-              <Shield className="w-3.5 h-3.5 text-indigo-300" />
+            <div className="inline-flex items-center gap-1.5 bg-indigo-500/10 text-indigo-300 px-3 py-1 rounded-full text-xs font-semibold mb-2 border border-indigo-500/20">
+              <Shield className="w-3.5 h-3.5 text-indigo-400" />
               Authenticated Caretaker Portal
             </div>
-            <h2 className="text-3xl font-black tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
               Welcome, {displayName}
             </h2>
-            <p className="text-indigo-200 text-sm mt-1">
-              Supabase Auth UID: <span className="font-mono text-xs bg-indigo-950 px-2 py-0.5 rounded">{caretakerUser.id}</span>
+            <p className="text-slate-400 text-xs mt-1">
+              Supabase Auth UID: <span className="font-mono text-[11px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">{caretakerUser.id}</span>
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={onOpenAnalytics}
-              className="px-4 py-2.5 bg-white text-indigo-950 font-bold rounded-2xl hover:bg-indigo-50 border-2 border-zinc-900 transition flex items-center gap-2 shadow-[0_3px_0_#18181B]"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition flex items-center gap-2 shadow-sm"
             >
               <span>View Analytics</span>
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={signOutCaretaker}
-              className="px-4 py-2.5 bg-indigo-950/80 hover:bg-rose-900 text-rose-200 font-bold rounded-2xl border border-indigo-700 transition flex items-center gap-2"
+              className="px-4 py-2 bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 text-xs font-semibold rounded-xl border border-slate-700 transition flex items-center gap-2"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
               <span>Sign Out</span>
             </button>
           </div>
@@ -160,35 +159,35 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Caretaker Profile Details */}
-          <div className="bg-white rounded-3xl p-6 border-4 border-zinc-900 shadow-[0_4px_0_#18181B] space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b-2 border-zinc-100">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-800 flex items-center justify-center font-bold">
-                <User className="w-5 h-5" />
+          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                <User className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-zinc-900">Caretaker Account</h3>
-                <p className="text-xs text-zinc-500">Profile synced with PostgreSQL `caretakers` table</p>
+                <h3 className="text-base font-bold text-slate-900">Caretaker Profile</h3>
+                <p className="text-xs text-slate-500">PostgreSQL `caretakers` record</p>
               </div>
             </div>
 
             <div className="space-y-3 text-sm">
-              <div className="p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
-                <span className="text-xs font-bold text-zinc-500 uppercase block mb-0.5">Full Name</span>
-                <p className="font-bold text-zinc-800 text-base">{displayName}</p>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-[11px] font-bold text-slate-400 uppercase block mb-0.5">Full Name</span>
+                <p className="font-semibold text-slate-800">{displayName}</p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
-                <span className="text-xs font-bold text-zinc-500 uppercase block mb-0.5">Email Address</span>
-                <p className="font-bold text-zinc-800 text-base flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-zinc-400" />
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-[11px] font-bold text-slate-400 uppercase block mb-0.5">Email Address</span>
+                <p className="font-semibold text-slate-800 flex items-center gap-2">
+                  <Mail className="w-3.5 h-3.5 text-slate-400" />
                   {caretakerUser.email}
                 </p>
               </div>
 
-              <div className="p-3 bg-zinc-50 rounded-2xl border border-zinc-200">
-                <span className="text-xs font-bold text-zinc-500 uppercase block mb-0.5">Phone Number</span>
-                <p className="font-bold text-zinc-800 text-base flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-zinc-400" />
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                <span className="text-[11px] font-bold text-slate-400 uppercase block mb-0.5">Phone Number</span>
+                <p className="font-semibold text-slate-800 flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-slate-400" />
                   {displayPhone}
                 </p>
               </div>
@@ -196,27 +195,27 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
           </div>
 
           {/* Manage Patient Access Password */}
-          <div className="bg-white rounded-3xl p-6 border-4 border-zinc-900 shadow-[0_4px_0_#18181B] space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b-2 border-zinc-100">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                <Key className="w-5 h-5" />
+          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                <Key className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-lg font-black text-zinc-900">Patient Access Password</h3>
-                <p className="text-xs text-zinc-500">Stored as bcrypt hash in `patient_profiles`</p>
+                <h3 className="text-base font-bold text-slate-900">Patient Access Password</h3>
+                <p className="text-xs text-slate-500">Hashed via Blowfish in `patient_profiles`</p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+            <p className="text-xs text-slate-600 leading-relaxed">
               Your patient logs in at the <strong>Patient Portal</strong> using your email (<code>{caretakerUser.email}</code>) and this dedicated password.
             </p>
 
             {passUpdateStatus && (
               <div
-                className={`p-3 rounded-2xl text-xs font-bold flex items-center gap-2 ${
+                className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
                   passUpdateStatus.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-800 border-2 border-emerald-300'
-                    : 'bg-rose-50 text-rose-800 border-2 border-rose-300'
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    : 'bg-rose-50 text-rose-800 border border-rose-200'
                 }`}
               >
                 {passUpdateStatus.type === 'success' ? (
@@ -230,11 +229,11 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
 
             <form onSubmit={handleSetPatientPassword} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-zinc-700 uppercase mb-1">
+                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
                   New Patient Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
+                  <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
                   <input
                     type="text"
                     required
@@ -242,7 +241,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
                     value={patientPassword}
                     onChange={(e) => setPatientPassword(e.target.value)}
                     placeholder="e.g. Setu@2026 or EasyMemory123"
-                    className="w-full bg-zinc-50 border-2 border-zinc-300 rounded-2xl py-2.5 pl-10 pr-4 text-sm font-semibold text-zinc-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                   />
                 </div>
               </div>
@@ -250,25 +249,25 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
               <button
                 type="submit"
                 disabled={isUpdatingPass}
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2.5 px-4 rounded-2xl border-2 border-zinc-900 shadow-[0_3px_0_#18181B] flex items-center justify-center gap-2 transition disabled:opacity-50"
+                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold py-2.5 px-4 rounded-xl shadow-sm flex items-center justify-center gap-2 transition disabled:opacity-50"
               >
-                <Key className="w-4 h-4" />
-                <span>{isUpdatingPass ? 'Hashing & Updating...' : 'Save Patient Password'}</span>
+                <Key className="w-3.5 h-3.5" />
+                <span>{isUpdatingPass ? 'Updating...' : 'Save Patient Password'}</span>
               </button>
             </form>
 
-            <div className="pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
               <button
                 onClick={handleCopyCredentials}
-                className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5"
+                className="text-xs font-semibold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5"
               >
                 <Copy className="w-3.5 h-3.5" />
-                <span>{copied ? 'Copied to Clipboard!' : 'Copy Patient Login Info'}</span>
+                <span>{copied ? 'Copied!' : 'Copy Login Credentials'}</span>
               </button>
 
               <button
                 onClick={onNavigateToPatientPortal}
-                className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-emerald-700 hover:underline flex items-center gap-1"
               >
                 <span>Launch Patient View</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -282,22 +281,22 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
 
   // --- Unauthenticated Caretaker Sign Up / Login View ---
   return (
-    <div className="w-full max-w-lg mx-auto bg-white rounded-3xl border-4 border-zinc-900 shadow-[0_6px_0_#18181B] p-6 sm:p-8 space-y-6">
+    <div className="w-full max-w-md mx-auto bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
       {/* Header */}
       <div className="text-center">
-        <div className="w-14 h-14 bg-indigo-100 text-indigo-800 rounded-2xl mx-auto flex items-center justify-center mb-3 border-2 border-zinc-900 shadow-[0_3px_0_#18181B]">
-          <Shield className="w-7 h-7" />
+        <div className="w-12 h-12 bg-indigo-50 text-indigo-700 rounded-xl mx-auto flex items-center justify-center mb-3 border border-indigo-100 shadow-sm">
+          <Shield className="w-6 h-6" />
         </div>
-        <h2 className="text-2xl font-black text-zinc-950">
+        <h2 className="text-xl font-bold text-slate-900">
           Caretaker Administration
         </h2>
-        <p className="text-xs font-bold text-zinc-500 mt-1">
-          {isSignUp ? 'Create a secure caretaker account with Supabase Auth.' : 'Sign in to manage your patient profile and security keys.'}
+        <p className="text-xs text-slate-500 mt-1">
+          {isSignUp ? 'Create a caretaker account to monitor telemetry & set passwords.' : 'Sign in to manage patient access and clinical metrics.'}
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex rounded-2xl bg-zinc-100 p-1 border-2 border-zinc-900">
+      <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200">
         <button
           type="button"
           onClick={() => {
@@ -305,8 +304,8 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
             setErrorMsg(null);
             setSuccessMsg(null);
           }}
-          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${
-            !isSignUp ? 'bg-indigo-800 text-white shadow' : 'text-zinc-700 hover:text-zinc-900'
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            !isSignUp ? 'bg-indigo-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           Sign In
@@ -318,8 +317,8 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
             setErrorMsg(null);
             setSuccessMsg(null);
           }}
-          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${
-            isSignUp ? 'bg-indigo-800 text-white shadow' : 'text-zinc-700 hover:text-zinc-900'
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            isSignUp ? 'bg-indigo-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
           }`}
         >
           Sign Up (New Caretaker)
@@ -327,15 +326,15 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
       </div>
 
       {errorMsg && (
-        <div className="p-3.5 bg-rose-50 border-2 border-rose-400 rounded-2xl text-rose-800 text-xs font-bold flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
+        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-semibold flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="p-3.5 bg-emerald-50 border-2 border-emerald-400 rounded-2xl text-emerald-800 text-xs font-bold flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 shrink-0" />
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-semibold flex items-center gap-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
           <span>{successMsg}</span>
         </div>
       )}
@@ -344,34 +343,34 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
         {isSignUp && (
           <>
             <div>
-              <label className="block text-xs font-black text-zinc-700 uppercase mb-1">
+              <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
+                <User className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Ananya Baruah"
-                  className="w-full bg-zinc-50 border-2 border-zinc-300 rounded-2xl py-2.5 pl-10 pr-4 text-sm font-semibold text-zinc-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-black text-zinc-700 uppercase mb-1">
+              <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                 Phone Number
               </label>
               <div className="relative">
-                <Phone className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
+                <Phone className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
                 <input
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+91 94350 12345"
-                  className="w-full bg-zinc-50 border-2 border-zinc-300 rounded-2xl py-2.5 pl-10 pr-4 text-sm font-semibold text-zinc-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                 />
               </div>
             </div>
@@ -379,28 +378,28 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
         )}
 
         <div>
-          <label className="block text-xs font-black text-zinc-700 uppercase mb-1">
+          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
             Email Address
           </label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
+            <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="caretaker@example.com"
-              className="w-full bg-zinc-50 border-2 border-zinc-300 rounded-2xl py-2.5 pl-10 pr-4 text-sm font-semibold text-zinc-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-black text-zinc-700 uppercase mb-1">
+          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
             Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-3 w-4 h-4 text-zinc-400" />
+            <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
             <input
               type="password"
               required
@@ -408,7 +407,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-zinc-50 border-2 border-zinc-300 rounded-2xl py-2.5 pl-10 pr-4 text-sm font-semibold text-zinc-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
+              className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
             />
           </div>
         </div>
@@ -416,21 +415,21 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-black text-base py-3 px-4 rounded-2xl border-2 border-zinc-900 shadow-[0_4px_0_#18181B] flex items-center justify-center gap-2 transition disabled:opacity-50 mt-2"
+          className="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm flex items-center justify-center gap-2 transition disabled:opacity-50 mt-2"
         >
           <span>{loading ? 'Processing...' : isSignUp ? 'Create Caretaker Account' : 'Sign In as Caretaker'}</span>
-          <ArrowRight className="w-4 h-4" />
+          <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </form>
 
-      <div className="pt-4 border-t-2 border-zinc-100 text-center">
-        <p className="text-xs text-zinc-600">
+      <div className="pt-3 border-t border-slate-100 text-center">
+        <p className="text-xs text-slate-500">
           Looking for patient login?{' '}
           <button
             onClick={onNavigateToPatientPortal}
-            className="font-black text-emerald-800 hover:underline ml-1"
+            className="font-bold text-emerald-700 hover:underline ml-1"
           >
-            Go to Patient Companion Portal →
+            Patient Portal →
           </button>
         </p>
       </div>

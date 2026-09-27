@@ -7,34 +7,43 @@ const STORAGE_KEY_LOCALE = 'smritisetu_locale';
 const STORAGE_KEY_REGION = 'smritisetu_region';
 const STORAGE_KEY_OVERRIDE = 'smritisetu_manual_override';
 
-// Supported fallback language map
+// Comprehensive Indian State Language & Region Map
 const REGION_PAIR_MAP = {
   OD: { primary: 'or', secondary: 'en', native: 'ଓଡ଼ିଆ', name: 'Odisha' },
   OR: { primary: 'or', secondary: 'en', native: 'ଓଡ଼ିଆ', name: 'Odisha' },
+  ODISHA: { primary: 'or', secondary: 'en', native: 'ଓଡ଼ିଆ', name: 'Odisha' },
+  ORISSA: { primary: 'or', secondary: 'en', native: 'ଓଡ଼ିଆ', name: 'Odisha' },
+  
   GJ: { primary: 'gu', secondary: 'en', native: 'ગુજરાતી', name: 'Gujarat' },
+  GUJARAT: { primary: 'gu', secondary: 'en', native: 'ગુજરાતી', name: 'Gujarat' },
+  
   AS: { primary: 'as', secondary: 'en', native: 'অসমীয়া', name: 'Assam' },
-  WB: { primary: 'bn', secondary: 'en', native: 'বাংলা', name: 'West Bengal' },
-  MH: { primary: 'mr', secondary: 'en', native: 'मराठी', name: 'Maharashtra' }
+  ASSAM: { primary: 'as', secondary: 'en', native: 'অসমীয়া', name: 'Assam' },
+  
+  WB: { primary: 'or', secondary: 'en', native: 'ଓଡ଼ିଆ', name: 'Odisha' }, // default east pair
+  MH: { primary: 'or', secondary: 'en', native: 'ଓଡ଼ିଆ', name: 'Odisha' },
 };
 
 export function LocaleProvider({ children }) {
-  const [activeLang, setActiveLang] = useState('or'); // Default to target Regional (e.g. Odia)
+  const [activeLang, setActiveLang] = useState(() => {
+    return localStorage.getItem(STORAGE_KEY_LOCALE) || 'or';
+  });
   const [availablePair, setAvailablePair] = useState(['or', 'en']);
   const [regionInfo, setRegionInfo] = useState({
     stateCode: 'OD',
     stateName: 'Odisha',
     nativeName: 'ଓଡ଼ିଆ',
     englishName: 'Odia',
-    isDetected: true,
+    isDetected: false,
     detectionSource: 'initial'
   });
   const [isManualOverride, setIsManualOverride] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize from cookies, localStorage, or server-side GeoIP endpoint
+  // Initialize and automatically detect region from IP
   useEffect(() => {
-    async function initLocale() {
-      // 1. Check local storage for persistent caregiver choices
+    async function initAndDetectIP() {
+      // Check saved override first
       const savedOverride = localStorage.getItem(STORAGE_KEY_OVERRIDE) === 'true';
       const savedLocale = localStorage.getItem(STORAGE_KEY_LOCALE);
       const savedRegion = localStorage.getItem(STORAGE_KEY_REGION);
@@ -42,90 +51,94 @@ export function LocaleProvider({ children }) {
       if (savedOverride && savedLocale) {
         setIsManualOverride(true);
         setActiveLang(savedLocale);
-        const regionMeta = REGION_PAIR_MAP[savedRegion] || REGION_PAIR_MAP.OD;
-        setAvailablePair([regionMeta.primary, 'en']);
-        setRegionInfo({
-          stateCode: savedRegion || 'OD',
-          stateName: regionMeta.name,
-          nativeName: regionMeta.native,
-          englishName: regionMeta.primary,
-          isDetected: false,
-          detectionSource: 'localStorage_override'
-        });
-        setIsLoading(false);
-        return;
       }
 
-      // 2. Query GeoIP API from Express server (if running) or fallback
+      // Try automatic IP Geolocation
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/v1/locale/detect', {
-          credentials: 'include'
-        });
+        // 1. Try public IP API for real-time IP region resolution
+        const ipRes = await fetch('https://ipapi.co/json/', { cache: 'no-store' });
+        if (ipRes.ok) {
+          const ipData = await ipRes.json();
+          const regionName = (ipData.region || ipData.region_code || '').toUpperCase();
+          const matched = REGION_PAIR_MAP[regionName] || REGION_PAIR_MAP[ipData.region_code] || REGION_PAIR_MAP.OD;
 
-        if (res.ok) {
-          const body = await res.json();
-          const data = body.data;
-
-          if (data && data.pair) {
-            setActiveLang(data.activeLocale || 'or');
-            setAvailablePair(data.pair);
-            setRegionInfo({
-              stateCode: data.stateCode,
-              stateName: data.stateName,
-              nativeName: data.nativeName,
-              englishName: data.englishName,
-              isDetected: data.isDetected,
-              detectionSource: data.detectionSource
-            });
-            setIsLoading(false);
-            return;
+          setRegionInfo({
+            stateCode: matched.primary.toUpperCase(),
+            stateName: ipData.region || matched.name,
+            nativeName: matched.native,
+            englishName: matched.primary,
+            isDetected: true,
+            detectionSource: 'ipapi'
+          });
+          setAvailablePair([matched.primary, 'en']);
+          if (!savedOverride) {
+            setActiveLang(matched.primary);
           }
+          setIsLoading(false);
+          return;
         }
       } catch (err) {
-        // Express server might not be running yet; fallback to browser / sensible defaults
+        // Fallback to backend / API endpoint
+        try {
+          const res = await fetch('http://127.0.0.1:8000/api/v1/locale/detect', { credentials: 'include' });
+          if (res.ok) {
+            const body = await res.json();
+            const data = body.data;
+            if (data) {
+              setRegionInfo({
+                stateCode: data.stateCode || 'OD',
+                stateName: data.stateName || 'Odisha',
+                nativeName: data.nativeName || 'ଓଡ଼ିଆ',
+                englishName: data.englishName || 'Odia',
+                isDetected: true,
+                detectionSource: 'backend_geoip'
+              });
+              if (data.pair) setAvailablePair(data.pair);
+              if (!savedOverride) setActiveLang(data.activeLocale || 'or');
+              setIsLoading(false);
+              return;
+            }
+          }
+        } catch (e) {
+          // Default fallback
+        }
       }
 
-      // 3. Fallback: Default to Odisha (or) + English (en) pair as specified
-      setActiveLang('or');
-      setAvailablePair(['or', 'en']);
+      // Default fallback: Odisha (Odia)
+      const defaultMeta = REGION_PAIR_MAP.OD;
       setRegionInfo({
         stateCode: 'OD',
         stateName: 'Odisha',
-        nativeName: 'ଓଡ଼ିଆ',
+        nativeName: defaultMeta.native,
         englishName: 'Odia',
         isDetected: false,
-        detectionSource: 'default_odisha'
+        detectionSource: 'default_fallback'
       });
+      setAvailablePair(['or', 'en']);
+      if (!savedOverride) {
+        setActiveLang('or');
+      }
       setIsLoading(false);
     }
 
-    initLocale();
+    initAndDetectIP();
   }, []);
 
-  // Manual Toggle function (switches between primary and secondary pair)
+  // Language Toggle: Switches between Regional and English
   const toggleLanguage = useCallback(() => {
     setActiveLang((prev) => {
-      const next = prev === availablePair[0] ? availablePair[1] : availablePair[0];
+      const primary = availablePair[0] || 'or';
+      const secondary = availablePair[1] || 'en';
+      const next = prev === primary ? secondary : primary;
 
-      // Mark manual override so GeoIP doesn't revert user preference
       setIsManualOverride(true);
       localStorage.setItem(STORAGE_KEY_LOCALE, next);
       localStorage.setItem(STORAGE_KEY_OVERRIDE, 'true');
-      localStorage.setItem(STORAGE_KEY_REGION, regionInfo.stateCode);
-
-      // Notify backend if connected
-      fetch('http://127.0.0.1:8000/api/v1/locale/override', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ langCode: next, stateCode: regionInfo.stateCode })
-      }).catch(() => {});
-
       return next;
     });
-  }, [availablePair, regionInfo]);
+  }, [availablePair]);
 
-  // Direct language setter
+  // Direct Language Setter
   const setLanguage = useCallback((lang) => {
     setActiveLang(lang);
     setIsManualOverride(true);
@@ -133,42 +146,36 @@ export function LocaleProvider({ children }) {
     localStorage.setItem(STORAGE_KEY_OVERRIDE, 'true');
   }, []);
 
-  // Development helper to simulate different regions (Odisha vs Gujarat vs Assam)
-  const simulateRegion = useCallback((stateCode) => {
-    const target = REGION_PAIR_MAP[stateCode] || REGION_PAIR_MAP.OD;
-    setActiveLang(target.primary);
-    setAvailablePair([target.primary, 'en']);
-    setRegionInfo({
-      stateCode,
-      stateName: target.name,
-      nativeName: target.native,
-      englishName: target.primary,
-      isDetected: true,
-      detectionSource: 'simulation'
-    });
-    localStorage.setItem(STORAGE_KEY_LOCALE, target.primary);
-    localStorage.setItem(STORAGE_KEY_REGION, stateCode);
-    localStorage.setItem(STORAGE_KEY_OVERRIDE, 'false'); // reset override
-  }, []);
-
-  // Translation helper function
-  const t = useCallback((path) => {
+  // Translation Helper Function
+  const t = useCallback((path, defaultVal = '') => {
+    if (!path) return '';
     const keys = path.split('.');
-    const dict = TRANSLATIONS[activeLang] || TRANSLATIONS.en;
-    let curr = dict;
+    
+    // 1. Try active selected language
+    const currentDict = TRANSLATIONS[activeLang] || TRANSLATIONS.or;
+    let curr = currentDict;
     for (const k of keys) {
-      if (!curr || typeof curr !== 'object') break;
+      if (!curr || typeof curr !== 'object') {
+        curr = undefined;
+        break;
+      }
       curr = curr[k];
     }
-    if (typeof curr === 'string') return curr;
+    if (typeof curr === 'string' && curr.trim() !== '') return curr;
 
-    // Fallback to English dictionary
-    let fallback = TRANSLATIONS.en;
+    // 2. Fallback to English dictionary
+    const fallbackDict = TRANSLATIONS.en || {};
+    let fallback = fallbackDict;
     for (const k of keys) {
-      if (!fallback || typeof fallback !== 'object') return path;
+      if (!fallback || typeof fallback !== 'object') {
+        fallback = undefined;
+        break;
+      }
       fallback = fallback[k];
     }
-    return typeof fallback === 'string' ? fallback : path;
+    if (typeof fallback === 'string' && fallback.trim() !== '') return fallback;
+
+    return defaultVal || path;
   }, [activeLang]);
 
   return (
@@ -181,7 +188,6 @@ export function LocaleProvider({ children }) {
         isLoading,
         toggleLanguage,
         setLanguage,
-        simulateRegion,
         t
       }}
     >

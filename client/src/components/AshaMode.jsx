@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Plus, CloudUpload, AlertTriangle, CheckCircle, ShieldAlert, MapPin, ClipboardList } from 'lucide-react';
+import { UserCheck, Plus, CloudUpload, AlertTriangle, CheckCircle, ShieldAlert, MapPin, ClipboardList, Send } from 'lucide-react';
 import { db } from '../db/db';
+import { useLocale } from '../context/LocaleContext';
 
 export function AshaMode({ onOpenTeleconsult }) {
+  const { t } = useLocale();
   const [queue, setQueue] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [patientName, setPatientName] = useState('');
@@ -71,113 +73,113 @@ export function AshaMode({ onOpenTeleconsult }) {
   const getBadgeStyle = (status) => {
     switch (status) {
       case 'Red':
-        return 'bg-red-100 text-red-900 border-red-700';
+        return 'bg-rose-50 text-rose-800 border-rose-200';
       case 'Amber':
-        return 'bg-amber-100 text-amber-900 border-amber-700';
+        return 'bg-amber-50 text-amber-800 border-amber-200';
       default:
-        return 'bg-emerald-100 text-emerald-900 border-emerald-700';
+        return 'bg-emerald-50 text-emerald-800 border-emerald-200';
     }
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 bg-white rounded-3xl border-4 border-zinc-900 shadow-xl">
+    <div className="w-full max-w-5xl mx-auto p-6 sm:p-8 bg-white rounded-2xl border border-slate-200/80 shadow-sm space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b-3 border-zinc-200 pb-4 mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
-          <span className="inline-block px-3 py-1 rounded-full bg-teal-100 text-teal-900 font-bold text-sm mb-1">
-            Rural Health Tier: Primary Health Centre (PHC) Field Portal
+          <span className="inline-block px-3 py-1 rounded-full bg-teal-50 text-teal-800 font-semibold text-xs mb-1.5 border border-teal-200/60">
+            {t('asha.tierBadge')}
           </span>
-          <h2 className="text-3xl font-black text-zinc-900 flex items-center gap-3">
-            <ClipboardList className="w-8 h-8 text-teal-800" />
-            <span>ASHA Companion Door-to-Door Triage Queue</span>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2.5">
+            <ClipboardList className="w-7 h-7 text-teal-700" />
+            <span>{t('asha.title')}</span>
           </h2>
-          <p className="text-base font-semibold text-zinc-600 mt-1">
-            Worker ID: <strong>ASHA-NAGAON-01</strong> | Sub-Center: <strong>Raha PHC, Assam</strong>
+          <p className="text-xs text-slate-500 mt-1">
+            {t('asha.workerId')}: <strong>ASHA-NAGAON-01</strong> | {t('asha.subCenter')}: <strong>Raha PHC</strong>
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowAddModal(true)}
-            className="min-h-[56px] px-5 rounded-2xl bg-teal-800 hover:bg-teal-900 text-white font-bold text-lg flex items-center gap-2 border-2 border-zinc-900 shadow-[0_4px_0_#18181B]"
+            className="px-4 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-semibold text-xs flex items-center gap-2 shadow-sm transition"
           >
-            <Plus className="w-6 h-6" />
-            <span>New Household Screening</span>
+            <Plus className="w-4 h-4" />
+            <span>{t('asha.newScreeningBtn')}</span>
           </button>
           <button
             onClick={handleSyncToPHC}
             disabled={isSyncing}
-            className="min-h-[56px] px-5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-bold text-lg flex items-center gap-2 border-2 border-zinc-900 shadow-[0_4px_0_#18181B]"
+            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs flex items-center gap-2 border border-slate-200 transition"
           >
-            <CloudUpload className="w-6 h-6 text-zinc-800" />
-            <span>{isSyncing ? 'Syncing...' : 'Sync to PHC'}</span>
+            <CloudUpload className="w-4 h-4 text-slate-600" />
+            <span>{isSyncing ? 'Syncing...' : t('asha.syncToPhcBtn')}</span>
           </button>
         </div>
       </div>
 
       {/* Triage Overview Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="p-4 rounded-2xl border-3 border-emerald-800 bg-emerald-50">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50/60">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-emerald-900">Green (Stable)</span>
-            <CheckCircle className="w-6 h-6 text-emerald-800" />
+            <span className="font-bold text-emerald-900 text-sm">{t('asha.stable')}</span>
+            <CheckCircle className="w-5 h-5 text-emerald-700" />
           </div>
-          <span className="text-3xl font-black text-emerald-950 mt-1 block">
-            {queue.filter(q => q.triage_status === 'Green').length} Households
+          <span className="text-2xl font-bold text-emerald-950 mt-1 block">
+            {queue.filter(q => q.triage_status === 'Green').length} {t('asha.households')}
           </span>
-          <span className="text-xs font-semibold text-emerald-800">Routine follow-up in 30 days</span>
+          <span className="text-xs text-emerald-700">{t('asha.stableSub')}</span>
         </div>
 
-        <div className="p-4 rounded-2xl border-3 border-amber-800 bg-amber-50">
+        <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/60">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-amber-900">Amber (Moderate Drift)</span>
-            <AlertTriangle className="w-6 h-6 text-amber-800" />
+            <span className="font-bold text-amber-900 text-sm">{t('asha.moderate')}</span>
+            <AlertTriangle className="w-5 h-5 text-amber-700" />
           </div>
-          <span className="text-3xl font-black text-amber-950 mt-1 block">
-            {queue.filter(q => q.triage_status === 'Amber').length} Households
+          <span className="text-2xl font-bold text-amber-950 mt-1 block">
+            {queue.filter(q => q.triage_status === 'Amber').length} {t('asha.households')}
           </span>
-          <span className="text-xs font-semibold text-amber-800">Weekly caregiver check advised</span>
+          <span className="text-xs text-amber-700">{t('asha.moderateSub')}</span>
         </div>
 
-        <div className="p-4 rounded-2xl border-3 border-red-800 bg-red-50">
+        <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/60">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-red-900">Red (Urgent Clinical Alert)</span>
-            <ShieldAlert className="w-6 h-6 text-red-800" />
+            <span className="font-bold text-rose-900 text-sm">{t('asha.urgent')}</span>
+            <ShieldAlert className="w-5 h-5 text-rose-700" />
           </div>
-          <span className="text-3xl font-black text-red-950 mt-1 block">
-            {queue.filter(q => q.triage_status === 'Red').length} Households
+          <span className="text-2xl font-bold text-rose-950 mt-1 block">
+            {queue.filter(q => q.triage_status === 'Red').length} {t('asha.households')}
           </span>
-          <span className="text-xs font-semibold text-red-800">Immediate eSanjeevani dispatch</span>
+          <span className="text-xs text-rose-700">{t('asha.urgentSub')}</span>
         </div>
       </div>
 
       {/* Household Visit Table */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {queue.map((record) => (
           <div
             key={record.id}
-            className="p-5 rounded-2xl border-3 border-zinc-900 bg-white hover:bg-zinc-50 shadow-[0_4px_0_#18181B] transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+            className="p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 shadow-sm transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
           >
             <div className="space-y-1">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-black text-zinc-900">
+              <div className="flex items-center gap-2.5">
+                <span className="text-base font-bold text-slate-900">
                   {record.patient_name}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-black border-2 ${getBadgeStyle(record.triage_status)}`}>
-                  {record.triage_status} Priority
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${getBadgeStyle(record.triage_status)}`}>
+                  {record.triage_status}
                 </span>
-                <span className={`px-2 py-0.5 rounded text-xs font-bold ${record.synced ? 'bg-zinc-100 text-zinc-600' : 'bg-amber-100 text-amber-900'}`}>
-                  {record.synced ? 'Synced to PHC' : 'Offline Stored'}
+                <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${record.synced ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-900'}`}>
+                  {record.synced ? t('asha.synced') : t('asha.pending')}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-zinc-600 font-semibold text-sm">
-                <MapPin className="w-4 h-4 text-zinc-500" />
+              <div className="flex items-center gap-2 text-slate-500 font-medium text-xs">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" />
                 <span>{record.village}</span>
                 <span>•</span>
                 <span>{new Date(record.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
               </div>
               {record.notes && (
-                <p className="text-base text-zinc-800 font-medium mt-2 bg-zinc-100 p-2.5 rounded-xl border border-zinc-300">
+                <p className="text-xs text-slate-700 font-normal mt-1 bg-slate-50 p-2 rounded-lg border border-slate-200">
                   {record.notes}
                 </p>
               )}
@@ -186,9 +188,10 @@ export function AshaMode({ onOpenTeleconsult }) {
             {record.triage_status === 'Red' && (
               <button
                 onClick={() => onOpenTeleconsult && onOpenTeleconsult(record)}
-                className="min-h-[56px] px-5 rounded-xl bg-red-700 hover:bg-red-800 text-white font-bold text-base flex items-center gap-2 border-2 border-zinc-900 shadow shrink-0"
+                className="px-4 py-2 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-semibold text-xs flex items-center gap-2 shadow-sm shrink-0"
               >
-                <span>Dispatch eSanjeevani</span>
+                <Send className="w-3.5 h-3.5" />
+                <span>{t('asha.dispatchBtn')}</span>
               </button>
             )}
           </div>
@@ -197,79 +200,69 @@ export function AshaMode({ onOpenTeleconsult }) {
 
       {/* Add Visit Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-lg bg-white rounded-3xl border-4 border-zinc-900 p-6 shadow-2xl">
-            <h3 className="text-2xl font-black text-zinc-900 mb-4">
-              Record Door-to-Door Household Screening
-            </h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">{t('asha.newScreeningBtn')}</h3>
             <form onSubmit={handleAddVisit} className="space-y-4">
               <div>
-                <label className="block text-base font-bold text-zinc-900 mb-1">
-                  Elderly Patient Name:
-                </label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Patient Name</label>
                 <input
                   type="text"
                   required
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
-                  placeholder="e.g., Gunaram Kalita"
-                  className="w-full px-4 py-3 rounded-xl border-2 border-zinc-800 text-lg font-medium"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:bg-white focus:border-teal-600 focus:outline-none"
+                  placeholder="e.g. Ramesh Chandra Dash"
                 />
               </div>
 
               <div>
-                <label className="block text-base font-bold text-zinc-900 mb-1">
-                  Village / Gaon Panchayat:
-                </label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Village / Ward</label>
                 <input
                   type="text"
+                  required
                   value={village}
                   onChange={(e) => setVillage(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-zinc-800 text-lg font-medium"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:bg-white focus:border-teal-600 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-base font-bold text-zinc-900 mb-1">
-                  Field Triage Status:
-                </label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Triage Priority</label>
                 <select
                   value={triageStatus}
                   onChange={(e) => setTriageStatus(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-zinc-800 text-lg font-bold"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:bg-white focus:border-teal-600 focus:outline-none font-semibold"
                 >
-                  <option value="Green">Green (Stable, Orientated)</option>
-                  <option value="Amber">Amber (Mild Confusion, Tremors Detected)</option>
-                  <option value="Red">Red (Severe Disorientation, Missed Meds)</option>
+                  <option value="Green">Green (Stable - Routine Follow-up)</option>
+                  <option value="Amber">Amber (Moderate - Caregiver Alert)</option>
+                  <option value="Red">Red (Urgent Clinical Alert - Dispatch Teleconsult)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-base font-bold text-zinc-900 mb-1">
-                  ASHA Clinical Observation Notes:
-                </label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Observations / Clinical Notes</label>
                 <textarea
-                  rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Notes on motor tremors, routine hesitation, or orientation..."
-                  className="w-full px-4 py-3 rounded-xl border-2 border-zinc-800 text-base font-medium"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:bg-white focus:border-teal-600 focus:outline-none h-20"
+                  placeholder="Note symptoms, memory lapses, disorientation..."
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-4">
+              <div className="flex gap-3 justify-end pt-2">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="min-h-[56px] px-5 rounded-xl border-2 border-zinc-400 font-bold text-zinc-700 hover:bg-zinc-100"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="min-h-[56px] px-6 rounded-xl bg-teal-800 hover:bg-teal-900 text-white font-black text-lg border-2 border-zinc-900 shadow"
+                  className="px-4 py-2 text-xs font-semibold bg-teal-700 hover:bg-teal-800 text-white rounded-xl shadow-sm transition"
                 >
-                  Save Screening (Offline First)
+                  Save Record
                 </button>
               </div>
             </form>

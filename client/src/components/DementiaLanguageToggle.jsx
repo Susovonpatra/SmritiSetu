@@ -1,133 +1,129 @@
 import React from 'react';
 import { useLocale } from '../context/LocaleContext';
-import { Languages, Check, Globe } from 'lucide-react';
+import { Globe, Check } from 'lucide-react';
 
 /**
- * Dementia-Accessible 2-Way Language Toggle Component
- * - WCAG AAA Compliant contrast ratios (>7:1)
- * - Extra-large 64px-72px touch targets for geriatric motor tremors
- * - Strictly 2-state visual layout (Zero confusing flyouts or dropdowns)
- * - Clear active state with both Native Script and English name
- * - Full Screen Reader support with role="switch" & aria-checked
+ * Modern Formal Segmented Language Switcher & IP-based Region Pill
  */
-export function DementiaLanguageToggle({ className = '' }) {
+export function DementiaLanguageToggle({ className = '', showRegionOnly = false, showToggleOnly = false }) {
   const {
     activeLang,
     availablePair,
     regionInfo,
-    toggleLanguage,
-    simulateRegion
+    toggleLanguage
   } = useLocale();
 
   const [primaryLang, secondaryLang] = availablePair;
 
-  // Metadata for languages
   const LANG_LABELS = {
-    or: { native: 'ଓଡ଼ିଆ', english: 'Odia' },
-    gu: { native: 'ગુજરાતી', english: 'Gujarati' },
-    as: { native: 'অসমীয়া', english: 'Assamese' },
-    en: { native: 'English', english: 'English' }
+    or: { native: 'ଓଡ଼ିଆ', english: 'ODIA' },
+    gu: { native: 'ગુજરાતી', english: 'GUJARATI' },
+    as: { native: 'অসমীয়া', english: 'ASSAMESE' },
+    en: { native: 'English', english: 'EN-IN' }
   };
 
-  const primaryMeta = LANG_LABELS[primaryLang] || { native: primaryLang.toUpperCase(), english: primaryLang };
-  const secondaryMeta = LANG_LABELS[secondaryLang] || { native: 'English', english: 'English' };
-
+  const primaryMeta = LANG_LABELS[primaryLang] || { native: 'ଓଡ଼ିଆ', english: 'ODIA' };
   const isPrimaryActive = activeLang === primaryLang;
 
-  return (
-    <div className={`flex flex-col sm:flex-row items-center gap-3 ${className}`}>
-      {/* Dementia 2-State Switch Container */}
-      <div 
-        role="group" 
-        aria-label="Language selector for dementia accessibility"
-        className="flex items-center p-1.5 bg-zinc-900 rounded-2xl border-3 border-zinc-950 shadow-md"
-      >
-        {/* State 1: Regional Language Button */}
+  // 1. Render ONLY Region Pill (No manual simulation buttons, displays IP-detected Region)
+  if (showRegionOnly) {
+    return (
+      <div className={`inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900/90 text-slate-200 rounded-xl border border-slate-700/80 text-xs font-medium shadow-sm backdrop-blur ${className}`}>
+        <Globe className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+        <span className="text-slate-300">
+          Region: <strong className="text-emerald-400 font-semibold">{regionInfo.stateName || 'Odisha'}</strong>
+        </span>
+      </div>
+    );
+  }
+
+  // 2. Render Language Segmented Switch
+  if (showToggleOnly) {
+    return (
+      <div className={`inline-flex items-center p-1 bg-slate-900/95 border border-slate-700/80 rounded-xl shadow-inner backdrop-blur ${className}`}>
+        {/* State 1: Regional Language (e.g. Odia) */}
         <button
           type="button"
           role="switch"
           aria-checked={isPrimaryActive}
-          aria-label={`Switch to ${primaryMeta.english} (${primaryMeta.native})`}
-          onClick={() => {
-            if (!isPrimaryActive) toggleLanguage();
-          }}
-          className={`min-h-[58px] sm:min-h-[64px] min-w-[130px] sm:min-w-[150px] px-4 py-2 rounded-xl flex items-center justify-center gap-2 font-black text-lg transition-all select-none ${
+          onClick={() => { if (!isPrimaryActive) toggleLanguage(); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 select-none cursor-pointer ${
             isPrimaryActive
-              ? 'bg-[#064E3B] text-white border-2 border-emerald-400 shadow-[0_3px_0_#022c22] scale-[1.02]'
-              : 'bg-transparent text-zinc-300 hover:text-white hover:bg-zinc-800 border-2 border-transparent'
+              ? 'bg-emerald-800 text-white border border-emerald-500/50 shadow-sm'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
           }`}
         >
-          {isPrimaryActive && <Check className="w-5 h-5 text-emerald-300 shrink-0" />}
-          <div className="flex flex-col items-center leading-tight">
-            <span className="text-xl tracking-wide">{primaryMeta.native}</span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-200">
-              {primaryMeta.english}
-            </span>
-          </div>
+          {isPrimaryActive && <Check className="w-3.5 h-3.5 text-emerald-300" />}
+          <span className="font-bold tracking-wide">{primaryMeta.native}</span>
+          <span className="text-[10px] uppercase opacity-75">{primaryMeta.english}</span>
         </button>
 
-        {/* Tactile Divider */}
-        <div className="w-[2px] h-10 bg-zinc-700 mx-1" aria-hidden="true" />
+        <div className="w-[1px] h-4 bg-slate-700/60 mx-1" aria-hidden="true" />
 
-        {/* State 2: English Button */}
+        {/* State 2: English */}
         <button
           type="button"
           role="switch"
           aria-checked={!isPrimaryActive}
-          aria-label={`Switch to English`}
-          onClick={() => {
-            if (isPrimaryActive) toggleLanguage();
-          }}
-          className={`min-h-[58px] sm:min-h-[64px] min-w-[130px] sm:min-w-[150px] px-4 py-2 rounded-xl flex items-center justify-center gap-2 font-black text-lg transition-all select-none ${
+          onClick={() => { if (isPrimaryActive) toggleLanguage(); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 select-none cursor-pointer ${
             !isPrimaryActive
-              ? 'bg-[#064E3B] text-white border-2 border-emerald-400 shadow-[0_3px_0_#022c22] scale-[1.02]'
-              : 'bg-transparent text-zinc-300 hover:text-white hover:bg-zinc-800 border-2 border-transparent'
+              ? 'bg-emerald-800 text-white border border-emerald-500/50 shadow-sm'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
           }`}
         >
-          {!isPrimaryActive && <Check className="w-5 h-5 text-emerald-300 shrink-0" />}
-          <div className="flex flex-col items-center leading-tight">
-            <span className="text-xl">English</span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-200">
-              EN-IN
-            </span>
-          </div>
+          {!isPrimaryActive && <Check className="w-3.5 h-3.5 text-emerald-300" />}
+          <span className="font-bold">English</span>
+          <span className="text-[10px] uppercase opacity-75">EN-IN</span>
+        </button>
+      </div>
+    );
+  }
+
+  // Combined fallback
+  return (
+    <div className={`flex flex-wrap items-center gap-2.5 ${className}`}>
+      {/* 2-State Language Toggle */}
+      <div className="inline-flex items-center p-1 bg-slate-900 border border-slate-700/80 rounded-xl shadow-inner">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isPrimaryActive}
+          onClick={() => { if (!isPrimaryActive) toggleLanguage(); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all select-none cursor-pointer ${
+            isPrimaryActive
+              ? 'bg-emerald-800 text-white border border-emerald-500/50 shadow-sm'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+          }`}
+        >
+          {isPrimaryActive && <Check className="w-3.5 h-3.5 text-emerald-300" />}
+          <span className="font-bold">{primaryMeta.native}</span>
+          <span className="text-[10px] uppercase opacity-80">{primaryMeta.english}</span>
+        </button>
+
+        <div className="w-[1px] h-4 bg-slate-700 mx-1" aria-hidden="true" />
+
+        <button
+          type="button"
+          role="switch"
+          aria-checked={!isPrimaryActive}
+          onClick={() => { if (isPrimaryActive) toggleLanguage(); }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all select-none cursor-pointer ${
+            !isPrimaryActive
+              ? 'bg-emerald-800 text-white border border-emerald-500/50 shadow-sm'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+          }`}
+        >
+          {!isPrimaryActive && <Check className="w-3.5 h-3.5 text-emerald-300" />}
+          <span className="font-bold">English</span>
+          <span className="text-[10px] uppercase opacity-80">EN-IN</span>
         </button>
       </div>
 
-      {/* Region Tag & Testing Switcher for Demos */}
-      <div className="flex items-center gap-1.5 text-xs text-zinc-400 bg-zinc-800 px-2.5 py-1.5 rounded-xl border border-zinc-700">
+      {/* Sleek Region Pill (Auto IP) */}
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900 text-slate-300 rounded-xl border border-slate-700/80 text-xs font-medium shadow-sm">
         <Globe className="w-3.5 h-3.5 text-emerald-400" />
-        <span className="font-bold text-zinc-200">
-          Region: <strong className="text-emerald-400">{regionInfo.stateName}</strong>
-        </span>
-        <span className="text-zinc-500">|</span>
-        <button
-          onClick={() => simulateRegion('OD')}
-          className={`px-1.5 py-0.5 rounded font-bold hover:underline ${
-            regionInfo.stateCode === 'OD' ? 'text-amber-400 underline' : 'text-zinc-400'
-          }`}
-          title="Simulate GeoIP: Odisha"
-        >
-          OD
-        </button>
-        <button
-          onClick={() => simulateRegion('GJ')}
-          className={`px-1.5 py-0.5 rounded font-bold hover:underline ${
-            regionInfo.stateCode === 'GJ' ? 'text-amber-400 underline' : 'text-zinc-400'
-          }`}
-          title="Simulate GeoIP: Gujarat"
-        >
-          GJ
-        </button>
-        <button
-          onClick={() => simulateRegion('AS')}
-          className={`px-1.5 py-0.5 rounded font-bold hover:underline ${
-            regionInfo.stateCode === 'AS' ? 'text-amber-400 underline' : 'text-zinc-400'
-          }`}
-          title="Simulate GeoIP: Assam"
-        >
-          AS
-        </button>
+        <span>Region: <strong className="text-emerald-400 font-semibold">{regionInfo.stateName || 'Odisha'}</strong></span>
       </div>
     </div>
   );
