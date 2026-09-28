@@ -38,44 +38,44 @@ export function PatternTraceReportModal({ isOpen, onClose, patient }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white text-slate-900 w-full max-w-4xl rounded-3xl border-3 border-slate-300 shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white text-slate-900 w-full max-w-4xl rounded-2xl sm:rounded-3xl border-2 sm:border-3 border-slate-300 shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="bg-slate-900 text-white p-6 border-b border-slate-800 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-indigo-500/20 text-indigo-300 rounded-xl flex items-center justify-center border border-indigo-500/30">
-              <FileText className="w-6 h-6" />
+        <div className="bg-slate-900 text-white p-4 sm:p-6 border-b border-slate-800 flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 bg-indigo-500/20 text-indigo-300 rounded-xl flex items-center justify-center border border-indigo-500/30 shrink-0">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <span className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider block">
+              <span className="text-[10px] sm:text-[11px] font-bold text-indigo-300 uppercase tracking-wider block">
                 Clinical Neurocognitive Summary
               </span>
-              <h3 className="text-xl sm:text-2xl font-black text-white">
+              <h3 className="text-base sm:text-2xl font-black text-white leading-tight">
                 PatternTrace Visuospatial Working Memory Report
               </h3>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end xs:self-auto shrink-0">
             <button
               onClick={handlePrint}
-              className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs rounded-xl flex items-center gap-2 border border-indigo-600 transition cursor-pointer"
+              className="px-3 sm:px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 sm:gap-2 border border-indigo-600 transition cursor-pointer"
             >
-              <Printer className="w-4 h-4" />
+              <Printer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Print / PDF</span>
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition"
+              className="p-1.5 sm:p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition"
               aria-label="Close report"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
 
         {/* Printable Report Content Body */}
-        <div className="p-6 sm:p-8 overflow-y-auto space-y-6 text-sm">
+        <div className="p-4 sm:p-8 overflow-y-auto space-y-4 sm:space-y-6 text-sm">
           {loading || !analytics ? (
             <div className="py-16 text-center text-slate-500">
               <Brain className="w-10 h-10 mx-auto text-indigo-400 animate-pulse mb-3" />
@@ -84,76 +84,76 @@ export function PatternTraceReportModal({ isOpen, onClose, patient }) {
           ) : (
             <>
               {/* Patient Metadata Header Card */}
-              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase block">Patient Name</span>
-                  <span className="text-base font-black text-slate-900">{patient?.name || 'Bhaben Baruah'}</span>
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase block">Patient Name</span>
+                  <span className="text-sm sm:text-base font-black text-slate-900">{patient?.name || 'Bhaben Baruah'}</span>
                   <span className="text-xs text-slate-500 block">Age: {patient?.age || 74} | ABHA: {patient?.abha_id || 'NER-ASM-9821-4412'}</span>
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase block">Assessing Assessment</span>
-                  <span className="text-base font-black text-indigo-900">PatternTrace v2.4 (3x3 Matrix)</span>
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase block">Assessing Assessment</span>
+                  <span className="text-sm sm:text-base font-black text-indigo-900">PatternTrace v2.4 (3x3 Matrix)</span>
                   <span className="text-xs text-slate-500 block">Protocol: Asymmetric Adaptive Staircase</span>
                 </div>
                 <div>
-                  <span className="text-xs font-bold text-slate-500 uppercase block">Clinical Date</span>
-                  <span className="text-base font-black text-slate-900">{new Date().toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase block">Clinical Date</span>
+                  <span className="text-sm sm:text-base font-black text-slate-900">{new Date().toLocaleDateString(undefined, { dateStyle: 'long' })}</span>
                   <span className="text-xs text-emerald-700 font-semibold block">DPDP Consent: Verified &amp; Signed</span>
                 </div>
               </div>
 
               {/* Working Memory Index & Clinical Interpretation */}
-              <div className="p-6 rounded-2xl bg-indigo-50/70 border-2 border-indigo-200 flex flex-wrap items-center justify-between gap-6">
+              <div className="p-4 sm:p-6 rounded-2xl bg-indigo-50/70 border-2 border-indigo-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
                 <div>
-                  <div className="flex items-center gap-2.5 mb-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="text-xs font-black uppercase tracking-wider text-indigo-900">
                       Composite Working Memory Score:
                     </span>
-                    <span className="px-3 py-0.5 rounded-full bg-indigo-200 text-indigo-900 text-xs font-extrabold">
+                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-200 text-indigo-900 text-[11px] sm:text-xs font-extrabold">
                       {analytics.clinicalStatus}
                     </span>
                   </div>
-                  <div className="text-4xl font-black text-indigo-950">
-                    {analytics.compositeScore} <span className="text-lg text-indigo-600 font-bold">/ 100</span>
+                  <div className="text-3xl sm:text-4xl font-black text-indigo-950">
+                    {analytics.compositeScore} <span className="text-base sm:text-lg text-indigo-600 font-bold">/ 100</span>
                   </div>
-                  <p className="text-xs text-indigo-900 font-semibold mt-2 max-w-xl">
+                  <p className="text-xs text-indigo-900 font-semibold mt-1.5 sm:mt-2 max-w-xl">
                     {analytics.clinicalNotes}
                   </p>
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-indigo-100 shadow-sm text-center min-w-[140px]">
+                <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-indigo-100 shadow-sm text-center w-full sm:w-auto min-w-[140px]">
                   <span className="text-xs font-bold text-slate-500 block">Peak Working Memory Span</span>
-                  <span className="text-2xl font-black text-indigo-900 block mt-1">Level {analytics.maxLevelAchieved}</span>
+                  <span className="text-xl sm:text-2xl font-black text-indigo-900 block mt-1">Level {analytics.maxLevelAchieved}</span>
                   <span className="text-[11px] text-slate-500 font-medium">({analytics.maxLevelAchieved + 1} node sequences)</span>
                 </div>
               </div>
 
               {/* 4 Quantitative Biomarker Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-xs font-bold text-slate-500 block">Sequence Accuracy</span>
-                  <span className="text-2xl font-black text-slate-900 block mt-1">{analytics.sequenceMatchPct}%</span>
-                  <span className="text-[11px] text-slate-500">Exact node order</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 block">Sequence Accuracy</span>
+                  <span className="text-xl sm:text-2xl font-black text-slate-900 block mt-1">{analytics.sequenceMatchPct}%</span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500">Exact node order</span>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-xs font-bold text-slate-500 block">Spatial Memory</span>
-                  <span className="text-2xl font-black text-slate-900 block mt-1">{analytics.spatialMatchPct}%</span>
-                  <span className="text-[11px] text-slate-500">Correct nodes visited</span>
+                <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 block">Spatial Memory</span>
+                  <span className="text-xl sm:text-2xl font-black text-slate-900 block mt-1">{analytics.spatialMatchPct}%</span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500">Correct nodes visited</span>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-xs font-bold text-slate-500 block">Initiation Latency</span>
-                  <span className="text-2xl font-black text-slate-900 block mt-1">{analytics.meanLatency} ms</span>
-                  <span className="text-[11px] text-slate-500">Perceptual processing time</span>
+                <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 block">Initiation Latency</span>
+                  <span className="text-xl sm:text-2xl font-black text-slate-900 block mt-1">{analytics.meanLatency} ms</span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500">Perceptual time</span>
                 </div>
 
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="text-xs font-bold text-slate-500 block">Perseveration Rate</span>
-                  <span className={`text-2xl font-black block mt-1 ${analytics.perseverationCount > 0 ? 'text-amber-800' : 'text-emerald-700'}`}>
+                <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="text-[11px] sm:text-xs font-bold text-slate-500 block">Perseveration Rate</span>
+                  <span className={`text-xl sm:text-2xl font-black block mt-1 ${analytics.perseverationCount > 0 ? 'text-amber-800' : 'text-emerald-700'}`}>
                     {analytics.perseverationRatePct}%
                   </span>
-                  <span className="text-[11px] text-slate-500">{analytics.perseverationCount} detected repetitions</span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500">{analytics.perseverationCount} repetitions</span>
                 </div>
               </div>
 

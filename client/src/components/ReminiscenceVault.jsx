@@ -101,48 +101,48 @@ export function ReminiscenceVault({ dialect = 'Assamese' }) {
   );
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 bg-white rounded-3xl border-4 border-zinc-900 shadow-xl">
+    <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 bg-white rounded-2xl sm:rounded-3xl border-3 sm:border-4 border-zinc-900 shadow-xl">
       {/* Vault Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b-3 border-zinc-200 pb-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b-2 sm:border-b-3 border-zinc-200 pb-4 mb-4 sm:mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-block px-3 py-1 rounded-full bg-rose-100 text-rose-900 font-bold text-sm">
+            <span className="inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-rose-100 text-rose-900 font-bold text-xs sm:text-sm">
               Phase 3: ChromaDB Memory Vector Store
             </span>
           </div>
-          <h2 className="text-3xl font-black text-zinc-900 mt-1 flex items-center gap-3">
-            <Heart className="w-8 h-8 text-rose-600 fill-rose-600" />
+          <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 mt-1 flex items-center gap-2.5 sm:gap-3">
+            <Heart className="w-6 h-6 sm:w-8 sm:h-8 text-rose-600 fill-rose-600 shrink-0" />
             <span>{dialect === 'Assamese' ? 'সোঁৱৰণি ভঁৰাল (Reminiscence Vault)' : 'Reminiscence Memory Vault'}</span>
           </h2>
         </div>
 
         {/* Semantic Tag Search */}
         <div className="relative w-full sm:w-72">
-          <Search className="w-5 h-5 absolute left-3 top-3.5 text-zinc-400" />
+          <Search className="w-4 h-4 sm:w-5 sm:h-5 absolute left-3 top-3 sm:top-3.5 text-zinc-400" />
           <input
             type="text"
             placeholder={dialect === 'Assamese' ? 'সম্পৰ্ক বা নাম বিচৰক...' : 'Search kin or memories...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border-2 border-zinc-400 text-base font-medium focus:border-rose-600 min-h-[48px]"
+            className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 rounded-xl border-2 border-zinc-400 text-sm sm:text-base font-medium focus:border-rose-600 min-h-[44px] sm:min-h-[48px]"
           />
         </div>
       </div>
 
       {/* Guide Banner */}
-      <div className="p-4 rounded-2xl bg-amber-50 border-3 border-amber-700 mb-8 flex items-center justify-between shadow-sm">
+      <div className="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50 border-2 sm:border-3 border-amber-700 mb-6 sm:mb-8 flex items-center justify-between shadow-sm">
         <div>
-          <span className="text-xl font-black text-amber-950 block">
+          <span className="text-base sm:text-xl font-black text-amber-950 block">
             {dialect === 'Assamese' ? 'এওঁ কোন হয়? চিনি পাইছে নে?' : 'Who is this? Tap any photo to hear their voice & story:'}
           </span>
-          <span className="text-sm font-semibold text-amber-800">
+          <span className="text-xs sm:text-sm font-semibold text-amber-800 block mt-0.5">
             Tapping cards activates local regional audio kinship prompts to anchor autobiographical memory.
           </span>
         </div>
       </div>
 
       {/* Photo Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {filteredMemories.map((photo) => {
           const isRevealed = revealedIds.has(photo.id);
           const isSelected = activePhoto?.id === photo.id;
@@ -151,14 +151,14 @@ export function ReminiscenceVault({ dialect = 'Assamese' }) {
             <button
               key={photo.id}
               onClick={() => handleCardTap(photo)}
-              className={`rounded-3xl p-4 flex flex-col items-center border-4 text-center transition-all duration-200 cursor-pointer min-h-[280px] justify-between
+              className={`rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 flex flex-col items-center border-3 sm:border-4 text-center transition-all duration-200 cursor-pointer min-h-[240px] sm:min-h-[280px] justify-between
                 ${isSelected 
-                  ? 'border-rose-600 bg-rose-50 shadow-[0_6px_0_#E11D48] scale-102' 
-                  : 'border-zinc-900 bg-white hover:border-rose-600 hover:bg-zinc-50 shadow-[0_6px_0_#18181B] active:translate-y-1'
+                  ? 'border-rose-600 bg-rose-50 shadow-[0_4px_0_#E11D48] sm:shadow-[0_6px_0_#E11D48]' 
+                  : 'border-zinc-900 bg-white hover:border-rose-600 hover:bg-zinc-50 shadow-[0_4px_0_#18181B] sm:shadow-[0_6px_0_#18181B] active:translate-y-1'
                 }
               `}
             >
-              <div className="w-full h-44 rounded-2xl overflow-hidden bg-zinc-100 border-2 border-zinc-300 flex items-center justify-center p-2 mb-3">
+              <div className="w-full h-36 sm:h-44 rounded-xl sm:rounded-2xl overflow-hidden bg-zinc-100 border-2 border-zinc-300 flex items-center justify-center p-2 mb-2 sm:mb-3">
                 <img
                   src={photo.image_url}
                   alt={photo.title}
@@ -169,16 +169,16 @@ export function ReminiscenceVault({ dialect = 'Assamese' }) {
               <div className="w-full">
                 {isRevealed ? (
                   <>
-                    <span className="text-xl font-black text-zinc-900 block">
+                    <span className="text-lg sm:text-xl font-black text-zinc-900 block">
                       {photo.title}
                     </span>
-                    <span className="inline-block mt-1 px-3 py-0.5 rounded-full bg-rose-100 text-rose-800 text-sm font-bold">
+                    <span className="inline-block mt-1 px-2.5 sm:px-3 py-0.5 rounded-full bg-rose-100 text-rose-800 text-xs sm:text-sm font-bold">
                       {photo.relation}
                     </span>
                   </>
                 ) : (
-                  <div className="py-2 flex items-center justify-center gap-2 text-zinc-600 font-bold text-lg bg-zinc-100 rounded-xl border border-dashed border-zinc-400">
-                    <HelpCircle className="w-5 h-5 text-amber-600" />
+                  <div className="py-2 flex items-center justify-center gap-2 text-zinc-600 font-bold text-base sm:text-lg bg-zinc-100 rounded-xl border border-dashed border-zinc-400">
+                    <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
                     <span>{dialect === 'Assamese' ? 'এওঁ কোন?' : 'Who is this?'}</span>
                   </div>
                 )}
@@ -190,19 +190,19 @@ export function ReminiscenceVault({ dialect = 'Assamese' }) {
 
       {/* Active Photo Kinship Audio Detail Modal/Banner */}
       {activePhoto && (
-        <div className="p-6 rounded-3xl bg-rose-50 border-3 border-rose-600 shadow-md flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="w-20 h-20 rounded-2xl border-2 border-rose-500 overflow-hidden bg-white shrink-0">
+        <div className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-rose-50 border-2 sm:border-3 border-rose-600 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex items-center gap-3.5 sm:gap-5">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl border-2 border-rose-500 overflow-hidden bg-white shrink-0">
               <img src={activePhoto.image_url} alt={activePhoto.title} className="w-full h-full object-contain" />
             </div>
             <div>
-              <span className="text-sm font-bold uppercase tracking-wider text-rose-700 block">
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-rose-700 block">
                 Kinship Tag: {activePhoto.relation}
               </span>
-              <h3 className="text-2xl font-black text-zinc-900">
+              <h3 className="text-xl sm:text-2xl font-black text-zinc-900">
                 {activePhoto.title}
               </h3>
-              <p className="text-lg font-semibold text-zinc-800 mt-1">
+              <p className="text-base sm:text-lg font-semibold text-zinc-800 mt-0.5">
                 {dialect === 'Assamese' ? activePhoto.assamese_description : activePhoto.description}
               </p>
             </div>
@@ -211,9 +211,9 @@ export function ReminiscenceVault({ dialect = 'Assamese' }) {
           <button
             onClick={() => handleCardTap(activePhoto)}
             disabled={isSpeaking}
-            className="min-h-[72px] px-6 rounded-2xl bg-rose-700 hover:bg-rose-800 text-white font-bold text-xl flex items-center gap-3 border-2 border-zinc-900 shadow-[0_4px_0_#18181B] shrink-0"
+            className="w-full sm:w-auto min-h-[56px] sm:min-h-[72px] px-5 sm:px-6 rounded-2xl bg-rose-700 hover:bg-rose-800 text-white font-bold text-base sm:text-xl flex items-center justify-center gap-2 sm:gap-3 border-2 border-zinc-900 shadow-[0_4px_0_#18181B] shrink-0"
           >
-            <Volume2 className={`w-7 h-7 ${isSpeaking ? 'animate-bounce text-amber-300' : ''}`} />
+            <Volume2 className={`w-6 h-6 sm:w-7 sm:h-7 ${isSpeaking ? 'animate-bounce text-amber-300' : ''}`} />
             <span>{isSpeaking ? 'কৈ থকা হৈছে...' : 'পুনৰ শুনক (Listen)'}</span>
           </button>
         </div>

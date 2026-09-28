@@ -78,113 +78,122 @@ export function Navbar({
         }`}
       >
         {/* Top Minimalist Bar */}
-        <div className="bg-slate-900 text-slate-200 px-4 py-2 border-b border-slate-800">
-          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-slate-900 text-slate-200 px-3 sm:px-4 py-1.5 sm:py-2 border-b border-slate-800">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 flex-wrap">
             {/* Left: Pure IP Region Indicator */}
             <div className="flex items-center gap-2">
               <DementiaLanguageToggle showRegionOnly />
             </div>
 
             {/* Right: DPDP Consent & Sync Status */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Show language toggle on top bar only when patient is logged in */}
               {patientSession && (
-                <DementiaLanguageToggle showToggleOnly />
+                <div className="hidden xs:block">
+                  <DementiaLanguageToggle showToggleOnly />
+                </div>
               )}
 
               <button
                 onClick={onOpenConsent}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
+                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold transition-all border cursor-pointer ${
                   consentSigned
                     ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700/60 hover:bg-emerald-900/90'
                     : 'bg-amber-950/80 text-amber-300 border-amber-700/60 hover:bg-amber-900/90 animate-pulse'
                 }`}
                 title="DPDP Consent Status"
               >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>{consentSigned ? t('nav.consentSigned') : t('nav.signConsent')}</span>
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate max-w-[120px] sm:max-w-none">
+                  {consentSigned ? t('nav.consentSigned') : t('nav.signConsent')}
+                </span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Main Navigation Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4">
           {/* Brand Identity - Navigates to Landing Page */}
           <div
             onClick={() => handleNavClick('landing')}
-            className="flex items-center gap-3 cursor-pointer group select-none"
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none min-w-0"
             title="SmritiSetu Home"
           >
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-900 text-white flex items-center justify-center font-bold text-xl shadow-sm group-hover:scale-105 transition-transform border border-emerald-600/40">
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-900 text-white flex items-center justify-center font-bold text-base sm:text-xl shadow-sm group-hover:scale-105 transition-transform border border-emerald-600/40 shrink-0">
               {regionInfo.nativeName ? regionInfo.nativeName.substring(0, 2) : 'ସ୍ମୃ'}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-bold tracking-tight text-slate-900 leading-tight font-serif">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-xl font-bold tracking-tight text-slate-900 leading-tight font-serif truncate">
                   {regionInfo.nativeName || 'ସ୍ମୃତିସେତୁ'}
                 </span>
-                <span className="text-base font-extrabold text-emerald-700 tracking-tight">
+                <span className="text-sm sm:text-base font-extrabold text-emerald-700 tracking-tight">
                   SmritiSetu
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-500 tracking-wide">
+              <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 tracking-wide truncate hidden xs:block">
                 {t('brandSubtitle')}
               </p>
             </div>
           </div>
 
           {/* Right Action Header Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* 1. If Patient is Logged In */}
             {patientSession ? (
-              <div className="flex items-center gap-2.5">
-                <div className="px-3.5 py-1.5 bg-emerald-50 text-emerald-950 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-emerald-600 fill-emerald-600" />
-                  <span>Patient: {patientDisplayName}</span>
+              <div className="flex items-center gap-1.5 sm:gap-2.5">
+                <div className="hidden sm:flex px-3 py-1.5 bg-emerald-50 text-emerald-950 border border-emerald-200 rounded-xl text-xs font-bold items-center gap-1.5 max-w-[160px] truncate">
+                  <Heart className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600 shrink-0" />
+                  <span className="truncate">Patient: {patientDisplayName}</span>
                 </div>
 
                 <button
                   onClick={signOutPatient}
-                  className="px-3.5 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  title="Exit Patient Session"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Exit</span>
+                  <LogOut className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden xs:inline">Exit</span>
                 </button>
               </div>
             ) : caretakerUser ? (
               /* 2. If Caretaker is Logged In */
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 sm:gap-2.5">
                 <button
                   onClick={() => handleNavClick('patient_portal')}
-                  className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-sm"
+                  className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  title="Launch Patient Portal"
                 >
-                  <Heart className="w-3.5 h-3.5 fill-emerald-200 text-emerald-200" />
-                  <span>Launch Patient View</span>
+                  <Heart className="w-3.5 h-3.5 fill-emerald-200 text-emerald-200 shrink-0" />
+                  <span className="hidden sm:inline">Launch Patient View</span>
+                  <span className="sm:hidden">Patient View</span>
                 </button>
 
-                <div className="px-3.5 py-1.5 bg-indigo-50 text-indigo-950 border border-indigo-200 rounded-xl text-xs font-bold flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-indigo-600" />
-                  <span>{caretakerDisplayName}</span>
+                <div className="hidden md:flex px-3 py-1.5 bg-indigo-50 text-indigo-950 border border-indigo-200 rounded-xl text-xs font-bold items-center gap-1.5 max-w-[150px] truncate">
+                  <Shield className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span className="truncate">{caretakerDisplayName}</span>
                 </div>
 
                 <button
                   onClick={signOutCaretaker}
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                  className="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  title="Sign Out"
                 >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Sign Out</span>
+                  <LogOut className="w-3.5 h-3.5 shrink-0" />
+                  <span className="hidden xs:inline">Sign Out</span>
                 </button>
               </div>
             ) : (
               /* 3. If Guest / New Visitor: Prominent Login / Access Portals Button */
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 sm:gap-2.5">
                 <button
                   onClick={() => onOpenAuthModal && onOpenAuthModal('caretaker')}
-                  className="px-4 py-2.5 bg-slate-900 hover:bg-indigo-950 text-white font-bold text-xs rounded-xl shadow-md border border-slate-800 transition flex items-center gap-2 cursor-pointer"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2.5 bg-slate-900 hover:bg-indigo-950 text-white font-bold text-xs rounded-xl shadow-md border border-slate-800 transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <LogIn className="w-4 h-4 text-indigo-300" />
-                  <span>Login / Access Portals</span>
+                  <LogIn className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
+                  <span className="hidden sm:inline">Login / Access Portals</span>
+                  <span className="sm:hidden">Portals</span>
                 </button>
               </div>
             )}
@@ -192,11 +201,11 @@ export function Navbar({
             {/* Menu Drawer Toggle */}
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors ml-1 cursor-pointer"
+              className="p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
               title="Open Navigation Menu"
               aria-label="Open Navigation Menu"
             >
-              <Menu className="w-4 h-4" />
+              <Menu className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </button>
           </div>
         </div>
@@ -204,7 +213,7 @@ export function Navbar({
 
       {/* ── FLOATING HAMBURGER BUTTON (When scrolled) ── */}
       <div
-        className={`fixed top-4 right-4 z-50 transition-all duration-300 ${
+        className={`fixed top-3 right-3 sm:top-4 sm:right-4 z-50 transition-all duration-300 ${
           isScrolled
             ? 'opacity-100 scale-100 pointer-events-auto'
             : 'opacity-0 scale-75 pointer-events-none'
@@ -212,10 +221,10 @@ export function Navbar({
       >
         <button
           onClick={() => setIsDrawerOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-900/95 hover:bg-slate-900 text-white rounded-2xl shadow-xl border border-slate-700/80 backdrop-blur-md transition-transform hover:scale-105 active:scale-95 group cursor-pointer"
+          className="flex items-center gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-900/95 hover:bg-slate-900 text-white rounded-2xl shadow-xl border border-slate-700/80 backdrop-blur-md transition-transform hover:scale-105 active:scale-95 group cursor-pointer"
           aria-label="Menu"
         >
-          <Menu className="w-5 h-5 text-emerald-400 group-hover:rotate-90 transition-transform duration-300" />
+          <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 group-hover:rotate-90 transition-transform duration-300" />
           <span className="text-xs font-bold tracking-wide">{t('nav.menu')}</span>
         </button>
       </div>
@@ -230,7 +239,7 @@ export function Navbar({
           />
 
           {/* Drawer Panel */}
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
             <div className="w-screen max-w-md bg-white shadow-2xl border-l border-slate-200 flex flex-col justify-between overflow-y-auto">
               {/* Drawer Header */}
               <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">

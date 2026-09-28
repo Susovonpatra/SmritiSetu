@@ -22,38 +22,38 @@ export function WelcomeLanding({ onOpenAuthModal }) {
   const { regionInfo } = useLocale();
 
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-12 py-4">
+    <div className="w-full max-w-6xl mx-auto space-y-8 sm:space-y-12 py-2 sm:py-4">
       {/* ── HERO BANNER ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white p-8 sm:p-12 border border-slate-800 shadow-2xl">
-        <div className="relative z-10 max-w-3xl space-y-5">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-300 text-xs font-bold border border-emerald-500/20 backdrop-blur-md">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Digital Cognitive Health &amp; Dementia Care Engine</span>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white p-5 sm:p-10 md:p-12 border border-slate-800 shadow-2xl">
+        <div className="relative z-10 max-w-3xl space-y-4 sm:space-y-5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-emerald-500/10 text-emerald-300 text-xs font-bold border border-emerald-500/20 backdrop-blur-md">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <span className="truncate">Digital Cognitive Health &amp; Dementia Care Engine</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight text-white font-serif">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-white font-serif">
             Welcome to <span className="text-emerald-400">{regionInfo.nativeName || 'ସ୍ମୃତିସେତୁ'}</span> SmritiSetu
           </h1>
 
-          <p className="text-sm sm:text-base text-slate-300 font-medium leading-relaxed">
+          <p className="text-xs sm:text-base text-slate-300 font-medium leading-relaxed">
             SmritiSetu is an accessible, clinically informed digital health bridge designed for individuals living with Mild Cognitive Impairment (MCI) and dementia. We unite gentle visuospatial cognitive stimulation with longitudinal biomarker tracking for families, caregivers, and primary health workers across India.
           </p>
 
-          <div className="flex flex-wrap items-center gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4 pt-2">
             <button
               onClick={() => onOpenAuthModal('patient')}
-              className="px-6 py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm flex items-center gap-2.5 shadow-lg border border-emerald-600 active:translate-y-0.5 transition-all cursor-pointer"
+              className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-lg border border-emerald-600 active:translate-y-0.5 transition-all cursor-pointer"
             >
-              <Heart className="w-4 h-4 text-emerald-200 fill-emerald-200" />
+              <Heart className="w-4 h-4 text-emerald-200 fill-emerald-200 shrink-0" />
               <span>Enter Patient Companion</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 shrink-0" />
             </button>
 
             <button
               onClick={() => onOpenAuthModal('caretaker')}
-              className="px-6 py-3.5 rounded-2xl bg-slate-800/90 hover:bg-indigo-900 text-white font-bold text-sm flex items-center gap-2.5 border border-slate-700 hover:border-indigo-600 transition-all cursor-pointer"
+              className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-3.5 rounded-2xl bg-slate-800/90 hover:bg-indigo-900 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2.5 border border-slate-700 hover:border-indigo-600 transition-all cursor-pointer"
             >
-              <Shield className="w-4 h-4 text-indigo-300" />
+              <Shield className="w-4 h-4 text-indigo-300 shrink-0" />
               <span>Caretaker Portal &amp; Analytics</span>
             </button>
           </div>
@@ -65,13 +65,13 @@ export function WelcomeLanding({ onOpenAuthModal }) {
       </div>
 
       {/* ── TWO DEDICATED PORTAL ENTRY CARDS ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         {/* 1. PATIENT COMPANION PORTAL CARD */}
-        <div className="bg-white rounded-3xl p-7 sm:p-8 border-2 border-slate-200/80 shadow-md hover:border-emerald-600/60 transition-all flex flex-col justify-between space-y-6 group">
+        <div className="bg-white rounded-3xl p-5 sm:p-8 border-2 border-slate-200/80 shadow-md hover:border-emerald-600/60 transition-all flex flex-col justify-between space-y-6 group">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shadow-sm group-hover:scale-105 transition-transform">
-                <Heart className="w-7 h-7 fill-emerald-700" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shadow-sm group-hover:scale-105 transition-transform">
+                <Heart className="w-6 h-6 sm:w-7 sm:h-7 fill-emerald-700" />
               </div>
               <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold">
                 Patient Portal
@@ -79,7 +79,7 @@ export function WelcomeLanding({ onOpenAuthModal }) {
             </div>
 
             <div>
-              <h2 className="text-2xl font-black text-slate-900">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
                 Patient Companion Experience
               </h2>
               <p className="text-xs text-slate-500 mt-1">
@@ -106,14 +106,14 @@ export function WelcomeLanding({ onOpenAuthModal }) {
               </li>
               <li className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>88px touch targets with zero punitive buzzers or timers</span>
+                <span>Calming high-contrast targets with zero punitive timers</span>
               </li>
             </ul>
           </div>
 
           <button
             onClick={() => onOpenAuthModal('patient')}
-            className="w-full py-3.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow flex items-center justify-center gap-2 transition cursor-pointer"
+            className="w-full py-3 sm:py-3.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow flex items-center justify-center gap-2 transition cursor-pointer"
           >
             <span>Patient Sign In</span>
             <ArrowRight className="w-4 h-4" />
@@ -121,11 +121,11 @@ export function WelcomeLanding({ onOpenAuthModal }) {
         </div>
 
         {/* 2. CARETAKER & CLINICAL ANALYTICS CARD */}
-        <div className="bg-white rounded-3xl p-7 sm:p-8 border-2 border-slate-200/80 shadow-md hover:border-indigo-600/60 transition-all flex flex-col justify-between space-y-6 group">
+        <div className="bg-white rounded-3xl p-5 sm:p-8 border-2 border-slate-200/80 shadow-md hover:border-indigo-600/60 transition-all flex flex-col justify-between space-y-6 group">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100 shadow-sm group-hover:scale-105 transition-transform">
-                <Shield className="w-7 h-7" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center border border-indigo-100 shadow-sm group-hover:scale-105 transition-transform">
+                <Shield className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
               <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 text-xs font-bold">
                 Caretaker Portal
@@ -133,7 +133,7 @@ export function WelcomeLanding({ onOpenAuthModal }) {
             </div>
 
             <div>
-              <h2 className="text-2xl font-black text-slate-900">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
                 Caregiver Clinical &amp; Telemetry Hub
               </h2>
               <p className="text-xs text-slate-500 mt-1">
@@ -167,7 +167,7 @@ export function WelcomeLanding({ onOpenAuthModal }) {
 
           <button
             onClick={() => onOpenAuthModal('caretaker')}
-            className="w-full py-3.5 px-4 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow flex items-center justify-center gap-2 transition cursor-pointer"
+            className="w-full py-3 sm:py-3.5 px-4 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow flex items-center justify-center gap-2 transition cursor-pointer"
           >
             <span>Caretaker Login / Sign Up</span>
             <ArrowRight className="w-4 h-4" />

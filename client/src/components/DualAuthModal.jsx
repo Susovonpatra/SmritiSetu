@@ -111,64 +111,64 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 xs:p-4 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="bg-white text-slate-900 w-full max-w-lg rounded-3xl border-2 border-slate-200 shadow-2xl overflow-hidden relative"
+        className="bg-white text-slate-900 w-full max-w-lg rounded-2xl sm:rounded-3xl border-2 border-slate-200 shadow-2xl overflow-hidden relative max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition z-10 cursor-pointer"
+          className="absolute top-4 right-4 sm:top-5 sm:right-5 p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition z-10 cursor-pointer"
           aria-label="Close dialog"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header & Portal Switcher */}
-        <div className="bg-slate-900 text-white p-6 sm:p-8 pb-6 border-b border-slate-800">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center font-bold text-lg text-white shadow-sm border border-emerald-500/30">
+        <div className="bg-slate-900 text-white p-4 sm:p-8 pb-4 sm:pb-6 border-b border-slate-800 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 mb-2 sm:mb-3 pr-8">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center font-bold text-base sm:text-lg text-white shadow-sm border border-emerald-500/30 shrink-0">
               ସ୍ମୃ
             </div>
-            <div>
-              <h3 className="text-xl font-extrabold text-white">SmritiSetu Portals</h3>
-              <p className="text-xs text-slate-400">Select your portal to sign in or create an account</p>
+            <div className="min-w-0">
+              <h3 className="text-lg sm:text-xl font-extrabold text-white truncate">SmritiSetu Portals</h3>
+              <p className="text-[11px] sm:text-xs text-slate-400 truncate">Select your portal to sign in or create an account</p>
             </div>
           </div>
 
           {/* Segmented Tab Switcher */}
-          <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-800/90 rounded-2xl border border-slate-700 mt-4">
+          <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-800/90 rounded-2xl border border-slate-700 mt-3 sm:mt-4">
             <button
               type="button"
               onClick={() => handleTabSwitch('caretaker')}
-              className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              className={`py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${
                 activeTab === 'caretaker'
                   ? 'bg-indigo-700 text-white shadow border border-indigo-600'
                   : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
               }`}
             >
-              <Shield className="w-3.5 h-3.5" />
+              <Shield className="w-3.5 h-3.5 shrink-0" />
               <span>Caretaker Portal</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleTabSwitch('patient')}
-              className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              className={`py-2 sm:py-2.5 px-2.5 sm:px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer ${
                 activeTab === 'patient'
                   ? 'bg-emerald-700 text-white shadow border border-emerald-600'
                   : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
               }`}
             >
-              <Heart className="w-3.5 h-3.5" />
+              <Heart className="w-3.5 h-3.5 shrink-0" />
               <span>Patient Portal</span>
             </button>
           </div>
         </div>
 
         {/* Modal Content Body */}
-        <div className="p-6 sm:p-8 space-y-5">
+        <div className="p-4 sm:p-8 space-y-4 sm:space-y-5 overflow-y-auto">
           {/* Status Notifications */}
           {errorMsg && (
             <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-semibold flex items-center gap-2.5">

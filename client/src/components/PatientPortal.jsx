@@ -104,54 +104,55 @@ export function PatientPortal({ onExitToHome }) {
   // ── AUTHENTICATED PATIENT COMPANION PAGE ──
   if (patientSession) {
     return (
-      <div className="w-full max-w-5xl mx-auto space-y-8 font-sans pb-12">
+      <div className="w-full max-w-5xl mx-auto space-y-6 sm:space-y-8 font-sans pb-12">
         {/* Top Header Card: Real-Time Dynamic Greeting & Regional Language Switcher */}
-        <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl flex flex-wrap items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 flex items-center justify-center shrink-0">
-              <GreetingIcon className="w-7 h-7 text-emerald-400" />
+        <div className="bg-slate-900 text-white rounded-3xl p-5 sm:p-8 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-5 sm:gap-6">
+          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+              <GreetingIcon className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="inline-block px-3 py-0.5 bg-emerald-500/10 text-emerald-300 rounded-full text-xs font-semibold border border-emerald-500/20">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="inline-block px-2.5 py-0.5 bg-emerald-500/10 text-emerald-300 rounded-full text-[11px] sm:text-xs font-semibold border border-emerald-500/20">
                   Patient Companion Portal
                 </span>
-                <span className="text-xs text-slate-400 font-medium">
-                  • Linked Caretaker: <strong className="text-emerald-300">{patientSession.caretaker_name || patientSession.caretaker_email}</strong>
+                <span className="text-[11px] sm:text-xs text-slate-400 font-medium truncate">
+                  • Caretaker: <strong className="text-emerald-300">{patientSession.caretaker_name || patientSession.caretaker_email}</strong>
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white mt-1">
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-1 leading-tight">
                 {greetingData.text}
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
             {/* Regional Language Toggle for Patient */}
-            <div className="bg-slate-800 p-1.5 rounded-2xl border border-slate-700">
+            <div className="bg-slate-800 p-1 rounded-2xl border border-slate-700">
               <DementiaLanguageToggle showToggleOnly />
             </div>
 
             {/* Exit Portal Button */}
             <button
               onClick={handleSignOut}
-              className="px-4 py-2.5 bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-2 cursor-pointer"
+              className="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+              title="Exit Patient Companion"
             >
-              <LogOut className="w-4 h-4" />
-              <span>Exit Portal</span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Exit</span>
             </button>
           </div>
         </div>
 
         {/* ── 1. TODAY'S CARE SCHEDULE (Dementia-Friendly, Clear, Calming) ── */}
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-slate-200/90 shadow-md space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="bg-white rounded-3xl p-5 sm:p-8 border-2 border-slate-200/90 shadow-md space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold shrink-0">
                 <Calendar className="w-5 h-5" />
               </div>
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900">
+                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">
                   Today's Care Schedule
                 </h2>
                 <p className="text-xs text-slate-500">
@@ -165,14 +166,14 @@ export function PatientPortal({ onExitToHome }) {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-1">
             {/* Morning Hydration */}
             <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 block">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-800 block">
                   Morning • 8:00 AM
                 </span>
-                <h3 className="text-sm font-bold text-emerald-950">
+                <h3 className="text-sm font-bold text-emerald-950 truncate">
                   Morning Hydration &amp; Tea
                 </h3>
                 <p className="text-xs text-emerald-700">Warm water, fresh fruit &amp; medicine</p>
@@ -184,11 +185,11 @@ export function PatientPortal({ onExitToHome }) {
 
             {/* Prescribed Memory Game */}
             <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-800 block">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-indigo-800 block">
                   Midday • 11:30 AM
                 </span>
-                <h3 className="text-sm font-bold text-indigo-950">
+                <h3 className="text-sm font-bold text-indigo-950 truncate">
                   PatternTrace Memory Play
                 </h3>
                 <p className="text-xs text-indigo-700">Gentle visuospatial puzzle session</p>
@@ -200,11 +201,11 @@ export function PatientPortal({ onExitToHome }) {
 
             {/* Afternoon Stroll */}
             <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center justify-between gap-3">
-              <div className="space-y-0.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-800 block">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-800 block">
                   Afternoon • 4:30 PM
                 </span>
-                <h3 className="text-sm font-bold text-amber-950">
+                <h3 className="text-sm font-bold text-amber-950 truncate">
                   Gentle Courtyard Stroll
                 </h3>
                 <p className="text-xs text-amber-800">15 minutes fresh air &amp; family chat</p>
@@ -219,41 +220,44 @@ export function PatientPortal({ onExitToHome }) {
         {/* ── 2. PRESCRIBED COGNITIVE GAMES SECTION ── */}
         <div className="space-y-4">
           {/* Game Switcher Tabs */}
-          <div className="max-w-xl mx-auto flex items-center justify-center p-1.5 bg-slate-200/80 rounded-2xl border border-slate-300 shadow-inner">
+          <div className="max-w-2xl mx-auto grid grid-cols-3 gap-1.5 p-1.5 bg-slate-200/80 rounded-2xl border border-slate-300 shadow-inner">
             <button
               onClick={() => setActiveGameTab('pattern')}
-              className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer text-center ${
                 activeGameTab === 'pattern'
                   ? 'bg-indigo-900 text-white shadow border border-indigo-950'
                   : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
               }`}
             >
-              <Layers className={`w-4 h-4 ${activeGameTab === 'pattern' ? 'text-indigo-300' : 'text-indigo-700'}`} />
-              <span>1. {t('games.patternTitle') || 'PatternTrace Memory'}</span>
+              <Layers className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'pattern' ? 'text-indigo-300' : 'text-indigo-700'}`} />
+              <span className="hidden sm:inline">1. {t('games.patternTitle') || 'PatternTrace'}</span>
+              <span className="sm:hidden">1. Pattern</span>
             </button>
 
             <button
               onClick={() => setActiveGameTab('visual')}
-              className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer text-center ${
                 activeGameTab === 'visual'
                   ? 'bg-emerald-800 text-white shadow border border-emerald-900'
                   : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
               }`}
             >
-              <Brain className={`w-4 h-4 ${activeGameTab === 'visual' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-              <span>2. {t('games.visualTitle') || 'Picture Matching'}</span>
+              <Brain className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'visual' ? 'text-emerald-300' : 'text-emerald-700'}`} />
+              <span className="hidden sm:inline">2. {t('games.visualTitle') || 'Picture Match'}</span>
+              <span className="sm:hidden">2. Picture</span>
             </button>
 
             <button
               onClick={() => setActiveGameTab('routine')}
-              className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer text-center ${
                 activeGameTab === 'routine'
                   ? 'bg-emerald-800 text-white shadow border border-emerald-900'
                   : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
               }`}
             >
-              <Calendar className={`w-4 h-4 ${activeGameTab === 'routine' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-              <span>3. {t('games.routineTitle') || 'Daily Routine'}</span>
+              <Calendar className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'routine' ? 'text-emerald-300' : 'text-emerald-700'}`} />
+              <span className="hidden sm:inline">3. {t('games.routineTitle') || 'Daily Routine'}</span>
+              <span className="sm:hidden">3. Routine</span>
             </button>
           </div>
 

@@ -118,7 +118,7 @@ function SmritiSetuApp() {
       />
 
       {/* Main Page Body Router */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 min-w-0">
         {/* 1. Welcoming Public Landing Page (Default for new users / guest mode) */}
         {currentView === 'landing' && (
           <WelcomeLanding onOpenAuthModal={handleOpenAuthModal} />
@@ -154,18 +154,18 @@ function SmritiSetuApp() {
       </main>
 
       {/* Accessible Footer */}
-      <footer className="bg-zinc-900 text-zinc-400 py-6 px-4 border-t-4 border-zinc-950 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <footer className="bg-zinc-900 text-zinc-400 py-4 sm:py-6 px-3 sm:px-4 border-t-4 border-zinc-950 mt-auto">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-center sm:text-left">
           <div>
-            <p className="font-bold text-white text-base">
+            <p className="font-bold text-white text-sm sm:text-base">
               SmritiSetu | <span className="text-emerald-400 font-mono">ସ୍ମୃତିସେତୁ</span>
             </p>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5">
               Accessible Dementia Localization Engine | Odisha, Gujarat &amp; National Dialects
             </p>
           </div>
-          <div className="flex items-center gap-4 text-xs font-semibold">
-            <span>Server: FastAPI Unified (Port 8000)</span>
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 sm:gap-3 text-[10px] sm:text-xs font-semibold text-zinc-400">
+            <span>Server: FastAPI (8000)</span>
             <span>•</span>
             <span>Offline: Dexie.js</span>
             <span>•</span>

@@ -143,41 +143,41 @@ export function IVRSimulator({ dialect = 'Assamese' }) {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 sm:p-6 bg-white rounded-3xl border-4 border-zinc-900 shadow-xl">
+    <div className="w-full max-w-5xl mx-auto p-3.5 sm:p-6 bg-white rounded-3xl border-2 sm:border-4 border-zinc-900 shadow-xl">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b-3 border-zinc-200 pb-4 mb-6">
-        <div>
-          <span className="inline-block px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-sm mb-1">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b-2 sm:border-b-3 border-zinc-200 pb-3 sm:pb-4 mb-4 sm:mb-6">
+        <div className="min-w-0">
+          <span className="inline-block px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-xs sm:text-sm mb-1">
             Tier 3: Off-Grid 2G Feature-Phone Voice Gateway
           </span>
-          <h2 className="text-3xl font-black text-zinc-900 flex items-center gap-3">
-            <Radio className="w-8 h-8 text-amber-800" />
-            <span>Interactive Feature-Phone IVR Simulator</span>
+          <h2 className="text-xl sm:text-3xl font-black text-zinc-900 flex items-center gap-2.5 sm:gap-3">
+            <Radio className="w-6 h-6 sm:w-8 sm:h-8 text-amber-800 shrink-0" />
+            <span className="truncate">Feature-Phone IVR Simulator</span>
           </h2>
-          <p className="text-base font-semibold text-zinc-600 mt-1">
+          <p className="text-xs sm:text-base font-semibold text-zinc-600 mt-1">
             Zero-internet, automated dial-in telemetry for remote NER villages using DTMF keypress parsing.
           </p>
         </div>
 
         <button
           onClick={() => setShowTwiML(!showTwiML)}
-          className="min-h-[56px] px-5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-bold text-base flex items-center gap-2 border-2 border-zinc-900 shadow"
+          className="w-full sm:w-auto min-h-[44px] sm:min-h-[56px] px-4 sm:px-5 rounded-2xl bg-zinc-100 hover:bg-zinc-200 text-zinc-900 font-bold text-xs sm:text-base flex items-center justify-center gap-2 border-2 border-zinc-900 shadow cursor-pointer shrink-0"
         >
-          <Code className="w-5 h-5" />
-          <span>{showTwiML ? 'Hide TwiML' : 'View Carrier TwiML XML'}</span>
+          <Code className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span>{showTwiML ? 'Hide TwiML' : 'View TwiML XML'}</span>
         </button>
       </div>
 
       {/* Main Grid: Phone simulator + Info */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start">
         {/* Retro Feature Phone Mockup */}
-        <div className="w-full max-w-xs mx-auto bg-zinc-800 p-5 rounded-[40px] border-4 border-zinc-950 shadow-2xl flex flex-col items-center">
+        <div className="w-full max-w-[280px] xs:max-w-xs mx-auto bg-zinc-800 p-4 sm:p-5 rounded-[32px] sm:rounded-[40px] border-3 sm:border-4 border-zinc-950 shadow-2xl flex flex-col items-center">
           {/* Earpiece Speaker grill */}
-          <div className="w-16 h-1.5 bg-zinc-600 rounded-full mb-3"></div>
+          <div className="w-14 sm:w-16 h-1.5 bg-zinc-600 rounded-full mb-3"></div>
 
           {/* Phone Monochrome / Matrix LCD Screen */}
-          <div className="w-full min-h-[140px] bg-[#9CA3AF] border-3 border-zinc-700 rounded-2xl p-3 flex flex-col justify-between font-mono text-zinc-900 shadow-inner">
-            <div className="flex justify-between items-center text-xs font-bold border-b border-zinc-700 pb-1">
+          <div className="w-full min-h-[120px] sm:min-h-[140px] bg-[#9CA3AF] border-2 sm:border-3 border-zinc-700 rounded-2xl p-3 flex flex-col justify-between font-mono text-zinc-900 shadow-inner">
+            <div className="flex justify-between items-center text-[10px] sm:text-xs font-bold border-b border-zinc-700 pb-1">
               <span>BSNL 2G NER</span>
               <span>{callActive ? '00:14' : 'READY'}</span>
             </div>
@@ -185,69 +185,69 @@ export function IVRSimulator({ dialect = 'Assamese' }) {
             <div className="my-2 text-center">
               {callActive ? (
                 <div>
-                  <span className="text-xs font-bold text-zinc-800 block">
+                  <span className="text-[10px] sm:text-xs font-bold text-zinc-800 block">
                     CALL IN PROGRESS...
                   </span>
-                  <span className="text-sm font-black text-zinc-950 block mt-1">
+                  <span className="text-xs sm:text-sm font-black text-zinc-950 block mt-1">
                     Step {currentStep + 1} of 3
                   </span>
-                  <span className="text-xs font-semibold text-zinc-800 block mt-1">
+                  <span className="text-[10px] sm:text-xs font-semibold text-zinc-800 block mt-1">
                     {isSpeaking ? 'Listening to voice prompt...' : 'Press 1 or 2 on keypad'}
                   </span>
                 </div>
               ) : (
                 <div>
-                  <span className="text-sm font-black text-zinc-950 block">
+                  <span className="text-xs sm:text-sm font-black text-zinc-950 block">
                     SmritiSetu IVR
                   </span>
-                  <span className="text-xs font-bold text-zinc-700 block mt-1">
+                  <span className="text-[10px] sm:text-xs font-bold text-zinc-700 block mt-1">
                     +91 8000 SMRITI
                   </span>
-                  <span className="text-xs text-zinc-600 block mt-1">
+                  <span className="text-[10px] sm:text-xs text-zinc-600 block mt-0.5">
                     Press Call Button Below
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="text-[10px] text-right font-bold text-zinc-700">
+            <div className="text-[9px] sm:text-[10px] text-right font-bold text-zinc-700">
               DTMF HUB ACTIVE
             </div>
           </div>
 
           {/* Action Buttons: Green Call / Red End */}
-          <div className="grid grid-cols-2 gap-4 w-full my-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 w-full my-3 sm:my-4">
             <button
               onClick={startCall}
               disabled={callActive}
-              className={`min-h-[56px] rounded-xl flex items-center justify-center border-2 border-zinc-900 shadow font-bold text-white
+              className={`min-h-[46px] sm:min-h-[56px] rounded-xl flex items-center justify-center border-2 border-zinc-900 shadow font-bold text-white cursor-pointer text-xs sm:text-sm
                 ${callActive ? 'bg-zinc-600 opacity-50' : 'bg-emerald-600 hover:bg-emerald-700 active:scale-95'}
               `}
               title="Start IVR Check-in"
             >
-              <PhoneCall className="w-6 h-6 mr-1" />
+              <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5 mr-1" />
               <span>Call</span>
             </button>
             <button
               onClick={endCall}
               disabled={!callActive}
-              className={`min-h-[56px] rounded-xl flex items-center justify-center border-2 border-zinc-900 shadow font-bold text-white
+              className={`min-h-[46px] sm:min-h-[56px] rounded-xl flex items-center justify-center border-2 border-zinc-900 shadow font-bold text-white cursor-pointer text-xs sm:text-sm
                 ${!callActive ? 'bg-zinc-600 opacity-50' : 'bg-rose-600 hover:bg-rose-700 active:scale-95'}
               `}
               title="Hang Up"
             >
-              <PhoneOff className="w-6 h-6 mr-1" />
+              <PhoneOff className="w-4 h-4 sm:w-5 sm:h-5 mr-1" />
               <span>End</span>
             </button>
           </div>
 
           {/* DTMF Keypad Grid */}
-          <div className="grid grid-cols-3 gap-2.5 w-full">
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5 w-full">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((key) => (
               <button
                 key={key}
                 onClick={() => handleDtmfPress(key)}
-                className="min-h-[50px] rounded-xl bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-900 text-white font-black text-xl border border-zinc-600 shadow flex flex-col items-center justify-center transition-all select-none"
+                className="min-h-[44px] sm:min-h-[50px] rounded-xl bg-zinc-700 hover:bg-zinc-600 active:bg-zinc-900 text-white font-black text-lg sm:text-xl border border-zinc-600 shadow flex flex-col items-center justify-center transition-all select-none cursor-pointer"
               >
                 <span>{key}</span>
               </button>
