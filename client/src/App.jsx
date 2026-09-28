@@ -2,32 +2,43 @@ import React, { useState, useEffect } from 'react';
 import { LocaleProvider, useLocale } from './context/LocaleContext';
 import { DualAuthProvider, useDualAuth } from './context/DualAuthContext';
 import { Navbar } from './components/Navbar';
-import { PatternTraceGame } from './components/PatternTraceGame';
-import { VisualSemanticGame } from './components/VisualSemanticGame';
-import { DailyRoutineGame } from './components/DailyRoutineGame';
-import { ReminiscenceVault } from './components/ReminiscenceVault';
-import { CaregiverDash } from './components/CaregiverDash';
+import { WelcomeLanding } from './components/WelcomeLanding';
+import { DualAuthModal } from './components/DualAuthModal';
+import { PatientPortal } from './components/PatientPortal';
+import { CaretakerPortal } from './components/CaretakerPortal';
 import { AshaMode } from './components/AshaMode';
 import { IVRSimulator } from './components/IVRSimulator';
 import { PitchArchitectureView } from './components/PitchArchitectureView';
 import { ConsentModal } from './components/ConsentModal';
 import { EsanjeevaniModal } from './components/EsanjeevaniModal';
 import { MotionAlertBanner } from './components/MotionAlertBanner';
-import { CaretakerPortal } from './components/CaretakerPortal';
-import { PatientPortal } from './components/PatientPortal';
 
 import { useSyncEngine } from './hooks/useSyncEngine';
 import { useMotionDetector } from './hooks/useMotionDetector';
 import { initDefaultData, db } from './db/db';
-import { AlertCircle, Brain, Calendar, Info, Layers, Sparkles, Home, ArrowLeft } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 function SmritiSetuApp() {
-  const [currentView, setCurrentView] = useState('patient_games');
-  const [activeGame, setActiveGame] = useState('pattern'); // 'pattern' | 'visual' | 'routine'
+  const { caretakerUser, patientSession } = useDualAuth();
+
+  // Route state: default to 'landing' for guest/new users, or user's active session
+  const [currentView, setCurrentView] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const patient = localStorage.getItem('smriti_patient_session');
+      if (patient) return 'patient_portal';
+    }
+    return 'landing';
+  });
+
+  // Dual Auth Modal State
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState('caretaker');
+
   const [isConsentOpen, setIsConsentOpen] = useState(false);
   const [isTeleconsultOpen, setIsTeleconsultOpen] = useState(false);
   const [selectedTriageForTeleconsult, setSelectedTriageForTeleconsult] = useState(null);
   const [consentSigned, setConsentSigned] = useState(true);
+
   const [patient, setPatient] = useState({
     id: 1,
     name: 'Bhaben Baruah',
@@ -52,6 +63,18 @@ function SmritiSetuApp() {
       if (c) setConsentSigned(true);
     });
   }, []);
+
+  // Update view automatically if caretaker or patient session state changes
+  useEffect(() => {
+    if (patientSession && currentView === 'landing') {
+      setCurrentView('patient_portal');
+    }
+  }, [patientSession]);
+
+  const handleOpenAuthModal = (tab = 'caretaker') => {
+    setAuthModalTab(tab);
+    setIsAuthModalOpen(true);
+  };
 
   const handleOpenTeleconsult = (triageRecord = null) => {
     setSelectedTriageForTeleconsult(triageRecord);
@@ -81,155 +104,52 @@ function SmritiSetuApp() {
         </div>
       )}
 
-      {/* Navigation Header with Location-Aware Accessible Toggle */}
+      {/* Clean, Non-Cluttered Navigation Header */}
       <Navbar
         currentView={currentView}
         onSelectView={setCurrentView}
         dialect={dialect}
-        onSelectDialect={() => {}}
         isOnline={isOnline}
         isSyncing={isSyncing}
         onTriggerSync={syncPendingRecords}
         onOpenConsent={() => setIsConsentOpen(true)}
         consentSigned={consentSigned}
+        onOpenAuthModal={handleOpenAuthModal}
       />
 
-      {/* Main Content Area */}
+      {/* Main Page Body Router */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
-        {/* Universal Back to Home Button on Non-Home Pages */}
-        {currentView !== 'patient_games' && (
-          <div className="mb-6 flex items-center justify-between">
-            <button
-              onClick={() => setCurrentView('patient_games')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-800 font-bold text-xs sm:text-sm rounded-xl border-2 border-slate-300 shadow-sm transition-all hover:-translate-x-0.5 active:translate-x-0 group cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4 text-emerald-700 group-hover:-translate-x-1 transition-transform" />
-              <Home className="w-4 h-4 text-slate-700" />
-              <span>{t('nav.backToHome') || 'Back to Home Page'}</span>
-            </button>
-
-            <span className="text-xs font-semibold text-slate-400 capitalize hidden sm:inline-block">
-              Current Module: <strong className="text-slate-700">{currentView.replace('_', ' ')}</strong>
-            </span>
-          </div>
+        {/* 1. Welcoming Public Landing Page (Default for new users / guest mode) */}
+        {currentView === 'landing' && (
+          <WelcomeLanding onOpenAuthModal={handleOpenAuthModal} />
         )}
 
-        {/* Tier 1: Patient Cognitive Games (Home View) */}
-        {currentView === 'patient_games' && (
-          <div className="space-y-6">
-            {/* Game Sub-Tab Switcher */}
-            <div className="max-w-3xl mx-auto flex items-center justify-center p-1.5 bg-slate-200/80 rounded-2xl border border-slate-300/80 shadow-inner">
-              <button
-                onClick={() => setActiveGame('pattern')}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
-                  activeGame === 'pattern'
-                    ? 'bg-indigo-900 text-white shadow-sm border border-indigo-950'
-                    : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
-                }`}
-              >
-                <Layers className={`w-4 h-4 ${activeGame === 'pattern' ? 'text-indigo-300' : 'text-indigo-700'}`} />
-                <span>1. {t('games.patternTitle') || 'PatternTrace Memory'}</span>
-              </button>
-
-              <button
-                onClick={() => setActiveGame('visual')}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
-                  activeGame === 'visual'
-                    ? 'bg-emerald-800 text-white shadow-sm border border-emerald-700'
-                    : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
-                }`}
-              >
-                <Brain className={`w-4 h-4 ${activeGame === 'visual' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-                <span>2. {t('games.visualTitle')}</span>
-              </button>
-
-              <button
-                onClick={() => setActiveGame('routine')}
-                className={`flex-1 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
-                  activeGame === 'routine'
-                    ? 'bg-emerald-800 text-white shadow-sm border border-emerald-700'
-                    : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
-                }`}
-              >
-                <Calendar className={`w-4 h-4 ${activeGame === 'routine' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-                <span>3. {t('games.routineTitle')}</span>
-              </button>
-            </div>
-
-            {/* Active Game Component */}
-            {activeGame === 'pattern' && (
-              <PatternTraceGame
-                patientId={patient?.id || 1}
-                onComplete={() => setActiveGame('visual')}
-              />
-            )}
-
-            {activeGame === 'visual' && (
-              <VisualSemanticGame
-                dialect={dialect}
-                onGameComplete={() => setActiveGame('routine')}
-              />
-            )}
-
-            {activeGame === 'routine' && (
-              <DailyRoutineGame
-                dialect={dialect}
-                onGameComplete={() => setActiveGame('pattern')}
-              />
-            )}
-          </div>
+        {/* 2. Dedicated Patient Companion Portal */}
+        {currentView === 'patient_portal' && (
+          <PatientPortal onExitToHome={() => setCurrentView('landing')} />
         )}
 
-        {/* Reminiscence Vault */}
-        {currentView === 'vault' && (
-          <ReminiscenceVault dialect={dialect} />
-        )}
-
-        {/* Caregiver Analytics Dashboard */}
-        {currentView === 'caregiver' && (
-          <CaregiverDash
-            patient={patient}
-            onOpenTeleconsult={handleOpenTeleconsult}
-          />
-        )}
-
-        {/* ASHA Companion Door-to-Door Triage */}
-        {currentView === 'asha' && (
-          <AshaMode
-            onOpenTeleconsult={handleOpenTeleconsult}
-          />
-        )}
-
-        {/* 2G Feature Phone IVR Simulator */}
-        {currentView === 'ivr' && (
-          <IVRSimulator
-            patient={patient}
-            dialect={dialect}
-          />
-        )}
-
-        {/* Caretaker Portal View */}
+        {/* 3. Dedicated Caretaker Portal & Clinical Hub */}
         {currentView === 'caretaker_portal' && (
           <CaretakerPortal
             onNavigateToPatientPortal={() => setCurrentView('patient_portal')}
-            onOpenAnalytics={() => setCurrentView('caregiver')}
+            onOpenTeleconsult={handleOpenTeleconsult}
           />
         )}
 
-        {/* Patient Portal View */}
-        {currentView === 'patient_portal' && (
-          <PatientPortal
-            onLaunchGame={() => setCurrentView('patient_games')}
-            onLaunchVault={() => setCurrentView('vault')}
-            onNavigateToCaretaker={() => setCurrentView('caretaker_portal')}
-          />
+        {/* 4. ASHA Companion Door-to-Door Triage */}
+        {currentView === 'asha' && (
+          <AshaMode onOpenTeleconsult={handleOpenTeleconsult} />
         )}
 
-        {/* Pitch & System Architecture View */}
+        {/* 5. 2G Feature Phone IVR Simulator */}
+        {currentView === 'ivr' && (
+          <IVRSimulator patient={patient} dialect={dialect} />
+        )}
+
+        {/* 6. Pitch & System Architecture View */}
         {currentView === 'pitch' && (
-          <PitchArchitectureView
-            onSelectTier={(view) => setCurrentView(view)}
-          />
+          <PitchArchitectureView onSelectTier={(view) => setCurrentView(view)} />
         )}
       </main>
 
@@ -255,6 +175,14 @@ function SmritiSetuApp() {
           </div>
         </div>
       </footer>
+
+      {/* Dual Portal Login / Sign-Up Modal */}
+      <DualAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialTab={authModalTab}
+        onSuccess={(targetView) => setCurrentView(targetView)}
+      />
 
       {/* DPDP Consent Modal */}
       <ConsentModal

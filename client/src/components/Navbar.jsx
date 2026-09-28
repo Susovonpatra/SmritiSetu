@@ -4,7 +4,6 @@ import {
   X,
   Shield,
   Key,
-  Brain,
   Heart,
   Users,
   ShieldCheck,
@@ -13,8 +12,9 @@ import {
   RefreshCw,
   LogOut,
   ChevronRight,
-  Home,
-  ArrowLeft
+  User,
+  LogIn,
+  ArrowRight
 } from 'lucide-react';
 import { DementiaLanguageToggle } from './DementiaLanguageToggle';
 import { useLocale } from '../context/LocaleContext';
@@ -24,20 +24,25 @@ export function Navbar({
   currentView,
   onSelectView,
   dialect,
-  onSelectDialect,
   isOnline,
   isSyncing,
   onTriggerSync,
   onOpenConsent,
-  consentSigned
+  consentSigned,
+  onOpenAuthModal
 }) {
   const { t, regionInfo } = useLocale();
-  const { caretakerUser, patientSession, signOutCaretaker, signOutPatient } = useDualAuth();
+  const {
+    caretakerUser,
+    patientSession,
+    signOutCaretaker,
+    signOutPatient
+  } = useDualAuth();
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Scroll detection to hide navbar and show floating hamburger
+  // Scroll detection
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 45) {
@@ -56,8 +61,11 @@ export function Navbar({
     setIsDrawerOpen(false);
   };
 
-  const caretakerDisplayName = caretakerUser?.user_metadata?.full_name || caretakerUser?.email?.split('@')[0] || t('nav.caretakerPortal');
-  const patientDisplayName = patientSession?.patient_name || t('nav.patientPortal');
+  const caretakerDisplayName =
+    caretakerUser?.user_metadata?.full_name ||
+    caretakerUser?.email?.split('@')[0] ||
+    'Caretaker';
+  const patientDisplayName = patientSession?.patient_name || 'Patient';
 
   return (
     <>
@@ -69,17 +77,20 @@ export function Navbar({
             : 'translate-y-0 opacity-100 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm'
         }`}
       >
-        {/* Top Minimalist Bar: Pure IP Region Pill & Segmented Language Toggle */}
+        {/* Top Minimalist Bar */}
         <div className="bg-slate-900 text-slate-200 px-4 py-2 border-b border-slate-800">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-            {/* Left: Pure IP Region Selector */}
+            {/* Left: Pure IP Region Indicator */}
             <div className="flex items-center gap-2">
               <DementiaLanguageToggle showRegionOnly />
             </div>
 
-            {/* Right: Sleek Segmented Switch & Consent Status */}
+            {/* Right: DPDP Consent & Sync Status */}
             <div className="flex items-center gap-3">
-              <DementiaLanguageToggle showToggleOnly />
+              {/* Show language toggle on top bar only when patient is logged in */}
+              {patientSession && (
+                <DementiaLanguageToggle showToggleOnly />
+              )}
 
               <button
                 onClick={onOpenConsent}
@@ -98,14 +109,14 @@ export function Navbar({
         </div>
 
         {/* Main Navigation Bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-          {/* Brand Identity - Navigates to Home */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+          {/* Brand Identity - Navigates to Landing Page */}
           <div
-            onClick={() => handleNavClick('patient_games')}
+            onClick={() => handleNavClick('landing')}
             className="flex items-center gap-3 cursor-pointer group select-none"
-            title="Go to Home"
+            title="SmritiSetu Home"
           >
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-900 text-white flex items-center justify-center font-bold text-xl shadow-sm group-hover:scale-105 transition-transform border border-emerald-600/40">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-900 text-white flex items-center justify-center font-bold text-xl shadow-sm group-hover:scale-105 transition-transform border border-emerald-600/40">
               {regionInfo.nativeName ? regionInfo.nativeName.substring(0, 2) : 'ସ୍ମୃ'}
             </div>
             <div>
@@ -123,112 +134,75 @@ export function Navbar({
             </div>
           </div>
 
-          {/* Main Primary Navigation Tabs */}
-          <nav className="hidden lg:flex items-center gap-1.5">
-            {/* 0. Home */}
-            <button
-              onClick={() => handleNavClick('patient_games')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all border ${
-                currentView === 'patient_games'
-                  ? 'bg-slate-900 text-white border-slate-950 shadow-sm'
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-950'
-              }`}
-              title={t('nav.backToHome') || 'Home'}
-            >
-              <Home className={`w-4 h-4 ${currentView === 'patient_games' ? 'text-emerald-400' : 'text-slate-600'}`} />
-              <span>{t('nav.backToHome') || 'Home'}</span>
-            </button>
+          {/* Right Action Header Buttons */}
+          <div className="flex items-center gap-3">
+            {/* 1. If Patient is Logged In */}
+            {patientSession ? (
+              <div className="flex items-center gap-2.5">
+                <div className="px-3.5 py-1.5 bg-emerald-50 text-emerald-950 border border-emerald-200 rounded-xl text-xs font-bold flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-emerald-600 fill-emerald-600" />
+                  <span>Patient: {patientDisplayName}</span>
+                </div>
 
-            {/* 1. Caretaker Portal */}
-            <button
-              onClick={() => handleNavClick('caretaker_portal')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all border ${
-                currentView === 'caretaker_portal'
-                  ? 'bg-indigo-700 text-white border-indigo-800 shadow-sm'
-                  : 'bg-slate-50 text-indigo-900 border-slate-200/80 hover:bg-indigo-50 hover:border-indigo-200'
-              }`}
-            >
-              <Shield className={`w-4 h-4 ${currentView === 'caretaker_portal' ? 'text-indigo-200' : 'text-indigo-600'}`} />
-              <span>{caretakerUser ? `${t('nav.caretakerPortal')}: ${caretakerDisplayName}` : t('nav.caretakerPortal')}</span>
-            </button>
+                <button
+                  onClick={signOutPatient}
+                  className="px-3.5 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Exit</span>
+                </button>
+              </div>
+            ) : caretakerUser ? (
+              /* 2. If Caretaker is Logged In */
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => handleNavClick('patient_portal')}
+                  className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-sm"
+                >
+                  <Heart className="w-3.5 h-3.5 fill-emerald-200 text-emerald-200" />
+                  <span>Launch Patient View</span>
+                </button>
 
-            {/* 2. Patient Portal */}
-            <button
-              onClick={() => handleNavClick('patient_portal')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all border ${
-                currentView === 'patient_portal'
-                  ? 'bg-emerald-700 text-white border-emerald-800 shadow-sm'
-                  : 'bg-slate-50 text-emerald-900 border-slate-200/80 hover:bg-emerald-50 hover:border-emerald-200'
-              }`}
-            >
-              <Key className={`w-4 h-4 ${currentView === 'patient_portal' ? 'text-emerald-200' : 'text-emerald-600'}`} />
-              <span>{patientSession ? `${t('nav.patientPortal')}: ${patientDisplayName}` : t('nav.patientPortal')}</span>
-            </button>
+                <div className="px-3.5 py-1.5 bg-indigo-50 text-indigo-950 border border-indigo-200 rounded-xl text-xs font-bold flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-indigo-600" />
+                  <span>{caretakerDisplayName}</span>
+                </div>
 
-            {/* 3. Cognitive Games */}
-            <button
-              onClick={() => handleNavClick('patient_games')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all border ${
-                currentView === 'patient_games'
-                  ? 'bg-emerald-800 text-white border-emerald-900 shadow-sm'
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Brain className={`w-4 h-4 ${currentView === 'patient_games' ? 'text-emerald-300' : 'text-emerald-600'}`} />
-              <span>{t('nav.cognitiveGames')}</span>
-            </button>
+                <button
+                  onClick={signOutCaretaker}
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            ) : (
+              /* 3. If Guest / New Visitor: Prominent Login / Access Portals Button */
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={() => onOpenAuthModal && onOpenAuthModal('caretaker')}
+                  className="px-4 py-2.5 bg-slate-900 hover:bg-indigo-950 text-white font-bold text-xs rounded-xl shadow-md border border-slate-800 transition flex items-center gap-2 cursor-pointer"
+                >
+                  <LogIn className="w-4 h-4 text-indigo-300" />
+                  <span>Login / Access Portals</span>
+                </button>
+              </div>
+            )}
 
-            {/* 4. Memory Vault */}
-            <button
-              onClick={() => handleNavClick('vault')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all border ${
-                currentView === 'vault'
-                  ? 'bg-rose-700 text-white border-rose-800 shadow-sm'
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Heart className={`w-4 h-4 ${currentView === 'vault' ? 'text-rose-200' : 'text-rose-500'}`} />
-              <span>{t('nav.memoryVault')}</span>
-            </button>
-
-            {/* 5. Caregiver Analytics */}
-            <button
-              onClick={() => handleNavClick('caregiver')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all border ${
-                currentView === 'caregiver'
-                  ? 'bg-indigo-900 text-white border-indigo-950 shadow-sm'
-                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-900'
-              }`}
-            >
-              <Users className={`w-4 h-4 ${currentView === 'caregiver' ? 'text-indigo-200' : 'text-indigo-600'}`} />
-              <span>{t('nav.caregiverAnalytics')}</span>
-            </button>
-
-            {/* In-Navbar Drawer Trigger */}
+            {/* Menu Drawer Toggle */}
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors ml-1"
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors ml-1 cursor-pointer"
               title="Open Navigation Menu"
               aria-label="Open Navigation Menu"
             >
               <Menu className="w-4 h-4" />
             </button>
-          </nav>
-
-          {/* Mobile Menu Icon */}
-          <div className="flex lg:hidden items-center gap-2">
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="p-2.5 rounded-xl bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200 transition-colors"
-              aria-label="Open Menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </header>
 
-      {/* ── FLOATING HAMBURGER BUTTON (Appears at top-right when scrolled down) ── */}
+      {/* ── FLOATING HAMBURGER BUTTON (When scrolled) ── */}
       <div
         className={`fixed top-4 right-4 z-50 transition-all duration-300 ${
           isScrolled
@@ -238,7 +212,7 @@ export function Navbar({
       >
         <button
           onClick={() => setIsDrawerOpen(true)}
-          className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-900/90 hover:bg-slate-900 text-white rounded-2xl shadow-xl border border-slate-700/80 backdrop-blur-md transition-transform hover:scale-105 active:scale-95 group cursor-pointer"
+          className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-900/95 hover:bg-slate-900 text-white rounded-2xl shadow-xl border border-slate-700/80 backdrop-blur-md transition-transform hover:scale-105 active:scale-95 group cursor-pointer"
           aria-label="Menu"
         >
           <Menu className="w-5 h-5 text-emerald-400 group-hover:rotate-90 transition-transform duration-300" />
@@ -258,7 +232,6 @@ export function Navbar({
           {/* Drawer Panel */}
           <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
             <div className="w-screen max-w-md bg-white shadow-2xl border-l border-slate-200 flex flex-col justify-between overflow-y-auto">
-              
               {/* Drawer Header */}
               <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
                 <div className="flex items-center gap-3">
@@ -272,7 +245,7 @@ export function Navbar({
                 </div>
                 <button
                   onClick={() => setIsDrawerOpen(false)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                  className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -280,15 +253,21 @@ export function Navbar({
 
               {/* Drawer Body */}
               <div className="p-6 space-y-6 flex-1">
-                {/* 1. PORTALS & LOGIN ACCESS SECTION */}
+                {/* 1. PORTALS SECTION */}
                 <div className="space-y-2.5">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block px-1">
-                    {t('nav.caretakerPortal')} &amp; {t('nav.patientPortal')}
+                    Portals
                   </span>
 
-                  {/* Caretaker Portal Card */}
+                  {/* Caretaker Portal */}
                   <div
-                    onClick={() => handleNavClick('caretaker_portal')}
+                    onClick={() => {
+                      if (caretakerUser) handleNavClick('caretaker_portal');
+                      else {
+                        setIsDrawerOpen(false);
+                        if (onOpenAuthModal) onOpenAuthModal('caretaker');
+                      }
+                    }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                       currentView === 'caretaker_portal' || caretakerUser
                         ? 'bg-indigo-50/80 border-indigo-200 text-indigo-950'
@@ -302,7 +281,7 @@ export function Navbar({
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="text-sm font-bold text-slate-900">
-                            {caretakerUser ? caretakerDisplayName : t('nav.caretakerPortal')}
+                            {caretakerUser ? caretakerDisplayName : 'Caretaker Portal'}
                           </h4>
                           {caretakerUser && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
@@ -311,16 +290,22 @@ export function Navbar({
                           )}
                         </div>
                         <p className="text-xs text-slate-500">
-                          {caretakerUser ? caretakerUser.email : t('caretakerPortal.title')}
+                          {caretakerUser ? 'Clinical analytics & password management' : 'Login or register as Caretaker'}
                         </p>
                       </div>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   </div>
 
-                  {/* Patient Portal Card */}
+                  {/* Patient Portal */}
                   <div
-                    onClick={() => handleNavClick('patient_portal')}
+                    onClick={() => {
+                      if (patientSession) handleNavClick('patient_portal');
+                      else {
+                        setIsDrawerOpen(false);
+                        if (onOpenAuthModal) onOpenAuthModal('patient');
+                      }
+                    }}
                     className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${
                       currentView === 'patient_portal' || patientSession
                         ? 'bg-emerald-50/80 border-emerald-200 text-emerald-950'
@@ -329,12 +314,12 @@ export function Navbar({
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                        <Key className="w-5 h-5" />
+                        <Heart className="w-5 h-5 fill-emerald-700" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="text-sm font-bold text-slate-900">
-                            {patientSession ? `${t('nav.patientPortal')}: ${patientDisplayName}` : t('nav.patientPortal')}
+                            {patientSession ? `Patient: ${patientDisplayName}` : 'Patient Portal'}
                           </h4>
                           {patientSession && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
@@ -343,7 +328,7 @@ export function Navbar({
                           )}
                         </div>
                         <p className="text-xs text-slate-500">
-                          {patientSession ? `Linked to ${patientSession.caretaker_name}` : t('patientPortal.title')}
+                          {patientSession ? 'Daily schedule & PatternTrace games' : 'Sign in with caretaker credentials'}
                         </p>
                       </div>
                     </div>
@@ -351,75 +336,30 @@ export function Navbar({
                   </div>
                 </div>
 
-                {/* 2. PRIMARY APPLICATION VIEWS */}
+                {/* 2. PUBLIC HEALTHCARE MODULES */}
                 <div className="space-y-1.5 pt-2">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block px-1">
-                    Application Modules
+                    Public Health Modules
                   </span>
 
                   <button
-                    onClick={() => handleNavClick('patient_games')}
-                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors ${
-                      currentView === 'patient_games'
-                        ? 'bg-slate-900 text-white shadow-sm'
+                    onClick={() => handleNavClick('landing')}
+                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                      currentView === 'landing'
+                        ? 'bg-slate-900 text-white'
                         : 'hover:bg-slate-50 text-slate-700'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Home className={`w-4 h-4 ${currentView === 'patient_games' ? 'text-emerald-400' : 'text-slate-600'}`} />
-                      <span>{t('nav.backToHome') || 'Home / Games'}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400" />
-                  </button>
-
-                  <button
-                    onClick={() => handleNavClick('patient_games')}
-                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors ${
-                      currentView === 'patient_games'
-                        ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
-                        : 'hover:bg-slate-50 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Brain className="w-4 h-4 text-emerald-600" />
-                      <span>1. {t('nav.cognitiveGames')}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400" />
-                  </button>
-
-                  <button
-                    onClick={() => handleNavClick('vault')}
-                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors ${
-                      currentView === 'vault'
-                        ? 'bg-rose-50 text-rose-900 border border-rose-200'
-                        : 'hover:bg-slate-50 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Heart className="w-4 h-4 text-rose-600" />
-                      <span>2. {t('nav.memoryVault')}</span>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400" />
-                  </button>
-
-                  <button
-                    onClick={() => handleNavClick('caregiver')}
-                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors ${
-                      currentView === 'caregiver'
-                        ? 'bg-indigo-50 text-indigo-900 border border-indigo-200'
-                        : 'hover:bg-slate-50 text-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Users className="w-4 h-4 text-indigo-600" />
-                      <span>3. {t('nav.caregiverAnalytics')}</span>
+                      <LayoutGrid className="w-4 h-4" />
+                      <span>Welcome Overview</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   </button>
 
                   <button
                     onClick={() => handleNavClick('asha')}
-                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors ${
+                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
                       currentView === 'asha'
                         ? 'bg-teal-50 text-teal-900 border border-teal-200'
                         : 'hover:bg-slate-50 text-slate-700'
@@ -427,14 +367,14 @@ export function Navbar({
                   >
                     <div className="flex items-center gap-3">
                       <ShieldCheck className="w-4 h-4 text-teal-600" />
-                      <span>4. {t('nav.ashaTriage')}</span>
+                      <span>ASHA Triage Network</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   </button>
 
                   <button
                     onClick={() => handleNavClick('ivr')}
-                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors ${
+                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
                       currentView === 'ivr'
                         ? 'bg-amber-50 text-amber-900 border border-amber-200'
                         : 'hover:bg-slate-50 text-slate-700'
@@ -442,14 +382,14 @@ export function Navbar({
                   >
                     <div className="flex items-center gap-3">
                       <Phone className="w-4 h-4 text-amber-600" />
-                      <span>5. {t('nav.ivrPhone')}</span>
+                      <span>2G Phone IVR Triage</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   </button>
 
                   <button
                     onClick={() => handleNavClick('pitch')}
-                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors ${
+                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
                       currentView === 'pitch'
                         ? 'bg-slate-100 text-slate-900 border border-slate-300'
                         : 'hover:bg-slate-50 text-slate-700'
@@ -457,67 +397,29 @@ export function Navbar({
                   >
                     <div className="flex items-center gap-3">
                       <LayoutGrid className="w-4 h-4 text-slate-600" />
-                      <span>6. {t('nav.architecture')}</span>
+                      <span>3-Tier Architecture</span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   </button>
                 </div>
-
-                {/* 3. LOCALIZATION CONTROLS */}
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
-                  <span className="text-xs font-bold text-slate-700">
-                    Localization
-                  </span>
-                  <div className="space-y-2">
-                    <DementiaLanguageToggle showToggleOnly className="w-full justify-center" />
-                    <DementiaLanguageToggle showRegionOnly className="w-full justify-center" />
-                  </div>
-                </div>
               </div>
 
-              {/* Drawer Footer Actions */}
+              {/* Drawer Footer */}
               <div className="p-6 border-t border-slate-100 bg-slate-50/70 space-y-3">
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                    <span>{isOnline ? 'Cloud Synced' : 'Offline Local Hub'}</span>
+                    <span>{isOnline ? 'Network Connected' : 'Offline Storage Active'}</span>
                   </div>
                   <button
                     onClick={onTriggerSync}
                     disabled={isSyncing}
-                    className="p-1.5 hover:bg-slate-200 rounded-lg transition-colors"
-                    title="Trigger Dexie Sync"
+                    className="p-1 text-slate-400 hover:text-slate-600"
+                    title="Force Sync"
                   >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-emerald-600' : ''}`} />
+                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                   </button>
                 </div>
-
-                {/* Active Session Sign-Out Buttons */}
-                {caretakerUser && (
-                  <button
-                    onClick={() => {
-                      signOutCaretaker();
-                      setIsDrawerOpen(false);
-                    }}
-                    className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold flex items-center justify-center gap-2 border border-rose-200 transition-colors"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>{t('caretakerPortal.signOutBtn')} ({caretakerDisplayName})</span>
-                  </button>
-                )}
-
-                {patientSession && (
-                  <button
-                    onClick={() => {
-                      signOutPatient();
-                      setIsDrawerOpen(false);
-                    }}
-                    className="w-full py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>{t('patientPortal.exitBtn')}</span>
-                  </button>
-                )}
               </div>
             </div>
           </div>
