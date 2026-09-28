@@ -35,6 +35,7 @@ export function Navbar({
   const {
     caretakerUser,
     patientSession,
+    patientProfile,
     signOutCaretaker,
     signOutPatient
   } = useDualAuth();
@@ -65,7 +66,7 @@ export function Navbar({
     caretakerUser?.user_metadata?.full_name ||
     caretakerUser?.email?.split('@')[0] ||
     'Caretaker';
-  const patientDisplayName = patientSession?.patient_name || 'Patient';
+  const patientDisplayName = patientSession?.patient_name || patientProfile?.name || 'Patient';
 
   return (
     <>

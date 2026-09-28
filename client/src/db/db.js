@@ -4,7 +4,7 @@ export const db = new Dexie('SmritiSetuDB');
 
 // Define database schema matching the backend tables
 db.version(2).stores({
-  patients: '++id, abha_id, name, age, dialect, caregiver_name, caregiver_phone, created_at',
+  patients: '++id, abha_id, name, age, dialect, locality, dementia_duration, caregiver_name, caregiver_phone, created_at',
   telemetry: '++id, patient_id, game_type, timestamp, latency_ms, jitter_px, accuracy_score, source',
   patterntrace_trials: '++id, trial_id, patient_id, level, accuracy_score, sequence_match, spatial_match, initiation_latency_ms, total_execution_time_ms, perseveration_detected, omission_count, commission_count, timestamp',
   consent: '++id, patient_id, caregiver_name, telemetry_consent, voice_storage_consent, abha_linkage_consent, signature_hash, timestamp',
@@ -20,6 +20,8 @@ export async function initDefaultData() {
       abha_id: 'NER-ASM-9821-4412',
       name: 'Bhaben Baruah',
       age: 74,
+      locality: 'Raha, Nagaon, Assam',
+      dementia_duration: '2 Years',
       dialect: 'Assamese',
       caregiver_name: 'Ananya Baruah',
       caregiver_phone: '+91 94350 12345',

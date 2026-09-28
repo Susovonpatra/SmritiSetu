@@ -19,7 +19,7 @@ import { initDefaultData, db } from './db/db';
 import { AlertCircle } from 'lucide-react';
 
 function SmritiSetuApp() {
-  const { caretakerUser, patientSession } = useDualAuth();
+  const { caretakerUser, patientSession, patientProfile } = useDualAuth();
 
   // Route state: default to 'landing' for guest/new users, or user's active session
   const [currentView, setCurrentView] = useState(() => {
@@ -43,6 +43,8 @@ function SmritiSetuApp() {
     id: 1,
     name: 'Bhaben Baruah',
     age: 74,
+    locality: 'Raha, Nagaon, Assam',
+    dementia_duration: '2 Years',
     abha_id: 'NER-ASM-9821-4412',
     dialect: 'Odia',
     caregiver_name: 'Ananya Baruah',
@@ -54,11 +56,18 @@ function SmritiSetuApp() {
   const { isOnline, isSyncing, lastSyncTime, offlineDriftAlert, syncPendingRecords } = useSyncEngine();
   const { isAlertActive, peakAcceleration, lastDropTime, dismissAlert, simulateDrop } = useMotionDetector();
 
+  // Sync patient state whenever patientProfile is updated
+  useEffect(() => {
+    if (patientProfile) {
+      setPatient(prev => ({ ...prev, ...patientProfile }));
+    }
+  }, [patientProfile]);
+
   // Initialize Dexie seed records
   useEffect(() => {
     initDefaultData().then(async () => {
       const p = await db.patients.toCollection().first();
-      if (p) setPatient(p);
+      if (p) setPatient(prev => ({ ...prev, ...p }));
       const c = await db.consent.toCollection().first();
       if (c) setConsentSigned(true);
     });

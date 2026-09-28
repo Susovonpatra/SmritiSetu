@@ -115,28 +115,28 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
     // Announce instruction
     speakText(t('games.watchPattern') || 'Watch the pattern.');
 
-    // ── Phase 2: Demonstration (1.2s per node) ──
+    // ── Phase 2: Demonstration (Snappy & Clear) ──
     let step = 0;
     const runDemoStep = () => {
       if (step < newPattern.length) {
         setDemoActiveStep(step);
         soundEngine.playNodeConnect(step);
         step++;
-        timerRef.current = setTimeout(runDemoStep, 1200);
+        timerRef.current = setTimeout(runDemoStep, 750);
       } else {
-        // Pattern complete: hold for 1.5s encoding window, then switch to User Turn
+        // Pattern complete: quick 450ms pause, then immediately switch to User Turn
         timerRef.current = setTimeout(() => {
           setDemoActiveStep(-1);
           setGameState('USER_INPUT');
           demoEndTimeRef.current = performance.now();
           firstTouchTimeRef.current = 0;
           speakText(t('games.yourTurn') || 'Your turn. Connect the dots.');
-        }, 1500);
+        }, 450);
       }
     };
 
     // Small delay before demonstration begins
-    timerRef.current = setTimeout(runDemoStep, 600);
+    timerRef.current = setTimeout(runDemoStep, 250);
   }, [currentLevel, targetSequence, speakText, t]);
 
   // Initial auto-start
@@ -163,11 +163,11 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
       const next = [...prev, nodeId];
       soundEngine.playNodeConnect(next.length - 1);
 
-      // If full sequence length reached, trigger evaluation after slight tactile pause
+      // If full sequence length reached, trigger evaluation after slight crisp tactile pause
       if (next.length >= targetSequence.length) {
         setTimeout(() => {
           evaluateInput(next);
-        }, 300);
+        }, 120);
       }
       return next;
     });
@@ -241,12 +241,12 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
       speakText(t('games.patternGentleRetry') || 'Good effort! Let us watch the pattern again.');
     }
 
-    // Auto-advance to next trial after gentle 2.4s pause
+    // Auto-advance to next trial after smooth, reduced 1.1s pause (decreased from 2.4s)
     timerRef.current = setTimeout(() => {
       setCurrentLevel(nextLevel);
       setTrialCount((c) => c + 1);
       startTrial(nextLevel);
-    }, 2400);
+    }, 1100);
   }, [
     gameState,
     userSequence,

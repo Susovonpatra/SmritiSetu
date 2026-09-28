@@ -20,7 +20,11 @@ import {
   Sparkles,
   Sun,
   Sunset,
-  Moon
+  Moon,
+  MapPin,
+  User,
+  Shield,
+  Home
 } from 'lucide-react';
 
 function getTimeBasedGreeting(patientName = 'Friend', lang = 'en') {
@@ -39,37 +43,39 @@ function getTimeBasedGreeting(patientName = 'Friend', lang = 'en') {
     Icon = Moon;
   }
 
+  const safeName = patientName || 'Friend';
+
   const greetings = {
     or: {
-      morning: `ଶୁଭ ସକାଳ, ${patientName}`,
-      afternoon: `ଶୁଭ ଅପରାହ୍ନ, ${patientName}`,
-      evening: `ଶୁଭ ସନ୍ଧ୍ୟା, ${patientName}`
+      morning: `ଶୁଭ ସକାଳ, ${safeName}`,
+      afternoon: `ଶୁଭ ଅପରାହ୍ନ, ${safeName}`,
+      evening: `ଶୁଭ ସନ୍ଧ୍ୟା, ${safeName}`
     },
     gu: {
-      morning: `શુભ સવાર, ${patientName}`,
-      afternoon: `શુભ બપોર, ${patientName}`,
-      evening: `શુભ સાંજ, ${patientName}`
+      morning: `શુભ સવાર, ${safeName}`,
+      afternoon: `શુભ બપોર, ${safeName}`,
+      evening: `શુભ સાંજ, ${safeName}`
     },
     as: {
-      morning: `শুভ প্ৰভাত, ${patientName}`,
-      afternoon: `শুভ অপৰাহ্ণ, ${patientName}`,
-      evening: `শুভ সন্ধিয়া, ${patientName}`
+      morning: `শুভ প্ৰভাত, ${safeName}`,
+      afternoon: `শুভ অপৰাহ্ণ, ${safeName}`,
+      evening: `শুভ সন্ধিয়া, ${safeName}`
     },
     en: {
-      morning: `Good Morning, ${patientName}`,
-      afternoon: `Good Afternoon, ${patientName}`,
-      evening: `Good Evening, ${patientName}`
+      morning: `Good Morning, ${safeName}`,
+      afternoon: `Good Afternoon, ${safeName}`,
+      evening: `Good Evening, ${safeName}`
     }
   };
 
   const selectedMap = greetings[lang] || greetings.en;
-  const text = selectedMap[period] || `Good Day, ${patientName}`;
+  const text = selectedMap[period] || `Good Day, ${safeName}`;
 
   return { text, period, Icon };
 }
 
 export function PatientPortal({ onExitToHome }) {
-  const { patientSession, patientLogin, signOutPatient } = useDualAuth();
+  const { patientSession, patientProfile, patientLogin, signOutPatient } = useDualAuth();
   const { activeLang, regionInfo, t } = useLocale();
 
   const [activeGameTab, setActiveGameTab] = useState('pattern'); // 'pattern' | 'visual' | 'routine'
@@ -78,7 +84,13 @@ export function PatientPortal({ onExitToHome }) {
   const [errorMsg, setErrorMsg] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const patientName = patientSession?.patient_name || 'Bhaben Baruah';
+  // Dynamic Patient Profile Details
+  const patientName = patientSession?.patient_name || patientProfile?.name || 'Bhaben Baruah';
+  const patientAge = patientSession?.patient_age || patientProfile?.age || 74;
+  const locality = patientSession?.locality || patientProfile?.locality || 'Raha, Nagaon, Assam';
+  const dementiaDuration = patientSession?.dementia_duration || patientProfile?.dementia_duration || '2 Years';
+  const caretakerName = patientSession?.caretaker_name || patientProfile?.caregiver_name || 'Ananya Baruah';
+
   const greetingData = getTimeBasedGreeting(patientName, activeLang);
   const GreetingIcon = greetingData.Icon;
 
@@ -96,6 +108,22 @@ export function PatientPortal({ onExitToHome }) {
     }
   };
 
+  // Quick 1-Click Demo Login for Patient
+  const handleQuickDemoPatientLogin = async () => {
+    setErrorMsg(null);
+    setLoading(true);
+    try {
+      await patientLogin({
+        caretakerEmail: 'ananya.baruah@smritisetu.in',
+        patientPassword: 'Setu@2026'
+      });
+    } catch (err) {
+      setErrorMsg('Quick patient sign-in failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSignOut = () => {
     signOutPatient();
     if (onExitToHome) onExitToHome();
@@ -105,11 +133,11 @@ export function PatientPortal({ onExitToHome }) {
   if (patientSession) {
     return (
       <div className="w-full max-w-5xl mx-auto space-y-6 sm:space-y-8 font-sans pb-12">
-        {/* Top Header Card: Real-Time Dynamic Greeting & Regional Language Switcher */}
+        {/* Top Header Card: Real-Time Dynamic Greeting ("Good Morning, {patientName}") & Regional Language Switcher */}
         <div className="bg-slate-900 text-white rounded-3xl p-5 sm:p-8 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-5 sm:gap-6">
           <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
-              <GreetingIcon className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400" />
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+              <GreetingIcon className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400" />
             </div>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
@@ -117,16 +145,32 @@ export function PatientPortal({ onExitToHome }) {
                   Patient Companion Portal
                 </span>
                 <span className="text-[11px] sm:text-xs text-slate-400 font-medium truncate">
-                  • Caretaker: <strong className="text-emerald-300">{patientSession.caretaker_name || patientSession.caretaker_email}</strong>
+                  • Caretaker: <strong className="text-emerald-300">{caretakerName}</strong>
                 </span>
               </div>
-              <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-1 leading-tight">
+              {/* Dynamic Personalized Time-Based Greeting */}
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white mt-1 leading-tight">
                 {greetingData.text}
               </h1>
+              {/* Patient Identity Pill Displaying Name & Age */}
+              <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 text-xs font-bold border border-emerald-700/60">
+                  <User className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>{patientName}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                  <span>Age {patientAge}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700">
+                  <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                  <span className="truncate max-w-[180px]">{locality}</span>
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
+          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800 shrink-0">
             {/* Regional Language Toggle for Patient */}
             <div className="bg-slate-800 p-1 rounded-2xl border border-slate-700">
               <DementiaLanguageToggle showToggleOnly />
@@ -144,6 +188,60 @@ export function PatientPortal({ onExitToHome }) {
           </div>
         </div>
 
+        {/* ── 0. PATIENT ORIENTATION & REASSURANCE IDENTITY CARD ── */}
+        <div className="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white rounded-3xl p-5 sm:p-7 border-2 border-emerald-200/90 shadow-md space-y-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-emerald-200/60">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-black text-lg shrink-0 shadow-sm">
+                🧓
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                  Welcome Home, <span className="text-emerald-800">{patientName}</span>
+                </h2>
+                <p className="text-xs text-slate-600">
+                  You are at home in <strong className="text-slate-800">{locality}</strong>. Your daily exercises and care plan are ready.
+                </p>
+              </div>
+            </div>
+
+            <span className="px-3 py-1 bg-emerald-200/80 text-emerald-900 rounded-full font-extrabold text-xs shrink-0">
+              Personalized Companion
+            </span>
+          </div>
+
+          {/* 4 Calming Orientation Tokens */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
+                Patient Name
+              </span>
+              <p className="text-sm font-extrabold text-slate-900 truncate">{patientName}</p>
+            </div>
+
+            <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
+                Age
+              </span>
+              <p className="text-sm font-extrabold text-slate-900">{patientAge} Years Old</p>
+            </div>
+
+            <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
+                Locality / Home
+              </span>
+              <p className="text-sm font-extrabold text-slate-900 truncate">{locality}</p>
+            </div>
+
+            <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
+                Care Journey
+              </span>
+              <p className="text-sm font-extrabold text-emerald-800 truncate">{dementiaDuration}</p>
+            </div>
+          </div>
+        </div>
+
         {/* ── 1. TODAY'S CARE SCHEDULE (Dementia-Friendly, Clear, Calming) ── */}
         <div className="bg-white rounded-3xl p-5 sm:p-8 border-2 border-slate-200/90 shadow-md space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
@@ -153,10 +251,10 @@ export function PatientPortal({ onExitToHome }) {
               </div>
               <div>
                 <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">
-                  Today's Care Schedule
+                  Today's Care Schedule for {patientName}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Personalized care routine synchronized with your family caretaker
+                  Personalized care routine synchronized with caretaker {caretakerName}
                 </p>
               </div>
             </div>
@@ -208,7 +306,7 @@ export function PatientPortal({ onExitToHome }) {
                 <h3 className="text-sm font-bold text-amber-950 truncate">
                   Gentle Courtyard Stroll
                 </h3>
-                <p className="text-xs text-amber-800">15 minutes fresh air &amp; family chat</p>
+                <p className="text-xs text-amber-800">15 minutes fresh air in {locality.split(',')[0] || 'the garden'}</p>
               </div>
               <span className="text-[10px] font-bold uppercase text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded shrink-0">
                 Scheduled
@@ -300,8 +398,25 @@ export function PatientPortal({ onExitToHome }) {
           Patient Companion Sign In
         </h2>
         <p className="text-xs text-slate-500 mt-1">
-          Enter your caretaker's email and patient access password to enter.
+          Sign in to enter the personalized companion portal for <strong className="text-emerald-800">{patientName} (Age {patientAge})</strong>.
         </p>
+      </div>
+
+      {/* Quick 1-Click Patient Sign-in Button */}
+      <button
+        type="button"
+        onClick={handleQuickDemoPatientLogin}
+        disabled={loading}
+        className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-300 font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
+      >
+        <Sparkles className="w-4 h-4 text-emerald-700" />
+        <span>⚡ 1-Click Quick Access as {patientName}</span>
+      </button>
+
+      <div className="relative flex py-1 items-center">
+        <div className="flex-grow border-t border-slate-200"></div>
+        <span className="flex-shrink mx-3 text-[11px] font-semibold text-slate-400 uppercase">Or Enter Caretaker Email</span>
+        <div className="flex-grow border-t border-slate-200"></div>
       </div>
 
       {errorMsg && (
@@ -351,7 +466,7 @@ export function PatientPortal({ onExitToHome }) {
           disabled={loading}
           className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
         >
-          <span>{loading ? 'Verifying...' : 'Sign In as Patient'}</span>
+          <span>{loading ? 'Verifying...' : `Sign In as ${patientName}`}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </form>

@@ -20,7 +20,8 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
   const {
     signUpCaretaker,
     signInCaretaker,
-    patientLogin
+    patientLogin,
+    patientProfile
   } = useDualAuth();
 
   const [activeTab, setActiveTab] = useState(initialTab); // 'caretaker' | 'patient'
@@ -308,7 +309,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
               <div className="pb-1 border-b border-slate-100">
                 <h4 className="font-extrabold text-slate-900 text-base">Patient Companion Sign In</h4>
                 <p className="text-xs text-slate-500">
-                  Enter your linked caretaker's email and your dedicated patient password.
+                  Signing in for <strong className="text-emerald-800">{patientProfile?.name || 'Bhaben Baruah'} (Age {patientProfile?.age || 74})</strong>
                 </p>
               </div>
 
@@ -348,7 +349,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
                 </div>
 
                 <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-emerald-900 text-[11px]">
-                  <strong>Friendly Tip:</strong> Your caretaker configures this password inside their dashboard. If you don't have one, ask your caretaker or family member.
+                  <strong>Friendly Tip:</strong> Your caretaker configures this password in the Caretaker Portal. Default demo password is <code>Setu@2026</code>.
                 </div>
 
                 <button
@@ -356,7 +357,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
                   disabled={loading}
                   className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-3 px-4 rounded-xl shadow-md flex items-center justify-center gap-2 transition disabled:opacity-50 mt-3 cursor-pointer"
                 >
-                  <span>{loading ? 'Verifying...' : 'Sign In to Patient Portal'}</span>
+                  <span>{loading ? 'Verifying...' : `Sign In as ${patientProfile?.name || 'Patient'}`}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </form>

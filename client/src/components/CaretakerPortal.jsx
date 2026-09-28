@@ -23,7 +23,15 @@ import {
   Send,
   Clock,
   FileText,
-  Heart
+  Heart,
+  Save,
+  MapPin,
+  Calendar,
+  Stethoscope,
+  Compass,
+  Home,
+  UserCheck,
+  RefreshCw
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -50,8 +58,13 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
     signUpCaretaker,
     signInCaretaker,
     signOutCaretaker,
-    updatePatientAccessPassword
+    updatePatientAccessPassword,
+    patientProfile,
+    updatePatientProfile
   } = useDualAuth();
+
+  // Active Caretaker Tab: 'profile' | 'telemetry' | 'security'
+  const [activeTab, setActiveTab] = useState('profile');
 
   // Auth Form State (when not signed in)
   const [isSignUp, setIsSignUp] = useState(false);
@@ -59,6 +72,21 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+
+  // Patient Profile Edit Form State
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    age: '',
+    locality: '',
+    dementia_duration: '',
+    dialect: 'Assamese',
+    abha_id: '',
+    primary_condition: '',
+    emergency_contact: '',
+    notes: ''
+  });
+  const [profileSaveStatus, setProfileSaveStatus] = useState(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   // Password Management State
   const [patientPassword, setPatientPassword] = useState('');
@@ -82,6 +110,23 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
     accuracy: 86.5,
     alert: false
   });
+
+  // Populate profile form whenever patientProfile loads/changes
+  useEffect(() => {
+    if (patientProfile) {
+      setProfileForm({
+        name: patientProfile.name || 'Bhaben Baruah',
+        age: patientProfile.age || 74,
+        locality: patientProfile.locality || 'Raha, Nagaon, Assam',
+        dementia_duration: patientProfile.dementia_duration || '2 Years',
+        dialect: patientProfile.dialect || 'Assamese',
+        abha_id: patientProfile.abha_id || 'NER-ASM-9821-4412',
+        primary_condition: patientProfile.primary_condition || 'Early-stage Alzheimer’s & Vascular Dementia',
+        emergency_contact: patientProfile.emergency_contact || patientProfile.caregiver_phone || '+91 94350 12345',
+        notes: patientProfile.notes || 'Prefers morning tea routine at 8:00 AM; responsive to native Assamese & Odia audio prompts.'
+      });
+    }
+  }, [patientProfile]);
 
   // Load telemetry data on mount
   useEffect(() => {
@@ -155,6 +200,73 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
     }
   };
 
+  // Quick 1-Click Demo Login
+  const handleQuickDemoLogin = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      await signInCaretaker({
+        email: 'ananya.baruah@smritisetu.in',
+        password: 'Password@123'
+      });
+    } catch (e) {
+      setErrorMsg('Demo sign-in failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Patient Profile Form Update
+  const handleProfileChange = (field, value) => {
+    setProfileForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSavePatientProfile = async (e) => {
+    e.preventDefault();
+    if (!profileForm.name.trim()) {
+      setProfileSaveStatus({ type: 'error', text: 'Patient Name is required.' });
+      return;
+    }
+    if (!profileForm.age || isNaN(Number(profileForm.age)) || Number(profileForm.age) <= 0) {
+      setProfileSaveStatus({ type: 'error', text: 'Please enter a valid age.' });
+      return;
+    }
+
+    setIsSavingProfile(true);
+    setProfileSaveStatus(null);
+
+    try {
+      await updatePatientProfile({
+        name: profileForm.name.trim(),
+        age: parseInt(profileForm.age, 10),
+        locality: profileForm.locality.trim() || 'Raha, Nagaon, Assam',
+        dementia_duration: profileForm.dementia_duration.trim() || '2 Years',
+        dialect: profileForm.dialect,
+        abha_id: profileForm.abha_id.trim() || 'NER-ASM-9821-4412',
+        primary_condition: profileForm.primary_condition.trim(),
+        emergency_contact: profileForm.emergency_contact.trim(),
+        caregiver_phone: profileForm.emergency_contact.trim(),
+        notes: profileForm.notes.trim()
+      });
+
+      setProfileSaveStatus({
+        type: 'success',
+        text: `Patient profile saved! Name "${profileForm.name.trim()}" and Age ${profileForm.age} are now active across the Patient Portal.`
+      });
+
+      setTimeout(() => {
+        setProfileSaveStatus(null);
+      }, 5000);
+    } catch (err) {
+      setProfileSaveStatus({
+        type: 'error',
+        text: 'Failed to update patient profile. Please check your data and try again.'
+      });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   // Handle Set/Update Patient Access Password
   const handleSetPatientPassword = async (e) => {
     e.preventDefault();
@@ -171,6 +283,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
         type: 'success',
         text: res?.message || 'Patient access password successfully updated!'
       });
+      setTimeout(() => setPassUpdateStatus(null), 4000);
     } catch (err) {
       setPassUpdateStatus({
         type: 'error',
@@ -197,11 +310,14 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
     );
   }
 
-  // ── AUTHENTICATED CARETAKER CLINICAL DASHBOARD (Strictly English) ──
+  // ── AUTHENTICATED CARETAKER CLINICAL DASHBOARD ──
   if (caretakerUser) {
     const meta = caretakerUser.user_metadata || {};
     const displayName = meta.full_name || caretakerUser.email.split('@')[0];
-    const displayPhone = meta.phone_number || '+91 94350 12345';
+    const displayPatientName = patientProfile?.name || 'Bhaben Baruah';
+    const displayPatientAge = patientProfile?.age || 74;
+    const displayLocality = patientProfile?.locality || 'Raha, Nagaon, Assam';
+    const displayDementiaDuration = patientProfile?.dementia_duration || '2 Years';
 
     return (
       <div className="w-full max-w-6xl mx-auto space-y-6 sm:space-y-8 font-sans pb-12">
@@ -217,7 +333,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
                   Caretaker Clinical Hub
                 </span>
                 <span className="text-[11px] sm:text-xs text-slate-400 truncate">
-                  • Auth: <code className="font-mono text-[10px] sm:text-[11px] text-slate-300">{caretakerUser.id?.slice(0, 10)}...</code>
+                  • Linked Patient: <strong className="text-emerald-300">{displayPatientName}</strong> (Age {displayPatientAge})
                 </span>
               </div>
               <h1 className="text-xl sm:text-3xl font-black tracking-tight text-white mt-1 leading-tight">
@@ -248,377 +364,754 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
           </div>
         </div>
 
-        {/* ── PROFILE & PATIENT PASSWORD MANAGEMENT GRID ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Caretaker & Linked Patient Identity Card */}
-          <div className="bg-white rounded-3xl p-5 sm:p-7 border-2 border-slate-200/90 shadow-md space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold shrink-0">
-                <User className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-slate-900">Caretaker &amp; Patient Metadata</h2>
-                <p className="text-xs text-slate-500">PostgreSQL authenticated records</p>
-              </div>
-            </div>
+        {/* ── CARETAKER PORTAL NAVIGATION TABS ── */}
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-200/80 rounded-2xl border border-slate-300 shadow-inner">
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              activeTab === 'profile'
+                ? 'bg-emerald-700 text-white shadow-md border border-emerald-800'
+                : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <User className={`w-4 h-4 shrink-0 ${activeTab === 'profile' ? 'text-emerald-200' : 'text-emerald-700'}`} />
+            <span>Patient Profile &amp; Care Details</span>
+          </button>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase block mb-0.5">Caretaker Name</span>
-                <p className="font-semibold text-slate-800 truncate">{displayName}</p>
-              </div>
+          <button
+            onClick={() => setActiveTab('telemetry')}
+            className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              activeTab === 'telemetry'
+                ? 'bg-indigo-900 text-white shadow-md border border-indigo-950'
+                : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <Brain className={`w-4 h-4 shrink-0 ${activeTab === 'telemetry' ? 'text-indigo-300' : 'text-indigo-700'}`} />
+            <span>Clinical Biomarkers &amp; Telemetry</span>
+          </button>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase block mb-0.5">Email</span>
-                <p className="font-semibold text-slate-800 truncate">{caretakerUser.email}</p>
-              </div>
+          <button
+            onClick={() => setActiveTab('security')}
+            className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              activeTab === 'security'
+                ? 'bg-slate-900 text-white shadow-md border border-slate-950'
+                : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <Key className={`w-4 h-4 shrink-0 ${activeTab === 'security' ? 'text-slate-300' : 'text-slate-700'}`} />
+            <span>Access Password &amp; ABHA</span>
+          </button>
+        </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase block mb-0.5">Linked Patient</span>
-                <p className="font-semibold text-slate-800 truncate">Bhaben Baruah (Age 74)</p>
-              </div>
+        {/* ══════════════════════════════════════════════════════════ */}
+        {/* TAB 1: PATIENT PROFILE & IDENTITY MANAGEMENT */}
+        {/* ══════════════════════════════════════════════════════════ */}
+        {activeTab === 'profile' && (
+          <div className="space-y-6">
+            {/* Live Profile Summary & Companion Preview Banner */}
+            <div className="bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 text-white rounded-3xl p-5 sm:p-7 border border-emerald-800/40 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-emerald-800/40">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 flex items-center justify-center font-black text-xl shrink-0">
+                    🧓
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] sm:text-xs font-bold border border-emerald-500/30">
+                        Active Patient Record
+                      </span>
+                      <span className="text-[11px] text-emerald-400/80">Synchronized with Patient Portal</span>
+                    </div>
+                    <h2 className="text-lg sm:text-2xl font-black text-white mt-0.5">
+                      {displayPatientName}
+                    </h2>
+                  </div>
+                </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase block mb-0.5">ABHA ID</span>
-                <p className="font-semibold text-slate-800 truncate">NER-ASM-9821-4412</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Manage Dedicated Patient Access Password Card */}
-          <div className="bg-white rounded-3xl p-5 sm:p-7 border-2 border-slate-200/90 shadow-md space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
-                <Key className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-slate-900">Patient Access Password</h2>
-                <p className="text-xs text-slate-500">Stored as a secure bcrypt hash in `patient_profiles`</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              Your patient logs in at the <strong>Patient Portal</strong> using your email (<code className="break-all">{caretakerUser.email}</code>) and this dedicated password.
-            </p>
-
-            {passUpdateStatus && (
-              <div
-                className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
-                  passUpdateStatus.type === 'success'
-                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                    : 'bg-rose-50 text-rose-800 border border-rose-200'
-                }`}
-              >
-                {passUpdateStatus.type === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                )}
-                <span>{passUpdateStatus.text}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleSetPatientPassword} className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
-                  Set New Patient Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    required
-                    minLength={6}
-                    value={patientPassword}
-                    onChange={(e) => setPatientPassword(e.target.value)}
-                    placeholder="e.g. Setu@2026 or EasyMemory123"
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
-                  />
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={onNavigateToPatientPortal}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <Heart className="w-3.5 h-3.5 fill-white" />
+                    <span>View Greeting on Patient Portal</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
-                <button
-                  type="submit"
-                  disabled={isUpdatingPass}
-                  className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
-                >
-                  <Key className="w-3.5 h-3.5" />
-                  <span>{isUpdatingPass ? 'Updating...' : 'Save Patient Password'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCopyCredentials}
-                  className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer"
-                  title="Copy Login Credentials"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>{copied ? 'Copied!' : 'Copy'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        {/* ── 7-DAY COGNITIVE DRIFT & BIOMARKER OVERVIEW ── */}
-        <div className={`p-5 sm:p-6 rounded-3xl border-3 transition-all ${
-          driftMetrics.alert 
-            ? 'bg-rose-50 border-rose-700 shadow-md' 
-            : 'bg-emerald-50 border-emerald-700 shadow-md'
-        }`}>
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-            <div className="flex items-start gap-3.5 sm:gap-4">
-              <div className={`p-2.5 sm:p-3 rounded-2xl border-2 shrink-0 ${
-                driftMetrics.alert ? 'bg-rose-200 border-rose-800 text-rose-900' : 'bg-emerald-200 border-emerald-800 text-emerald-900'
-              }`}>
-                {driftMetrics.alert ? <AlertOctagon className="w-7 h-7 sm:w-8 sm:h-8" /> : <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8" />}
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <span className="text-base sm:text-xl font-bold text-zinc-800">
-                    Rolling 7-Day Cognitive Drift Index:
-                  </span>
-                  <span className={`text-2xl sm:text-3xl font-black ${driftMetrics.alert ? 'text-rose-900' : 'text-emerald-950'}`}>
-                    {driftMetrics.drift_percent >= 0 ? `+${driftMetrics.drift_percent}%` : `${driftMetrics.drift_percent}%`}
-                  </span>
+              {/* Live Preview Metrics */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                  <span className="text-[10px] font-bold text-emerald-300/80 uppercase block">Patient Name</span>
+                  <p className="text-sm sm:text-base font-extrabold text-white mt-0.5 truncate">{displayPatientName}</p>
+                  <span className="text-[10px] text-emerald-400">Used in dynamic greetings</span>
                 </div>
-                <p className="text-xs sm:text-sm font-semibold text-zinc-700 mt-1">
-                  {driftMetrics.alert 
-                    ? 'CRITICAL ALERT: Reaction latency drift exceeded the 35% clinical threshold. Recommended teleconsultation with neurology team.'
-                    : 'STABLE RANGE: Reaction latency and accuracy variance are within acceptable geriatric baseline parameters (<35% drift).'
-                  }
-                </p>
+
+                <div className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                  <span className="text-[10px] font-bold text-emerald-300/80 uppercase block">Age</span>
+                  <p className="text-sm sm:text-base font-extrabold text-white mt-0.5">{displayPatientAge} Years</p>
+                  <span className="text-[10px] text-emerald-400">Displayed in portal badge</span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                  <span className="text-[10px] font-bold text-emerald-300/80 uppercase block">Locality</span>
+                  <p className="text-sm sm:text-base font-extrabold text-white mt-0.5 truncate">{displayLocality}</p>
+                  <span className="text-[10px] text-emerald-400">Orientation anchor</span>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-sm">
+                  <span className="text-[10px] font-bold text-emerald-300/80 uppercase block">Dementia History</span>
+                  <p className="text-sm sm:text-base font-extrabold text-white mt-0.5 truncate">{displayDementiaDuration}</p>
+                  <span className="text-[10px] text-emerald-400">Clinical timeline</span>
+                </div>
+              </div>
+
+              {/* Patient Portal Live Greeting Banner Preview */}
+              <div className="p-3.5 bg-emerald-900/40 rounded-2xl border border-emerald-600/30 flex items-center justify-between gap-3 text-xs flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-300 shrink-0" />
+                  <span className="font-semibold text-emerald-100">
+                    Patient Portal Welcome Banner will say:
+                  </span>
+                  <strong className="text-emerald-300 font-bold bg-emerald-950/60 px-2 py-0.5 rounded-lg border border-emerald-500/30">
+                    "Good Morning, {displayPatientName}"
+                  </strong>
+                </div>
+                <span className="text-[11px] text-emerald-300/80">
+                  (Also renders in native Odia, Assamese, and Gujarati)
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <button
-                onClick={() => setIsReportModalOpen(true)}
-                className="w-full md:w-auto px-4 sm:px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow cursor-pointer"
-              >
-                <FileText className="w-4 h-4 text-indigo-300" />
-                <span>Export Clinical Report</span>
-              </button>
+            {/* Profile Edit Form Card */}
+            <div className="bg-white rounded-3xl p-5 sm:p-8 border-2 border-slate-200/90 shadow-md space-y-6">
+              <div className="flex items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                    <UserCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg sm:text-xl font-extrabold text-slate-900">
+                      Edit Patient Profile &amp; Clinical Details
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Fill up patient name, age, locality, and how long they have been suffering from dementia.
+                    </p>
+                  </div>
+                </div>
+
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-900 rounded-full font-bold text-xs hidden sm:inline-block">
+                  PostgreSQL &amp; Dexie Synced
+                </span>
+              </div>
+
+              {/* Status Alert Banner */}
+              {profileSaveStatus && (
+                <div
+                  className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-3 animate-in fade-in duration-200 ${
+                    profileSaveStatus.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-900 border-2 border-emerald-300'
+                      : 'bg-rose-50 text-rose-900 border-2 border-rose-300'
+                  }`}
+                >
+                  {profileSaveStatus.type === 'success' ? (
+                    <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-700" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 shrink-0 text-rose-700" />
+                  )}
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">
+                      {profileSaveStatus.type === 'success' ? 'Profile Updated Successfully!' : 'Save Error'}
+                    </p>
+                    <p className="mt-0.5">{profileSaveStatus.text}</p>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSavePatientProfile} className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+                  {/* 1. Patient Full Name */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Patient Full Name <span className="text-rose-500">*</span></span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={profileForm.name}
+                      onChange={(e) => handleProfileChange('name', e.target.value)}
+                      placeholder="e.g. Bhaben Baruah"
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
+                    />
+                    <p className="text-[11px] text-slate-500">
+                      Renders directly in Patient Portal greeting: <em>"Good Morning, {profileForm.name || 'Patient'}"</em>
+                    </p>
+                  </div>
+
+                  {/* 2. Patient Age */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Age (Years) <span className="text-rose-500">*</span></span>
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={1}
+                      max={125}
+                      value={profileForm.age}
+                      onChange={(e) => handleProfileChange('age', e.target.value)}
+                      placeholder="e.g. 74"
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
+                    />
+                    <p className="text-[11px] text-slate-500">
+                      Displayed on Patient Portal identity card &amp; calibrates baseline motor latency.
+                    </p>
+                  </div>
+
+                  {/* 3. Locality / Address / District */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Locality / Village / District <span className="text-rose-500">*</span></span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={profileForm.locality}
+                      onChange={(e) => handleProfileChange('locality', e.target.value)}
+                      placeholder="e.g. Raha, Nagaon, Assam"
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
+                    />
+                    <p className="text-[11px] text-slate-500">
+                      Provides familiar place orientation to soothe morning disorientation.
+                    </p>
+                  </div>
+
+                  {/* 4. Dementia Duration (How long suffering from dementia) */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Suffering Dementia For How Long <span className="text-rose-500">*</span></span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={profileForm.dementia_duration}
+                      onChange={(e) => handleProfileChange('dementia_duration', e.target.value)}
+                      placeholder="e.g. 2 Years, 6 Months, or 3-5 Years"
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
+                    />
+                    {/* Quick Selection Chips */}
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {['6 Months', '1 Year', '2 Years', '3-5 Years', '5+ Years'].map((chip) => (
+                        <button
+                          key={chip}
+                          type="button"
+                          onClick={() => handleProfileChange('dementia_duration', chip)}
+                          className={`text-[10px] px-2 py-0.5 rounded-lg border font-semibold transition cursor-pointer ${
+                            profileForm.dementia_duration === chip
+                              ? 'bg-emerald-700 text-white border-emerald-800'
+                              : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                          }`}
+                        >
+                          {chip}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 5. Preferred Regional Dialect */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Compass className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Preferred Regional Dialect</span>
+                    </label>
+                    <select
+                      value={profileForm.dialect}
+                      onChange={(e) => handleProfileChange('dialect', e.target.value)}
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
+                    >
+                      <option value="Assamese">Assamese (অসমীয়া)</option>
+                      <option value="Odia">Odia (ଓଡ଼ିଆ)</option>
+                      <option value="Gujarati">Gujarati (ગુજરાતી)</option>
+                      <option value="Hindi">Hindi (हिन्दी)</option>
+                      <option value="English">English (National)</option>
+                    </select>
+                    <p className="text-[11px] text-slate-500">
+                      Sets default TTS dialect in IVR calls &amp; audio games.
+                    </p>
+                  </div>
+
+                  {/* 6. ABHA Health ID */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>ABHA Health ID (Ayushman Bharat)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.abha_id}
+                      onChange={(e) => handleProfileChange('abha_id', e.target.value)}
+                      placeholder="e.g. NER-ASM-9821-4412"
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
+                    />
+                    <p className="text-[11px] text-slate-500">
+                      Used for eSanjeevani teleconsultation and ABDM records.
+                    </p>
+                  </div>
+
+                  {/* 7. Primary Clinical Stage */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Stethoscope className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Primary Diagnosis / Stage</span>
+                    </label>
+                    <select
+                      value={profileForm.primary_condition}
+                      onChange={(e) => handleProfileChange('primary_condition', e.target.value)}
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
+                    >
+                      <option value="Early-stage Alzheimer’s & Vascular Dementia">Early-stage Alzheimer’s &amp; Vascular</option>
+                      <option value="Mild Cognitive Impairment (MCI)">Mild Cognitive Impairment (MCI)</option>
+                      <option value="Moderate Dementia">Moderate Dementia</option>
+                      <option value="Age-Associated Memory Loss">Age-Associated Memory Loss</option>
+                      <option value="Frontotemporal Dementia">Frontotemporal Dementia</option>
+                    </select>
+                  </div>
+
+                  {/* 8. Emergency Phone */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Emergency Caretaker Phone</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={profileForm.emergency_contact}
+                      onChange={(e) => handleProfileChange('emergency_contact', e.target.value)}
+                      placeholder="+91 94350 12345"
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
+                    />
+                  </div>
+
+                  {/* 9. Daily Guidance Notes */}
+                  <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-emerald-700" />
+                      <span>Caregiver Notes &amp; Routine Tips</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={profileForm.notes}
+                      onChange={(e) => handleProfileChange('notes', e.target.value)}
+                      placeholder="e.g. Likes morning tea at 8 AM, responsive to family photo games"
+                      className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Form Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Instant offline &amp; online auto-synchronization enabled</span>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <button
+                      type="submit"
+                      disabled={isSavingProfile}
+                      className="px-6 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs sm:text-sm rounded-xl shadow-md flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>{isSavingProfile ? 'Saving & Syncing...' : 'Save Patient Profile'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={onNavigateToPatientPortal}
+                      className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm rounded-xl shadow flex items-center justify-center gap-2 transition cursor-pointer"
+                    >
+                      <Heart className="w-4 h-4 fill-emerald-300 text-emerald-300" />
+                      <span>Launch Patient Portal</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* ── PATTERNTRACE™ WORKING MEMORY & STAIRCASE HUB ── */}
-        <div className="p-5 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-md space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 pb-4">
-            <div className="flex items-start sm:items-center gap-3">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-800 flex items-center justify-center shrink-0">
-                <Brain className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 text-[10px] sm:text-xs font-bold">
-                    PatternTrace™ Neurocognitive Engine
-                  </span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${
-                    patternAnalytics?.perseverationCount > 0
-                      ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                      : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+        {/* ══════════════════════════════════════════════════════════ */}
+        {/* TAB 2: CLINICAL BIOMARKERS & TELEMETRY */}
+        {/* ══════════════════════════════════════════════════════════ */}
+        {activeTab === 'telemetry' && (
+          <div className="space-y-6">
+            {/* 7-Day Cognitive Drift Overview */}
+            <div className={`p-5 sm:p-6 rounded-3xl border-3 transition-all ${
+              driftMetrics.alert 
+                ? 'bg-rose-50 border-rose-700 shadow-md' 
+                : 'bg-emerald-50 border-emerald-700 shadow-md'
+            }`}>
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-start gap-3.5 sm:gap-4">
+                  <div className={`p-2.5 sm:p-3 rounded-2xl border-2 shrink-0 ${
+                    driftMetrics.alert ? 'bg-rose-200 border-rose-800 text-rose-900' : 'bg-emerald-200 border-emerald-800 text-emerald-900'
                   }`}>
-                    {patternAnalytics?.clinicalStatus || 'Stable Baseline'}
+                    {driftMetrics.alert ? <AlertOctagon className="w-7 h-7 sm:w-8 sm:h-8" /> : <CheckCircle2 className="w-7 h-7 sm:w-8 sm:h-8" />}
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                      <span className="text-base sm:text-xl font-bold text-zinc-800">
+                        Rolling 7-Day Cognitive Drift Index ({displayPatientName}):
+                      </span>
+                      <span className={`text-2xl sm:text-3xl font-black ${driftMetrics.alert ? 'text-rose-900' : 'text-emerald-950'}`}>
+                        {driftMetrics.drift_percent >= 0 ? `+${driftMetrics.drift_percent}%` : `${driftMetrics.drift_percent}%`}
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm font-semibold text-zinc-700 mt-1">
+                      {driftMetrics.alert 
+                        ? 'CRITICAL ALERT: Reaction latency drift exceeded the 35% clinical threshold. Recommended teleconsultation with neurology team.'
+                        : 'STABLE RANGE: Reaction latency and accuracy variance are within acceptable geriatric baseline parameters (<35% drift).'
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                  <button
+                    onClick={() => setIsReportModalOpen(true)}
+                    className="w-full md:w-auto px-4 sm:px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-indigo-300" />
+                    <span>Export Clinical Report</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* PatternTrace Working Memory & Adaptive Staircase */}
+            <div className="p-5 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-md space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-100 pb-4">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-800 flex items-center justify-center shrink-0">
+                    <Brain className="w-6 h-6 sm:w-7 sm:h-7" />
+                  </div>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 text-[10px] sm:text-xs font-bold">
+                        PatternTrace™ Neurocognitive Engine
+                      </span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${
+                        patternAnalytics?.perseverationCount > 0
+                          ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                          : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                      }`}>
+                        {patternAnalytics?.clinicalStatus || 'Stable Baseline'}
+                      </span>
+                    </div>
+                    <h3 className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">
+                      Visuospatial Working Memory &amp; Adaptive Staircase
+                    </h3>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="px-4 py-2 bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs rounded-xl flex items-center gap-2 cursor-pointer shadow shrink-0"
+                >
+                  <FileText className="w-4 h-4 text-indigo-300" />
+                  <span>View Full Report</span>
+                </button>
+              </div>
+
+              {/* 4 Biomarker Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase block truncate">Working Memory</span>
+                  <span className="text-xl sm:text-3xl font-black text-indigo-900 block mt-1">
+                    Level {patternAnalytics?.currentLevel || 2} <span className="text-xs font-normal text-slate-400">/ 5</span>
+                  </span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block">Max: Level {patternAnalytics?.maxLevelAchieved || 3}</span>
+                </div>
+
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase block truncate">Sequence Recall</span>
+                  <span className="text-xl sm:text-3xl font-black text-emerald-800 block mt-1">
+                    {patternAnalytics?.sequenceMatchPct || 85}%
+                  </span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block">Exact node trajectory</span>
+                </div>
+
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase block truncate">Perceptual Latency</span>
+                  <span className="text-xl sm:text-3xl font-black text-slate-900 block mt-1">
+                    {patternAnalytics?.meanLatency || 880} ms
+                  </span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block">Demo to first touch</span>
+                </div>
+
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase block truncate">Perseveration Rate</span>
+                  <span className={`text-xl sm:text-3xl font-black block mt-1 ${
+                    (patternAnalytics?.perseverationCount || 0) > 0 ? 'text-amber-800' : 'text-emerald-700'
+                  }`}>
+                    {patternAnalytics?.perseverationRatePct || 0}%
+                  </span>
+                  <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block">
+                    {patternAnalytics?.perseverationCount || 0} repetitions
                   </span>
                 </div>
-                <h3 className="text-lg sm:text-2xl font-black text-slate-900 mt-0.5">
-                  Visuospatial Working Memory &amp; Adaptive Staircase
-                </h3>
+              </div>
+
+              {/* Adaptive Staircase Chart */}
+              <div className="space-y-2 min-w-0">
+                <div className="flex flex-wrap items-center justify-between text-xs gap-1">
+                  <h4 className="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-indigo-700" />
+                    <span>Adaptive Staircase Level Progression ({displayPatientName})</span>
+                  </h4>
+                  <span className="text-slate-500 text-[11px]">
+                    Rule: 2 Flawless (+1) | 2 Failed (-1)
+                  </span>
+                </div>
+
+                <div className="h-48 sm:h-56 w-full min-w-0 bg-slate-50 p-2 sm:p-3 rounded-2xl border border-slate-200 overflow-hidden">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={patternAnalytics?.trajectory || []}
+                      margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="levelGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#4F46E5" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                      <XAxis dataKey="trial" tick={{ fontSize: 10, fill: '#64748B' }} label={{ value: 'Trial #', position: 'insideBottomRight', offset: -5, fontSize: 9 }} />
+                      <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10, fill: '#4338CA' }} label={{ value: 'Level', angle: -90, position: 'insideLeft', fill: '#4338CA', fontSize: 10 }} />
+                      <Tooltip
+                        contentStyle={{ backgroundColor: '#0F172A', borderRadius: '12px', color: '#FFF', border: 'none', fontSize: '11px' }}
+                        labelFormatter={(label) => `Trial #${label}`}
+                      />
+                      <Area
+                        type="stepAfter"
+                        dataKey="level"
+                        stroke="#4338CA"
+                        strokeWidth={2.5}
+                        fillOpacity={1}
+                        fill="url(#levelGrad)"
+                        name="Difficulty Level"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={() => setIsReportModalOpen(true)}
-              className="px-4 py-2 bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs rounded-xl flex items-center gap-2 cursor-pointer shadow shrink-0"
-            >
-              <FileText className="w-4 h-4 text-indigo-300" />
-              <span>View Full Report</span>
-            </button>
-          </div>
+            {/* 30-Day Timeline */}
+            <div className="p-5 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-md space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2">
+                <div>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900">
+                    30-Day Timeline: Reaction Latency Drift vs Task Accuracy
+                  </h3>
+                  <p className="text-xs font-semibold text-slate-500">
+                    Track longitudinal cognitive deceleration against target baseline (800ms).
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
+                  <span className="flex items-center gap-1.5 text-indigo-700">
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-700 inline-block"></span>
+                    Latency (ms)
+                  </span>
+                  <span className="flex items-center gap-1.5 text-emerald-700">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>
+                    Accuracy (%)
+                  </span>
+                  <span className="flex items-center gap-1.5 text-slate-600">
+                    <span className="w-3 h-0.5 border border-dashed border-slate-800 inline-block"></span>
+                    Baseline (800ms)
+                  </span>
+                </div>
+              </div>
 
-          {/* 4 Biomarker Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
-              <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase block truncate">Working Memory</span>
-              <span className="text-xl sm:text-3xl font-black text-indigo-900 block mt-1">
-                Level {patternAnalytics?.currentLevel || 2} <span className="text-xs font-normal text-slate-400">/ 5</span>
-              </span>
-              <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block">Max: Level {patternAnalytics?.maxLevelAchieved || 3}</span>
-            </div>
-
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
-              <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase block truncate">Sequence Recall</span>
-              <span className="text-xl sm:text-3xl font-black text-emerald-800 block mt-1">
-                {patternAnalytics?.sequenceMatchPct || 85}%
-              </span>
-              <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block">Exact node trajectory</span>
-            </div>
-
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
-              <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase block truncate">Perceptual Latency</span>
-              <span className="text-xl sm:text-3xl font-black text-slate-900 block mt-1">
-                {patternAnalytics?.meanLatency || 880} ms
-              </span>
-              <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block">Demo to first touch</span>
-            </div>
-
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200 min-w-0">
-              <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase block truncate">Perseveration Rate</span>
-              <span className={`text-xl sm:text-3xl font-black block mt-1 ${
-                (patternAnalytics?.perseverationCount || 0) > 0 ? 'text-amber-800' : 'text-emerald-700'
-              }`}>
-                {patternAnalytics?.perseverationRatePct || 0}%
-              </span>
-              <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block">
-                {patternAnalytics?.perseverationCount || 0} repetitions
-              </span>
-            </div>
-          </div>
-
-          {/* Perseveration Warning Banner */}
-          {patternAnalytics?.perseverationCount > 0 && (
-            <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex items-start gap-3 text-xs">
-              <AlertCircle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold text-sm">
-                  Neurocognitive Warning: Working Memory Pattern Perseveration
-                </p>
-                <p className="text-amber-900 mt-0.5 leading-relaxed">
-                  The patient repeated geometric patterns from the previous trial during recent sessions. In geriatric neurology, pattern perseveration signifies executive set-shifting resistance and is a recognized early biomarker for Mild Cognitive Impairment (MCI).
-                </p>
+              <div className="h-60 sm:h-72 w-full min-w-0 overflow-hidden">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={analyticsData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                    <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#475569' }} />
+                    <YAxis
+                      yAxisId="left"
+                      orientation="left"
+                      domain={[500, 1500]}
+                      tick={{ fontSize: 10, fill: '#4338CA' }}
+                      label={{ value: 'Latency', angle: -90, position: 'insideLeft', fill: '#4338CA', fontSize: 10 }}
+                    />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      domain={[40, 100]}
+                      tick={{ fontSize: 10, fill: '#059669' }}
+                      label={{ value: 'Accuracy (%)', angle: 90, position: 'insideRight', fill: '#059669', fontSize: 10 }}
+                    />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#18181B', borderRadius: '12px', color: '#FFF', border: 'none', fontSize: '11px' }}
+                      labelStyle={{ fontWeight: 'bold' }}
+                    />
+                    <ReferenceLine yAxisId="left" y={800} stroke="#EF4444" strokeDasharray="5 5" label={{ value: '800ms', fill: '#EF4444', fontSize: 9 }} />
+                    <ReferenceLine yAxisId="left" y={1080} stroke="#DC2626" strokeDasharray="3 3" label={{ value: '+35%', fill: '#DC2626', fontSize: 9 }} />
+                    <Line
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="latency_ms"
+                      stroke="#4338CA"
+                      strokeWidth={2.5}
+                      dot={{ r: 2, fill: '#4338CA' }}
+                      name="Reaction Latency (ms)"
+                    />
+                    <Line
+                      yAxisId="right"
+                      type="monotone"
+                      dataKey="accuracy_pct"
+                      stroke="#059669"
+                      strokeWidth={2.5}
+                      dot={{ r: 2, fill: '#059669' }}
+                      name="Accuracy (%)"
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
               </div>
             </div>
-          )}
-
-          {/* Adaptive Staircase Chart */}
-          <div className="space-y-2 min-w-0">
-            <div className="flex flex-wrap items-center justify-between text-xs gap-1">
-              <h4 className="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-indigo-700" />
-                <span>Adaptive Staircase Level Progression</span>
-              </h4>
-              <span className="text-slate-500 text-[11px]">
-                Rule: 2 Flawless (+1) | 2 Failed (-1)
-              </span>
-            </div>
-
-            <div className="h-48 sm:h-56 w-full min-w-0 bg-slate-50 p-2 sm:p-3 rounded-2xl border border-slate-200 overflow-hidden">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={patternAnalytics?.trajectory || []}
-                  margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="levelGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#4F46E5" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                  <XAxis dataKey="trial" tick={{ fontSize: 10, fill: '#64748B' }} label={{ value: 'Trial #', position: 'insideBottomRight', offset: -5, fontSize: 9 }} />
-                  <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 10, fill: '#4338CA' }} label={{ value: 'Level', angle: -90, position: 'insideLeft', fill: '#4338CA', fontSize: 10 }} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#0F172A', borderRadius: '12px', color: '#FFF', border: 'none', fontSize: '11px' }}
-                    labelFormatter={(label) => `Trial #${label}`}
-                  />
-                  <Area
-                    type="stepAfter"
-                    dataKey="level"
-                    stroke="#4338CA"
-                    strokeWidth={2.5}
-                    fillOpacity={1}
-                    fill="url(#levelGrad)"
-                    name="Difficulty Level"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
           </div>
-        </div>
+        )}
 
-        {/* ── 30-DAY DUAL-AXIS LATENCY DRIFT VS ACCURACY TIMELINE ── */}
-        <div className="p-5 sm:p-8 rounded-3xl bg-white border-2 border-slate-200/90 shadow-md space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-2">
-            <div>
-              <h3 className="text-lg sm:text-xl font-bold text-slate-900">
-                30-Day Timeline: Reaction Latency Drift vs Task Accuracy
-              </h3>
-              <p className="text-xs font-semibold text-slate-500">
-                Track longitudinal cognitive deceleration against target baseline (800ms).
+        {/* ══════════════════════════════════════════════════════════ */}
+        {/* TAB 3: ACCESS PASSWORD & ABHA SECURITY */}
+        {/* ══════════════════════════════════════════════════════════ */}
+        {activeTab === 'security' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Manage Dedicated Patient Access Password Card */}
+            <div className="bg-white rounded-3xl p-5 sm:p-7 border-2 border-slate-200/90 shadow-md space-y-4">
+              <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                  <Key className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Patient Access Password</h2>
+                  <p className="text-xs text-slate-500">Stored as a secure bcrypt hash in `patient_profiles`</p>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Your patient logs in at the <strong>Patient Portal</strong> using your email (<code className="break-all">{caretakerUser.email}</code>) and this dedicated password.
               </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
-              <span className="flex items-center gap-1.5 text-indigo-700">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-700 inline-block"></span>
-                Latency (ms)
-              </span>
-              <span className="flex items-center gap-1.5 text-emerald-700">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span>
-                Accuracy (%)
-              </span>
-              <span className="flex items-center gap-1.5 text-slate-600">
-                <span className="w-3 h-0.5 border border-dashed border-slate-800 inline-block"></span>
-                Baseline (800ms)
-              </span>
-            </div>
-          </div>
 
-          <div className="h-60 sm:h-72 w-full min-w-0 overflow-hidden">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={analyticsData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: '#475569' }} />
-                <YAxis
-                  yAxisId="left"
-                  orientation="left"
-                  domain={[500, 1500]}
-                  tick={{ fontSize: 10, fill: '#4338CA' }}
-                  label={{ value: 'Latency', angle: -90, position: 'insideLeft', fill: '#4338CA', fontSize: 10 }}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  domain={[40, 100]}
-                  tick={{ fontSize: 10, fill: '#059669' }}
-                  label={{ value: 'Accuracy (%)', angle: 90, position: 'insideRight', fill: '#059669', fontSize: 10 }}
-                />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#18181B', borderRadius: '12px', color: '#FFF', border: 'none', fontSize: '11px' }}
-                  labelStyle={{ fontWeight: 'bold' }}
-                />
-                <ReferenceLine yAxisId="left" y={800} stroke="#EF4444" strokeDasharray="5 5" label={{ value: '800ms', fill: '#EF4444', fontSize: 9 }} />
-                <ReferenceLine yAxisId="left" y={1080} stroke="#DC2626" strokeDasharray="3 3" label={{ value: '+35%', fill: '#DC2626', fontSize: 9 }} />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="latency_ms"
-                  stroke="#4338CA"
-                  strokeWidth={2.5}
-                  dot={{ r: 2, fill: '#4338CA' }}
-                  name="Reaction Latency (ms)"
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="accuracy_pct"
-                  stroke="#059669"
-                  strokeWidth={2.5}
-                  dot={{ r: 2, fill: '#059669' }}
-                  name="Accuracy (%)"
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+              {passUpdateStatus && (
+                <div
+                  className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                    passUpdateStatus.type === 'success'
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  }`}
+                >
+                  {passUpdateStatus.type === 'success' ? (
+                    <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                  )}
+                  <span>{passUpdateStatus.text}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSetPatientPassword} className="space-y-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase mb-1">
+                    Set New Patient Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      minLength={6}
+                      value={patientPassword}
+                      onChange={(e) => setPatientPassword(e.target.value)}
+                      placeholder="e.g. Setu@2026 or EasyMemory123"
+                      className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
+                  <button
+                    type="submit"
+                    disabled={isUpdatingPass}
+                    className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
+                  >
+                    <Key className="w-3.5 h-3.5" />
+                    <span>{isUpdatingPass ? 'Updating...' : 'Save Patient Password'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyCredentials}
+                    className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold border border-slate-300 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    title="Copy Login Credentials"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>{copied ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Caretaker & Linked Patient Identity Overview */}
+            <div className="bg-white rounded-3xl p-5 sm:p-7 border-2 border-slate-200/90 shadow-md space-y-4">
+              <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+                  <User className="w-4 h-4" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Auth &amp; Linkage Metadata</h2>
+                  <p className="text-xs text-slate-500">Security &amp; compliance tokens</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 min-w-0">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase block mb-0.5">Caretaker Name</span>
+                  <p className="font-semibold text-slate-800 truncate">{displayName}</p>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 min-w-0">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase block mb-0.5">Email</span>
+                  <p className="font-semibold text-slate-800 truncate">{caretakerUser.email}</p>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 min-w-0">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase block mb-0.5">Linked Patient</span>
+                  <p className="font-semibold text-slate-800 truncate">{displayPatientName} (Age {displayPatientAge})</p>
+                </div>
+
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 min-w-0">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase block mb-0.5">ABHA ID</span>
+                  <p className="font-semibold text-slate-800 truncate">{patientProfile?.abha_id || 'NER-ASM-9821-4412'}</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Clinical Summary Report Modal */}
         <PatternTraceReportModal
           isOpen={isReportModalOpen}
           onClose={() => setIsReportModalOpen(false)}
-          patient={{ id: 1, name: 'Bhaben Baruah', age: 74, abha_id: 'NER-ASM-9821-4412' }}
+          patient={{ id: 1, name: displayPatientName, age: displayPatientAge, abha_id: patientProfile?.abha_id || 'NER-ASM-9821-4412' }}
         />
       </div>
     );
@@ -636,8 +1129,8 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
         </h2>
         <p className="text-xs text-slate-500 mt-1">
           {isSignUp
-            ? 'Register to manage patient access and clinical telemetry.'
-            : 'Sign in with your registered email and password.'}
+            ? 'Register to manage patient access, profile records, and clinical telemetry.'
+            : 'Sign in to configure patient profile, locality, and monitor biomarkers.'}
         </p>
       </div>
 
@@ -647,6 +1140,23 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
           <span>{errorMsg}</span>
         </div>
       )}
+
+      {/* 1-Click Quick Demo Sign In Button */}
+      <button
+        type="button"
+        onClick={handleQuickDemoLogin}
+        disabled={loading}
+        className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-300 font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
+      >
+        <Sparkles className="w-4 h-4 text-emerald-700" />
+        <span>⚡ Quick Demo Access (1-Click Caretaker Sign In)</span>
+      </button>
+
+      <div className="relative flex py-1 items-center">
+        <div className="flex-grow border-t border-slate-200"></div>
+        <span className="flex-shrink mx-3 text-[11px] font-semibold text-slate-400 uppercase">Or Continue With Email</span>
+        <div className="flex-grow border-t border-slate-200"></div>
+      </div>
 
       <form onSubmit={handleAuthSubmit} className="space-y-4">
         {isSignUp && (
