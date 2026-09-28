@@ -226,7 +226,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
                           required
                           value={caretakerFullName}
                           onChange={(e) => setCaretakerFullName(e.target.value)}
-                          placeholder="e.g. Dr. Ananya Baruah"
+                          placeholder="e.g. Caretaker Full Name"
                           className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                         />
                       </div>
@@ -242,7 +242,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
                           type="tel"
                           value={caretakerPhone}
                           onChange={(e) => setCaretakerPhone(e.target.value)}
-                          placeholder="+91 94350 12345"
+                          placeholder="e.g. +91 98765 43210"
                           className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                         />
                       </div>
@@ -309,7 +309,11 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
               <div className="pb-1 border-b border-slate-100">
                 <h4 className="font-extrabold text-slate-900 text-base">Patient Companion Sign In</h4>
                 <p className="text-xs text-slate-500">
-                  Signing in for <strong className="text-emerald-800">{patientProfile?.name || 'Bhaben Baruah'} (Age {patientProfile?.age || 74})</strong>
+                  {patientProfile?.name ? (
+                    <>Signing in for <strong className="text-emerald-800">{patientProfile.name} {patientProfile?.age ? `(Age ${patientProfile.age})` : ''}</strong></>
+                  ) : (
+                    <>Sign in with your caretaker credentials to enter patient companion view</>
+                  )}
                 </p>
               </div>
 

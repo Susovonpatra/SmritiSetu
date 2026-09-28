@@ -27,7 +27,7 @@ import {
   Home
 } from 'lucide-react';
 
-function getTimeBasedGreeting(patientName = 'Friend', lang = 'en') {
+function getTimeBasedGreeting(patientName = '', lang = 'en') {
   const hour = new Date().getHours();
   let period = 'morning';
   let Icon = Sun;
@@ -43,33 +43,34 @@ function getTimeBasedGreeting(patientName = 'Friend', lang = 'en') {
     Icon = Moon;
   }
 
-  const safeName = patientName || 'Friend';
+  const hasName = Boolean(patientName && patientName.trim());
+  const trimmedName = hasName ? patientName.trim() : '';
 
   const greetings = {
     or: {
-      morning: `ଶୁଭ ସକାଳ, ${safeName}`,
-      afternoon: `ଶୁଭ ଅପରାହ୍ନ, ${safeName}`,
-      evening: `ଶୁଭ ସନ୍ଧ୍ୟା, ${safeName}`
+      morning: hasName ? `ଶୁଭ ସକାଳ, ${trimmedName}` : 'ଶୁଭ ସକାଳ',
+      afternoon: hasName ? `ଶୁଭ ଅପରାହ୍ନ, ${trimmedName}` : 'ଶୁଭ ଅପରାହ୍ନ',
+      evening: hasName ? `ଶୁଭ ସନ୍ଧ୍ୟା, ${trimmedName}` : 'ଶୁଭ ସନ୍ଧ୍ୟା'
     },
     gu: {
-      morning: `શુભ સવાર, ${safeName}`,
-      afternoon: `શુભ બપોર, ${safeName}`,
-      evening: `શુભ સાંજ, ${safeName}`
+      morning: hasName ? `શુભ સવાર, ${trimmedName}` : 'શુભ સવાર',
+      afternoon: hasName ? `શુભ બપોર, ${trimmedName}` : 'શુભ બપોર',
+      evening: hasName ? `શુભ સાંજ, ${trimmedName}` : 'શુભ સાંજ'
     },
     as: {
-      morning: `শুভ প্ৰভাত, ${safeName}`,
-      afternoon: `শুভ অপৰাহ্ণ, ${safeName}`,
-      evening: `শুভ সন্ধিয়া, ${safeName}`
+      morning: hasName ? `শুভ প্ৰভাত, ${trimmedName}` : 'শুভ প্ৰভাত',
+      afternoon: hasName ? `শুভ অপৰাহ্ণ, ${trimmedName}` : 'শুভ অপৰাহ্ণ',
+      evening: hasName ? `শুভ সন্ধিয়া, ${trimmedName}` : 'শুভ সন্ধিয়া'
     },
     en: {
-      morning: `Good Morning, ${safeName}`,
-      afternoon: `Good Afternoon, ${safeName}`,
-      evening: `Good Evening, ${safeName}`
+      morning: hasName ? `Good Morning, ${trimmedName}` : 'Good Morning',
+      afternoon: hasName ? `Good Afternoon, ${trimmedName}` : 'Good Afternoon',
+      evening: hasName ? `Good Evening, ${trimmedName}` : 'Good Evening'
     }
   };
 
   const selectedMap = greetings[lang] || greetings.en;
-  const text = selectedMap[period] || `Good Day, ${safeName}`;
+  const text = selectedMap[period] || (hasName ? `Good Day, ${trimmedName}` : 'Good Day');
 
   return { text, period, Icon };
 }
@@ -85,11 +86,11 @@ export function PatientPortal({ onExitToHome }) {
   const [loading, setLoading] = useState(false);
 
   // Dynamic Patient Profile Details
-  const patientName = patientSession?.patient_name || patientProfile?.name || 'Bhaben Baruah';
-  const patientAge = patientSession?.patient_age || patientProfile?.age || 74;
-  const locality = patientSession?.locality || patientProfile?.locality || 'Raha, Nagaon, Assam';
-  const dementiaDuration = patientSession?.dementia_duration || patientProfile?.dementia_duration || '2 Years';
-  const caretakerName = patientSession?.caretaker_name || patientProfile?.caregiver_name || 'Ananya Baruah';
+  const patientName = patientSession?.patient_name || patientProfile?.name || '';
+  const patientAge = patientSession?.patient_age || patientProfile?.age || '';
+  const locality = patientSession?.locality || patientProfile?.locality || '';
+  const dementiaDuration = patientSession?.dementia_duration || patientProfile?.dementia_duration || '';
+  const caretakerName = patientSession?.caretaker_name || patientProfile?.caregiver_name || 'Caretaker';
 
   const greetingData = getTimeBasedGreeting(patientName, activeLang);
   const GreetingIcon = greetingData.Icon;
@@ -114,7 +115,7 @@ export function PatientPortal({ onExitToHome }) {
     setLoading(true);
     try {
       await patientLogin({
-        caretakerEmail: 'ananya.baruah@smritisetu.in',
+        caretakerEmail: 'caretaker@smritisetu.in',
         patientPassword: 'Setu@2026'
       });
     } catch (err) {
@@ -153,20 +154,28 @@ export function PatientPortal({ onExitToHome }) {
                 {greetingData.text}
               </h1>
               {/* Patient Identity Pill Displaying Name & Age */}
-              <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 text-xs font-bold border border-emerald-700/60">
-                  <User className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>{patientName}</span>
-                </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span>Age {patientAge}</span>
-                </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700">
-                  <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                  <span className="truncate max-w-[180px]">{locality}</span>
-                </span>
-              </div>
+              {(patientName || patientAge || locality) && (
+                <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                  {patientName && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 text-xs font-bold border border-emerald-700/60">
+                      <User className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>{patientName}</span>
+                    </span>
+                  )}
+                  {patientAge && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
+                      <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                      <span>Age {patientAge}</span>
+                    </span>
+                  )}
+                  {locality && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700">
+                      <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                      <span className="truncate max-w-[180px]">{locality}</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -197,10 +206,14 @@ export function PatientPortal({ onExitToHome }) {
               </div>
               <div>
                 <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-                  Welcome Home, <span className="text-emerald-800">{patientName}</span>
+                  Welcome Home{patientName ? `, ${patientName}` : ''}
                 </h2>
                 <p className="text-xs text-slate-600">
-                  You are at home in <strong className="text-slate-800">{locality}</strong>. Your daily exercises and care plan are ready.
+                  {locality ? (
+                    <>You are at home in <strong className="text-slate-800">{locality}</strong>. Your daily exercises and care plan are ready.</>
+                  ) : (
+                    <>Welcome to your daily health &amp; cognitive companion. Your exercises and care plan are ready.</>
+                  )}
                 </p>
               </div>
             </div>
@@ -216,28 +229,28 @@ export function PatientPortal({ onExitToHome }) {
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
                 Patient Name
               </span>
-              <p className="text-sm font-extrabold text-slate-900 truncate">{patientName}</p>
+              <p className="text-sm font-extrabold text-slate-900 truncate">{patientName || 'Not Set'}</p>
             </div>
 
             <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
                 Age
               </span>
-              <p className="text-sm font-extrabold text-slate-900">{patientAge} Years Old</p>
+              <p className="text-sm font-extrabold text-slate-900">{patientAge ? `${patientAge} Years Old` : 'Not Set'}</p>
             </div>
 
             <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
                 Locality / Home
               </span>
-              <p className="text-sm font-extrabold text-slate-900 truncate">{locality}</p>
+              <p className="text-sm font-extrabold text-slate-900 truncate">{locality || 'Not Set'}</p>
             </div>
 
             <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
               <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
                 Care Journey
               </span>
-              <p className="text-sm font-extrabold text-emerald-800 truncate">{dementiaDuration}</p>
+              <p className="text-sm font-extrabold text-emerald-800 truncate">{dementiaDuration || 'Not Set'}</p>
             </div>
           </div>
         </div>
@@ -398,7 +411,11 @@ export function PatientPortal({ onExitToHome }) {
           Patient Companion Sign In
         </h2>
         <p className="text-xs text-slate-500 mt-1">
-          Sign in to enter the personalized companion portal for <strong className="text-emerald-800">{patientName} (Age {patientAge})</strong>.
+          {patientName ? (
+            <>Sign in to enter the personalized companion portal for <strong className="text-emerald-800">{patientName} {patientAge ? `(Age ${patientAge})` : ''}</strong>.</>
+          ) : (
+            <>Sign in with your caretaker credentials to enter your daily companion portal.</>
+          )}
         </p>
       </div>
 
@@ -410,7 +427,7 @@ export function PatientPortal({ onExitToHome }) {
         className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-300 font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
       >
         <Sparkles className="w-4 h-4 text-emerald-700" />
-        <span>⚡ 1-Click Quick Access as {patientName}</span>
+        <span>⚡ Quick Access (1-Click Patient Sign In)</span>
       </button>
 
       <div className="relative flex py-1 items-center">
@@ -466,7 +483,7 @@ export function PatientPortal({ onExitToHome }) {
           disabled={loading}
           className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
         >
-          <span>{loading ? 'Verifying...' : `Sign In as ${patientName}`}</span>
+          <span>{loading ? 'Verifying...' : (patientName ? `Sign In as ${patientName}` : 'Sign In to Companion')}</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </form>

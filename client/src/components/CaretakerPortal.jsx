@@ -115,15 +115,15 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
   useEffect(() => {
     if (patientProfile) {
       setProfileForm({
-        name: patientProfile.name || 'Bhaben Baruah',
-        age: patientProfile.age || 74,
-        locality: patientProfile.locality || 'Raha, Nagaon, Assam',
-        dementia_duration: patientProfile.dementia_duration || '2 Years',
+        name: patientProfile.name || '',
+        age: patientProfile.age || '',
+        locality: patientProfile.locality || '',
+        dementia_duration: patientProfile.dementia_duration || '',
         dialect: patientProfile.dialect || 'Assamese',
-        abha_id: patientProfile.abha_id || 'NER-ASM-9821-4412',
+        abha_id: patientProfile.abha_id || '',
         primary_condition: patientProfile.primary_condition || 'Early-stage Alzheimer’s & Vascular Dementia',
-        emergency_contact: patientProfile.emergency_contact || patientProfile.caregiver_phone || '+91 94350 12345',
-        notes: patientProfile.notes || 'Prefers morning tea routine at 8:00 AM; responsive to native Assamese & Odia audio prompts.'
+        emergency_contact: patientProfile.emergency_contact || patientProfile.caregiver_phone || '',
+        notes: patientProfile.notes || ''
       });
     }
   }, [patientProfile]);
@@ -206,7 +206,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
     setErrorMsg(null);
     try {
       await signInCaretaker({
-        email: 'ananya.baruah@smritisetu.in',
+        email: 'caretaker@smritisetu.in',
         password: 'Password@123'
       });
     } catch (e) {
@@ -239,10 +239,10 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
       await updatePatientProfile({
         name: profileForm.name.trim(),
         age: parseInt(profileForm.age, 10),
-        locality: profileForm.locality.trim() || 'Raha, Nagaon, Assam',
-        dementia_duration: profileForm.dementia_duration.trim() || '2 Years',
+        locality: profileForm.locality.trim(),
+        dementia_duration: profileForm.dementia_duration.trim(),
         dialect: profileForm.dialect,
-        abha_id: profileForm.abha_id.trim() || 'NER-ASM-9821-4412',
+        abha_id: profileForm.abha_id.trim(),
         primary_condition: profileForm.primary_condition.trim(),
         emergency_contact: profileForm.emergency_contact.trim(),
         caregiver_phone: profileForm.emergency_contact.trim(),
@@ -314,10 +314,10 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
   if (caretakerUser) {
     const meta = caretakerUser.user_metadata || {};
     const displayName = meta.full_name || caretakerUser.email.split('@')[0];
-    const displayPatientName = patientProfile?.name || 'Bhaben Baruah';
-    const displayPatientAge = patientProfile?.age || 74;
-    const displayLocality = patientProfile?.locality || 'Raha, Nagaon, Assam';
-    const displayDementiaDuration = patientProfile?.dementia_duration || '2 Years';
+    const displayPatientName = patientProfile?.name || 'Not Configured';
+    const displayPatientAge = patientProfile?.age ? `${patientProfile.age}` : 'Not Set';
+    const displayLocality = patientProfile?.locality || 'Not Set';
+    const displayDementiaDuration = patientProfile?.dementia_duration || 'Not Set';
 
     return (
       <div className="w-full max-w-6xl mx-auto space-y-6 sm:space-y-8 font-sans pb-12">
@@ -333,7 +333,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
                   Caretaker Clinical Hub
                 </span>
                 <span className="text-[11px] sm:text-xs text-slate-400 truncate">
-                  • Linked Patient: <strong className="text-emerald-300">{displayPatientName}</strong> (Age {displayPatientAge})
+                  • Linked Patient: <strong className="text-emerald-300">{displayPatientName}</strong> {patientProfile?.age ? `(Age ${patientProfile.age})` : ''}
                 </span>
               </div>
               <h1 className="text-xl sm:text-3xl font-black tracking-tight text-white mt-1 leading-tight">
@@ -542,11 +542,11 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
                       required
                       value={profileForm.name}
                       onChange={(e) => handleProfileChange('name', e.target.value)}
-                      placeholder="e.g. Bhaben Baruah"
+                      placeholder="e.g. Patient Full Name"
                       className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
                     />
                     <p className="text-[11px] text-slate-500">
-                      Renders directly in Patient Portal greeting: <em>"Good Morning, {profileForm.name || 'Patient'}"</em>
+                      Renders directly in Patient Portal greeting: <em>"Good Morning{profileForm.name ? `, ${profileForm.name}` : ''}"</em>
                     </p>
                   </div>
 
@@ -563,7 +563,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
                       max={125}
                       value={profileForm.age}
                       onChange={(e) => handleProfileChange('age', e.target.value)}
-                      placeholder="e.g. 74"
+                      placeholder="e.g. 72"
                       className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
                     />
                     <p className="text-[11px] text-slate-500">
@@ -582,7 +582,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
                       required
                       value={profileForm.locality}
                       onChange={(e) => handleProfileChange('locality', e.target.value)}
-                      placeholder="e.g. Raha, Nagaon, Assam"
+                      placeholder="e.g. Guwahati, Assam"
                       className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
                     />
                     <p className="text-[11px] text-slate-500">
@@ -655,7 +655,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
                       type="text"
                       value={profileForm.abha_id}
                       onChange={(e) => handleProfileChange('abha_id', e.target.value)}
-                      placeholder="e.g. NER-ASM-9821-4412"
+                      placeholder="e.g. ABHA-1234-5678-9012"
                       className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
                     />
                     <p className="text-[11px] text-slate-500">
@@ -692,7 +692,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
                       type="tel"
                       value={profileForm.emergency_contact}
                       onChange={(e) => handleProfileChange('emergency_contact', e.target.value)}
-                      placeholder="+91 94350 12345"
+                      placeholder="e.g. +91 98765 43210"
                       className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
                     />
                   </div>
@@ -707,7 +707,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
                       type="text"
                       value={profileForm.notes}
                       onChange={(e) => handleProfileChange('notes', e.target.value)}
-                      placeholder="e.g. Likes morning tea at 8 AM, responsive to family photo games"
+                      placeholder="e.g. Likes morning tea at 8 AM, responsive to audio prompts"
                       className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
                     />
                   </div>
@@ -1100,7 +1100,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
 
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 min-w-0">
                   <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase block mb-0.5">ABHA ID</span>
-                  <p className="font-semibold text-slate-800 truncate">{patientProfile?.abha_id || 'NER-ASM-9821-4412'}</p>
+                  <p className="font-semibold text-slate-800 truncate">{patientProfile?.abha_id || 'Not Set'}</p>
                 </div>
               </div>
             </div>
@@ -1111,7 +1111,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
         <PatternTraceReportModal
           isOpen={isReportModalOpen}
           onClose={() => setIsReportModalOpen(false)}
-          patient={{ id: 1, name: displayPatientName, age: displayPatientAge, abha_id: patientProfile?.abha_id || 'NER-ASM-9821-4412' }}
+          patient={{ id: 1, name: displayPatientName, age: displayPatientAge, abha_id: patientProfile?.abha_id || '' }}
         />
       </div>
     );
@@ -1172,7 +1172,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Ananya Baruah"
+                  placeholder="e.g. Caretaker Full Name"
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                 />
               </div>

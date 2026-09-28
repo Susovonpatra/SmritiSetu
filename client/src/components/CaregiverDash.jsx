@@ -131,7 +131,7 @@ export function CaregiverDash({ onOpenTeleconsult, patient }) {
             <span>Longitudinal Cognitive Drift & Biomarker Analytics</span>
           </h2>
           <p className="text-xs sm:text-base font-semibold text-zinc-600 mt-1">
-            Patient: <strong>{patient?.name || 'Bhaben Baruah'}</strong> (ABHA: {patient?.abha_id || 'NER-ASM-9821-4412'}) | Dialect: Assamese
+            Patient: <strong>{patient?.name || 'Registered Patient'}</strong> (ABHA: {patient?.abha_id || 'Not Linked'}) | Dialect: {patient?.dialect || 'Assamese'}
           </p>
         </div>
 

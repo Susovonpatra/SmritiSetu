@@ -5,19 +5,18 @@ import { db } from '../db/db';
 const DualAuthContext = createContext(null);
 
 export const DEFAULT_PATIENT_PROFILE = {
-  id: 1,
-  name: 'Bhaben Baruah',
-  age: 74,
-  locality: 'Raha, Nagaon, Assam',
-  dementia_duration: '2 Years',
+  name: '',
+  age: '',
+  locality: '',
+  dementia_duration: '',
   dialect: 'Assamese',
-  abha_id: 'NER-ASM-9821-4412',
-  caregiver_name: 'Ananya Baruah',
-  caregiver_phone: '+91 94350 12345',
-  blood_group: 'O+',
-  primary_condition: 'Early-stage Alzheimer’s & Vascular Dementia',
-  emergency_contact: '+91 94350 12345',
-  notes: 'Prefers morning tea routine at 8:00 AM; responsive to native Assamese & Odia audio prompts.'
+  abha_id: '',
+  caregiver_name: '',
+  caregiver_phone: '',
+  blood_group: '',
+  primary_condition: '',
+  emergency_contact: '',
+  notes: ''
 };
 
 export function DualAuthProvider({ children }) {
@@ -30,7 +29,15 @@ export function DualAuthProvider({ children }) {
   const [patientProfile, setPatientProfileState] = useState(() => {
     try {
       const saved = localStorage.getItem('smriti_patient_profile');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If legacy proxy data was saved, clear it
+        if (parsed.name === 'Bhaben Baruah') {
+          localStorage.removeItem('smriti_patient_profile');
+          return DEFAULT_PATIENT_PROFILE;
+        }
+        return parsed;
+      }
     } catch (e) {
       console.warn('Error reading stored patient profile:', e);
     }
@@ -41,7 +48,15 @@ export function DualAuthProvider({ children }) {
   const [patientSession, setPatientSessionState] = useState(() => {
     try {
       const saved = localStorage.getItem('smriti_patient_session');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.patient_name === 'Bhaben Baruah') {
+          localStorage.removeItem('smriti_patient_session');
+          return null;
+        }
+        return parsed;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -52,7 +67,7 @@ export function DualAuthProvider({ children }) {
     const loadDexieProfile = async () => {
       try {
         const stored = await db.patients.toCollection().first();
-        if (stored) {
+        if (stored && stored.name !== 'Bhaben Baruah') {
           setPatientProfileState(prev => {
             const merged = { ...DEFAULT_PATIENT_PROFILE, ...prev, ...stored };
             localStorage.setItem('smriti_patient_profile', JSON.stringify(merged));
@@ -192,10 +207,12 @@ export function DualAuthProvider({ children }) {
 
   const signInCaretaker = async ({ email, password }) => {
     if (!isSupabaseConfigured) {
+      const emailPrefix = email ? email.split('@')[0] : 'Caretaker';
+      const formattedName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
       const mockUser = {
         id: 'dev-caretaker-1',
-        email,
-        user_metadata: { full_name: 'Ananya Baruah', phone_number: '+91 94350 12345', role: 'caretaker' }
+        email: email.trim(),
+        user_metadata: { full_name: formattedName, phone_number: '', role: 'caretaker' }
       };
       const mockSession = { user: mockUser, access_token: 'dev-token' };
       localStorage.setItem('smriti_dev_caretaker', JSON.stringify({ user: mockUser, session: mockSession }));
@@ -244,15 +261,16 @@ export function DualAuthProvider({ children }) {
       if (patientPassword !== storedDevPass && patientPassword !== 'Setu@2026') {
         throw new Error('Invalid caretaker email or patient password.');
       }
+      const ctName = currentProf.caregiver_name || caretakerUser?.user_metadata?.full_name || (caretakerEmail ? caretakerEmail.split('@')[0] : 'Caretaker');
       const session = {
         patient_id: currentProf.id || 'p-dev-1',
-        patient_name: currentProf.name,
-        patient_age: currentProf.age,
-        locality: currentProf.locality,
-        dementia_duration: currentProf.dementia_duration,
-        dialect: currentProf.dialect,
+        patient_name: currentProf.name || '',
+        patient_age: currentProf.age || '',
+        locality: currentProf.locality || '',
+        dementia_duration: currentProf.dementia_duration || '',
+        dialect: currentProf.dialect || 'Assamese',
         caretaker_id: 'dev-caretaker-1',
-        caretaker_name: currentProf.caregiver_name || 'Ananya Baruah',
+        caretaker_name: ctName,
         caretaker_email: caretakerEmail,
         authenticated_at: new Date().toISOString()
       };

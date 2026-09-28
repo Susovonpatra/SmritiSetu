@@ -87,8 +87,8 @@ export function PatternTraceReportModal({ isOpen, onClose, patient }) {
               <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                 <div>
                   <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase block">Patient Name</span>
-                  <span className="text-sm sm:text-base font-black text-slate-900">{patient?.name || 'Bhaben Baruah'}</span>
-                  <span className="text-xs text-slate-500 block">Age: {patient?.age || 74} | ABHA: {patient?.abha_id || 'NER-ASM-9821-4412'}</span>
+                  <span className="text-sm sm:text-base font-black text-slate-900">{patient?.name || 'Registered Patient'}</span>
+                  <span className="text-xs text-slate-500 block">Age: {patient?.age || 'N/A'} | ABHA: {patient?.abha_id || 'Not Linked'}</span>
                 </div>
                 <div>
                   <span className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase block">Assessing Assessment</span>

@@ -41,14 +41,14 @@ function SmritiSetuApp() {
 
   const [patient, setPatient] = useState({
     id: 1,
-    name: 'Bhaben Baruah',
-    age: 74,
-    locality: 'Raha, Nagaon, Assam',
-    dementia_duration: '2 Years',
-    abha_id: 'NER-ASM-9821-4412',
+    name: '',
+    age: '',
+    locality: '',
+    dementia_duration: '',
+    abha_id: '',
     dialect: 'Odia',
-    caregiver_name: 'Ananya Baruah',
-    caregiver_phone: '+91 94350 12345',
+    caregiver_name: '',
+    caregiver_phone: '',
     baseline_latency: 800.0
   });
 

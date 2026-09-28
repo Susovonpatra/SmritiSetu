@@ -17,7 +17,7 @@ export function EsanjeevaniModal({ isOpen, onClose, patient, triageRecord }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           patient_id: patient?.id || 1,
-          abha_id: patient?.abha_id || 'NER-ASM-9821-4412',
+          abha_id: patient?.abha_id || '',
           urgency_level: urgency,
           clinical_notes: notes
         })
@@ -89,7 +89,7 @@ export function EsanjeevaniModal({ isOpen, onClose, patient, triageRecord }) {
               <div><strong>Assigned Center:</strong> {dispatchResult.teleconsultation_center}</div>
               <div><strong>Attending Specialist:</strong> {dispatchResult.assigned_physician}</div>
               <div><strong>Estimated Queue:</strong> Position #{dispatchResult.queue_position} (~{dispatchResult.estimated_wait_time})</div>
-              <div><strong>Linked Health ID:</strong> {patient?.abha_id || 'NER-ASM-9821-4412'}</div>
+              <div><strong>Linked Health ID:</strong> {patient?.abha_id || 'Not Linked'}</div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -118,10 +118,10 @@ export function EsanjeevaniModal({ isOpen, onClose, patient, triageRecord }) {
                 Target Patient Profile:
               </span>
               <span className="text-lg sm:text-xl font-black text-indigo-950 block mt-0.5">
-                {patient?.name || 'Bhaben Baruah'} (Age 74)
+                {patient?.name || 'Registered Patient'} {patient?.age ? `(Age ${patient.age})` : ''}
               </span>
               <span className="text-xs sm:text-sm font-semibold text-indigo-800 block mt-0.5">
-                ABHA ID: {patient?.abha_id || 'NER-ASM-9821-4412'} | Caregiver: Ananya Baruah (+91 94350 12345)
+                ABHA ID: {patient?.abha_id || 'Not Linked'} | Caregiver: {patient?.caregiver_name || 'Assigned Caregiver'} {patient?.caregiver_phone ? `(${patient.caregiver_phone})` : ''}
               </span>
             </div>
 

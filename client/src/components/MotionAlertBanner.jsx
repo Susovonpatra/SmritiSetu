@@ -43,7 +43,7 @@ export function MotionAlertBanner({ isAlertActive, peakAcceleration, lastDropTim
             className="min-h-[44px] sm:min-h-[50px] px-4 sm:px-5 rounded-xl bg-white text-rose-900 font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow hover:bg-rose-50"
           >
             <PhoneCall className="w-4 h-4 sm:w-5 sm:h-5 text-rose-700" />
-            <span>Call Caregiver Ananya</span>
+            <span>Call Emergency Caregiver</span>
           </a>
           <button
             onClick={onDismiss}

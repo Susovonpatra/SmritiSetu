@@ -8,7 +8,7 @@ export function AshaMode({ onOpenTeleconsult }) {
   const [queue, setQueue] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [patientName, setPatientName] = useState('');
-  const [village, setVillage] = useState('Raha, Nagaon');
+  const [village, setVillage] = useState('');
   const [triageStatus, setTriageStatus] = useState('Amber');
   const [notes, setNotes] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);

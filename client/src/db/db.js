@@ -15,39 +15,23 @@ db.version(2).stores({
 // Seed default patient if empty for quick offline demonstration
 export async function initDefaultData() {
   const count = await db.patients.count();
-  if (count === 0) {
-    const patientId = await db.patients.add({
-      abha_id: 'NER-ASM-9821-4412',
-      name: 'Bhaben Baruah',
-      age: 74,
-      locality: 'Raha, Nagaon, Assam',
-      dementia_duration: '2 Years',
-      dialect: 'Assamese',
-      caregiver_name: 'Ananya Baruah',
-      caregiver_phone: '+91 94350 12345',
-      baseline_latency: 850,
-      created_at: new Date().toISOString()
-    });
+  
+  // Clean up any old mock proxy patient records
+  const oldProxy = await db.patients.filter(p => p.name === 'Bhaben Baruah').toArray();
+  for (const p of oldProxy) {
+    await db.patients.delete(p.id);
+  }
 
-    // Seed initial consent
-    await db.consent.add({
-      patient_id: patientId,
-      caregiver_name: 'Ananya Baruah',
-      telemetry_consent: true,
-      voice_storage_consent: true,
-      abha_linkage_consent: true,
-      signature_hash: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-      timestamp: new Date().toISOString()
-    });
-
-    // Seed baseline telemetry for the past 7 days so caregiver charts & drift work immediately
+  // Seed baseline telemetry for the past 7 days so caregiver charts & drift work immediately
+  const telemetryCount = await db.telemetry.count();
+  if (telemetryCount === 0) {
     const baselineRecords = [];
     const now = Date.now();
     for (let i = 14; i >= 1; i--) {
       const pastTime = new Date(now - i * 24 * 60 * 60 * 1000).toISOString();
-      const driftFactor = i <= 7 ? 1.25 : 1.0; // slight recent drift
+      const driftFactor = i <= 7 ? 1.25 : 1.0;
       baselineRecords.push({
-        patient_id: patientId,
+        patient_id: 1,
         game_type: i % 2 === 0 ? 'visual_matching' : 'routine_sequencer',
         timestamp: pastTime,
         latency_ms: Math.round((820 + Math.random() * 80) * driftFactor),
@@ -57,8 +41,12 @@ export async function initDefaultData() {
       });
     }
     await db.telemetry.bulkAdd(baselineRecords);
+  }
 
-    // Seed realistic PatternTrace baseline trials
+  // Seed realistic PatternTrace baseline trials
+  const trialsCount = await db.patterntrace_trials?.count();
+  if (trialsCount === 0 && db.patterntrace_trials) {
+    const now = Date.now();
     const patternTraceSeed = [
       {
         trial_id: 'seed-pt-01',
@@ -181,8 +169,8 @@ export async function initDefaultData() {
     await db.asha_queue.bulkAdd([
       {
         patient_id: patientId,
-        patient_name: 'Bhaben Baruah',
-        village: 'Raha, Nagaon',
+        patient_name: 'Kamal Das',
+        village: 'Rampur',
         triage_status: 'Amber',
         notes: 'Mild confusion in morning routine; motor tremor slightly increased.',
         timestamp: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString(),

@@ -4,7 +4,7 @@ import { generateSessionHash } from '../utils/crypto';
 import { db } from '../db/db';
 
 export function ConsentModal({ isOpen, onClose, onConsentComplete, patient }) {
-  const [caregiverName, setCaregiverName] = useState(patient?.caregiver_name || 'Ananya Baruah');
+  const [caregiverName, setCaregiverName] = useState(patient?.caregiver_name || '');
   const [telemetryConsent, setTelemetryConsent] = useState(true);
   const [voiceStorageConsent, setVoiceStorageConsent] = useState(true);
   const [abhaLinkageConsent, setAbhaLinkageConsent] = useState(true);
@@ -92,7 +92,7 @@ export function ConsentModal({ isOpen, onClose, onConsentComplete, patient }) {
         <div className="p-3.5 sm:p-4 rounded-2xl bg-amber-50 border-2 border-amber-800 mb-4 sm:mb-6 text-zinc-900 text-xs sm:text-base">
           <p className="font-medium leading-relaxed">
             As authorized under the <b>Digital Personal Data Protection (DPDP) Act 2023</b>, 
-            the legal caregiver acts on behalf of <b>{patient?.name || 'Bhaben Baruah'}</b> (ABHA: {patient?.abha_id || 'NER-ASM-9821-4412'}). 
+            the legal caregiver acts on behalf of <b>{patient?.name || 'the registered patient'}</b> (ABHA: {patient?.abha_id || 'Not Linked'}). 
             Please configure granular telemetry permissions:
           </p>
         </div>
@@ -108,7 +108,7 @@ export function ConsentModal({ isOpen, onClose, onConsentComplete, patient }) {
               value={caregiverName}
               onChange={(e) => setCaregiverName(e.target.value)}
               className="w-full px-3.5 py-2.5 sm:py-3 rounded-xl border-2 sm:border-3 border-zinc-800 text-sm sm:text-lg font-medium focus:border-emerald-700"
-              placeholder="e.g., Ananya Baruah"
+              placeholder="e.g., Caregiver Legal Name"
             />
           </div>
 
