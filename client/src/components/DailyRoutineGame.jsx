@@ -170,10 +170,11 @@ export function DailyRoutineGame({ onComplete }) {
         <button
           onClick={handleHearPrompt}
           disabled={isSpeaking}
-          className="min-h-[64px] px-6 rounded-2xl bg-amber-800 hover:bg-amber-900 text-white font-black text-lg flex items-center gap-2 border-3 border-zinc-900 shadow-[0_4px_0_#18181B] active:translate-y-1 transition-all"
+          title={t('games.replayVoice')}
+          aria-label={t('games.replayVoice')}
+          className="w-16 h-16 rounded-full bg-amber-800 hover:bg-amber-900 text-white flex items-center justify-center border-3 border-zinc-900 shadow-[0_4px_0_#92400E] active:translate-y-1 active:shadow-none transition-all flex-shrink-0"
         >
-          <Volume2 className={`w-6 h-6 ${isSpeaking ? 'animate-pulse text-amber-300' : 'text-white'}`} />
-          <span>{isSpeaking ? 'Speaking...' : t('games.replayVoice')}</span>
+          <Volume2 className={`w-7 h-7 ${isSpeaking ? 'animate-pulse text-amber-300' : 'text-white'}`} />
         </button>
       </div>
 

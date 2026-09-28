@@ -81,18 +81,30 @@ export function PatientPortal({ onLaunchGame, onLaunchVault, onNavigateToCaretak
             <div className="space-y-3 pt-1">
               <button
                 onClick={onLaunchGame}
-                className="w-full py-3.5 px-4 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm rounded-xl shadow-sm flex items-center justify-between transition cursor-pointer"
+                className="w-full py-4 px-4 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-sm rounded-xl shadow-md flex items-center justify-between transition cursor-pointer border-2 border-indigo-900 group"
               >
-                <div className="flex items-center gap-2.5">
-                  <Brain className="w-4 h-4 text-emerald-200" />
-                  <span>Play Cognitive Matching</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-600/60 flex items-center justify-center">
+                    <Brain className="w-5 h-5 text-indigo-200" />
+                  </div>
+                  <div className="text-left">
+                    <div className="flex items-center gap-2">
+                      <span className="font-extrabold text-white">Play PatternTrace Memory</span>
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-400 text-emerald-950 text-[10px] font-black uppercase">
+                        Prescribed
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-indigo-200 font-normal">
+                      Connect 3x3 dot patterns • Adaptive memory exercise
+                    </p>
+                  </div>
                 </div>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 text-indigo-200 group-hover:translate-x-1 transition-transform" />
               </button>
 
               <button
                 onClick={onLaunchVault}
-                className="w-full py-3.5 px-4 bg-rose-700 hover:bg-rose-800 text-white font-bold text-sm rounded-xl shadow-sm flex items-center justify-between transition cursor-pointer"
+                className="w-full py-3.5 px-4 bg-rose-700 hover:bg-rose-800 text-white font-bold text-sm rounded-xl shadow-sm flex items-center justify-between transition cursor-pointer border border-rose-800"
               >
                 <div className="flex items-center gap-2.5">
                   <Heart className="w-4 h-4 text-rose-200 fill-rose-200" />

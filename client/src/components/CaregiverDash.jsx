@@ -4,6 +4,8 @@ import {
   ComposedChart,
   Line,
   Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -11,11 +13,29 @@ import {
   Legend,
   ReferenceLine
 } from 'recharts';
-import { TrendingUp, AlertOctagon, Download, Send, CheckCircle2, Shield, Activity, Clock } from 'lucide-react';
+import {
+  TrendingUp,
+  AlertOctagon,
+  Download,
+  Send,
+  CheckCircle2,
+  Shield,
+  Activity,
+  Clock,
+  Brain,
+  Layers,
+  FileText,
+  AlertTriangle,
+  Sparkles
+} from 'lucide-react';
 import { db } from '../db/db';
+import { PatternTraceTelemetryService } from '../services/patternTraceTelemetry';
+import { PatternTraceReportModal } from './PatternTraceReportModal';
 
 export function CaregiverDash({ onOpenTeleconsult, patient }) {
   const [analyticsData, setAnalyticsData] = useState([]);
+  const [patternAnalytics, setPatternAnalytics] = useState(null);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [driftMetrics, setDriftMetrics] = useState({
     drift_percent: 28.4,
     current_latency: 1025,
@@ -72,6 +92,9 @@ export function CaregiverDash({ onOpenTeleconsult, patient }) {
           baseline: baseline
         });
       }
+
+      const patternData = await PatternTraceTelemetryService.getLongitudinalAnalytics(patient?.id || 1);
+      setPatternAnalytics(patternData);
 
       const recentLatency = timeline.slice(-7).reduce((acc, c) => acc + c.latency_ms, 0) / 7;
       const drift = ((recentLatency - baseline) / baseline) * 100;
@@ -301,6 +324,148 @@ export function CaregiverDash({ onOpenTeleconsult, patient }) {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* ── PatternTrace™: Visuospatial Working Memory & MCI Screening Hub ── */}
+      <div className="p-6 rounded-3xl bg-white border-3 border-indigo-900 shadow-lg space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b-2 border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-800 flex items-center justify-center">
+              <Brain className="w-7 h-7" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 text-xs font-bold">
+                  Dementia Biomarker Engine
+                </span>
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                  patternAnalytics?.perseverationCount > 0
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                    : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                }`}>
+                  {patternAnalytics?.clinicalStatus || 'Stable Baseline'}
+                </span>
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mt-0.5">
+                PatternTrace: Visuospatial Working Memory &amp; Staircase Trajectory
+              </h3>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsReportModalOpen(true)}
+            className="min-h-[50px] px-5 rounded-2xl bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-sm flex items-center gap-2 shadow border border-indigo-800 cursor-pointer"
+          >
+            <FileText className="w-4 h-4 text-indigo-300" />
+            <span>Export Full Clinical Report</span>
+          </button>
+        </div>
+
+        {/* 4 Pattern Biomarker Metric Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200">
+            <span className="text-xs font-bold text-slate-500 uppercase block">Working Memory Span</span>
+            <span className="text-3xl font-black text-indigo-900 block mt-1">
+              Level {patternAnalytics?.currentLevel || 2} <span className="text-xs font-normal text-slate-500">/ 5</span>
+            </span>
+            <span className="text-xs text-slate-500">Max span: Level {patternAnalytics?.maxLevelAchieved || 3}</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200">
+            <span className="text-xs font-bold text-slate-500 uppercase block">Sequence Recall</span>
+            <span className="text-3xl font-black text-emerald-800 block mt-1">
+              {patternAnalytics?.sequenceMatchPct || 85}%
+            </span>
+            <span className="text-xs text-slate-500">Exact node trajectory</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200">
+            <span className="text-xs font-bold text-slate-500 uppercase block">Perceptual Latency</span>
+            <span className="text-3xl font-black text-slate-900 block mt-1">
+              {patternAnalytics?.meanLatency || 880} ms
+            </span>
+            <span className="text-xs text-slate-500">Demo end → first touch</span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 border-2 border-slate-200">
+            <span className="text-xs font-bold text-slate-500 uppercase block">Perseveration Rate</span>
+            <span className={`text-3xl font-black block mt-1 ${
+              (patternAnalytics?.perseverationCount || 0) > 0 ? 'text-amber-800' : 'text-emerald-700'
+            }`}>
+              {patternAnalytics?.perseverationRatePct || 0}%
+            </span>
+            <span className="text-xs text-slate-500">
+              {patternAnalytics?.perseverationCount || 0} repetitions flagged
+            </span>
+          </div>
+        </div>
+
+        {/* Clinical Perseveration Banner */}
+        {patternAnalytics?.perseverationCount > 0 && (
+          <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex items-start gap-3 text-xs">
+            <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold text-sm">
+                Neurocognitive Marker Detected: Working Memory Perseveration
+              </p>
+              <p className="text-amber-900 mt-0.5">
+                The patient replicated the geometric pattern from a previous trial during recent trials. In geriatric neurology, pattern perseveration signifies executive set-shifting resistance and is a recognized early indicator for Mild Cognitive Impairment (MCI).
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* PatternTrace Staircase Adaptive Difficulty Chart */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <Layers className="w-4 h-4 text-indigo-700" />
+              <span>Adaptive Staircase Level Progression Over Recent Trials</span>
+            </h4>
+            <span className="text-xs text-slate-500">
+              Rule: 2 Consecutive Flawless (+1 Level) | 2 Failed (-1 Level)
+            </span>
+          </div>
+
+          <div className="h-56 w-full bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={patternAnalytics?.trajectory || []}
+                margin={{ top: 10, right: 15, left: -20, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="levelGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#4F46E5" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#4F46E5" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                <XAxis dataKey="trial" tick={{ fontSize: 11, fill: '#64748B' }} label={{ value: 'Trial #', position: 'insideBottomRight', offset: -5, fontSize: 10 }} />
+                <YAxis domain={[1, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 11, fill: '#4338CA' }} label={{ value: 'Level', angle: -90, position: 'insideLeft', fill: '#4338CA', fontSize: 11 }} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#0F172A', borderRadius: '12px', color: '#FFF', border: 'none', fontSize: '12px' }}
+                  labelFormatter={(label) => `Trial #${label}`}
+                />
+                <Area
+                  type="stepAfter"
+                  dataKey="level"
+                  stroke="#4338CA"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#levelGradient)"
+                  name="Difficulty Level"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* PatternTrace Exportable Clinical Report Modal */}
+      <PatternTraceReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        patient={patient}
+      />
     </div>
   );
 }

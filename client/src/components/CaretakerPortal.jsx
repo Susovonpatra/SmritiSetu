@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDualAuth } from '../context/DualAuthContext';
 import {
   Shield,
@@ -12,8 +12,13 @@ import {
   CheckCircle2,
   AlertCircle,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Brain,
+  Activity,
+  Layers,
+  Sparkles
 } from 'lucide-react';
+import { PatternTraceTelemetryService } from '../services/patternTraceTelemetry';
 
 export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) {
   const {
@@ -41,6 +46,15 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
   const [successMsg, setSuccessMsg] = useState(null);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [patternSummary, setPatternSummary] = useState(null);
+
+  useEffect(() => {
+    if (caretakerUser) {
+      PatternTraceTelemetryService.getLongitudinalAnalytics(1).then((data) => {
+        setPatternSummary(data);
+      });
+    }
+  }, [caretakerUser]);
 
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
@@ -272,6 +286,70 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenAnalytics }) 
                 <span>Launch Patient View</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Patient PatternTrace Cognitive Progress Card */}
+        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
+                <Brain className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900">PatternTrace™ Cognitive Progress</h3>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    patternSummary?.perseverationCount > 0
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'bg-emerald-100 text-emerald-900'
+                  }`}>
+                    {patternSummary?.clinicalStatus || 'Stable'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500">Live visuospatial working memory and adaptive staircase telemetry</p>
+              </div>
+            </div>
+
+            <button
+              onClick={onOpenAnalytics}
+              className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5"
+            >
+              <span>View Longitudinal Analytics</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="text-[11px] font-bold text-slate-400 uppercase block">Current Span</span>
+              <span className="text-xl font-black text-indigo-900 block mt-0.5">
+                Level {patternSummary?.currentLevel || 2} <span className="text-xs font-normal text-slate-400">/ 5</span>
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="text-[11px] font-bold text-slate-400 uppercase block">Accuracy Rate</span>
+              <span className="text-xl font-black text-emerald-800 block mt-0.5">
+                {patternSummary?.meanAccuracyPct || 85}%
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="text-[11px] font-bold text-slate-400 uppercase block">Response Latency</span>
+              <span className="text-xl font-black text-slate-900 block mt-0.5">
+                {patternSummary?.meanLatency || 880} ms
+              </span>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="text-[11px] font-bold text-slate-400 uppercase block">Perseveration</span>
+              <span className={`text-xl font-black block mt-0.5 ${
+                (patternSummary?.perseverationCount || 0) > 0 ? 'text-amber-800' : 'text-emerald-700'
+              }`}>
+                {patternSummary?.perseverationCount || 0} flagged
+              </span>
             </div>
           </div>
         </div>

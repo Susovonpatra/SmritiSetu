@@ -25,7 +25,8 @@ export const TRANSLATIONS = {
       sync: 'ସିଙ୍କ୍ କରନ୍ତୁ',
       signConsent: 'ଅନୁମତି ପତ୍ର',
       consentSigned: 'ଅନୁମତି ଯାଞ୍ଚ ହୋଇଛି',
-      menu: 'ମେନୁ'
+      menu: 'ମେନୁ',
+      backToHome: 'ମୁଖ୍ୟ ପୃଷ୍ଠାକୁ ଫେରନ୍ତୁ'
     },
     // ASHA Triage Portal
     asha: {
@@ -57,7 +58,16 @@ export const TRANSLATIONS = {
       correctFeedback: 'ବହୁତ ବଢ଼ିଆ! ସଠିକ୍ ଉତ୍ତର।',
       tryAgainFeedback: 'ଆଉ ଥରେ ଚେଷ୍ଟା କରନ୍ତୁ।',
       routineSuccess: 'ବହୁତ ସୁନ୍ଦର! ଦୈନନ୍ଦିନ ନିୟମ ସଠିକ୍ ଭାବେ ସଜାଡ଼ି ହେଲା।',
-      routineMixed: 'କ୍ରମଟି ଟିକେ ଓଲଟପାଲଟ ହୋଇଛି। ଆସନ୍ତୁ ପୁନର୍ବାର ଚେଷ୍ଟା କରିବା।'
+      routineMixed: 'କ୍ରମଟି ଟିକେ ଓଲଟପାଲଟ ହୋଇଛି। ଆସନ୍ତୁ ପୁନର୍ବାର ଚେଷ୍ଟା କରିବା।',
+      patternTitle: 'ପ୍ୟାଟର୍ଣ୍ଣ ଟ୍ରେସ୍ ମାନସିକ ସ୍ମୃତି',
+      patternSubtitle: 'ବିନ୍ଦୁଗୁଡ଼ିକୁ ମନେରଖି କ୍ରମାନୁସାରେ ଯୋଡ଼ନ୍ତୁ',
+      watchPattern: 'ଦେଖନ୍ତୁ କିପରି ବିନ୍ଦୁଗୁଡ଼ିକ ଯୋଡ଼ାଯାଉଛି।',
+      yourTurn: 'ଆପଣଙ୍କ ପାଳି। ବିନ୍ଦୁଗୁଡ଼ିକୁ ଯୋଡ଼ନ୍ତୁ।',
+      patternSuccess: 'ଅତି ଉତ୍ତମ! ପ୍ୟାଟର୍ଣ୍ଣ ସଠିକ୍ ଭାବେ ଯୋଡ଼ି ହୋଇଛି।',
+      patternGentleRetry: 'ଭଲ ପ୍ରୟାସ! ଆସନ୍ତୁ ପୁନର୍ବାର ଦେଖିବା।',
+      clearPattern: 'ସଫା କରନ୍ତୁ',
+      submitPattern: 'ଯାଞ୍ଚ କରନ୍ତୁ',
+      level: 'ସ୍ତର'
     },
     // Memory Vault
     vault: {
@@ -132,7 +142,8 @@ export const TRANSLATIONS = {
       sync: 'સિંક કરો',
       signConsent: 'સંમતિ પત્રક',
       consentSigned: 'સંમતિ ચકાસાયેલ',
-      menu: 'મેનુ'
+      menu: 'મેનુ',
+      backToHome: 'મુખ્ય પૃષ્ઠ પર પાછા જાઓ'
     },
     asha: {
       tierBadge: 'ગ્રામીણ આરોગ્ય સ્તર: પ્રાથમિક આરોગ્ય કેન્દ્ર (PHC) પોર્ટલ',
@@ -162,7 +173,16 @@ export const TRANSLATIONS = {
       correctFeedback: 'ખૂબ સરસ! સાચો જવાબ છે.',
       tryAgainFeedback: 'ફરીથી પ્રયાસ કરો.',
       routineSuccess: 'શાબાશ! દિનચર્યા યોગ્ય રીતે ગોઠવાઈ ગઈ.',
-      routineMixed: 'ક્રમ થોડો આડોઅવળો થયો છે. ચાલો ફરીથી પ્રયત્ન કરીએ.'
+      routineMixed: 'ક્રમ થોડો આડોઅવળો થયો છે. ચાલો ફરીથી પ્રયત્ન કરીએ.',
+      patternTitle: 'પેટર્ન ટ્રેસ સ્મૃતિ રમત',
+      patternSubtitle: 'બિંદુઓને યાદ રાખીને ક્રમમાં જોડો',
+      watchPattern: 'ધ્યાનથી જુઓ કે બિંદુઓ કેવી રીતે જોડાય છે.',
+      yourTurn: 'તમારો વારો. બિંદુઓને જોડો.',
+      patternSuccess: 'ખૂબ સરસ! પેટર્ન યોગ્ય રીતે જોડાઈ ગઈ.',
+      patternGentleRetry: 'સારો પ્રયાસ! ચાલો ફરીથી પેટર્ન જોઈએ.',
+      clearPattern: 'સાફ કરો',
+      submitPattern: 'તપાસો',
+      level: 'સ્તર'
     },
     vault: {
       title: 'પારિવારિક સ્મૃતિ ભંડાર',
@@ -233,7 +253,8 @@ export const TRANSLATIONS = {
       sync: 'চিংক কৰক',
       signConsent: 'সন্মতি পত্ৰ',
       consentSigned: 'সন্মতি পৰীক্ষিত',
-      menu: 'মেনু'
+      menu: 'মেনু',
+      backToHome: 'মূল পৃষ্ঠালৈ ঘূৰি যাওক'
     },
     asha: {
       tierBadge: 'গ্ৰাম্য স্বাস্থ্য স্তৰ: প্ৰাথমিক স্বাস্থ্য কেন্দ্ৰ (PHC) ফিল্ড পʼৰ্টেল',
@@ -263,7 +284,16 @@ export const TRANSLATIONS = {
       correctFeedback: 'বৰ সুন্দৰ! শুদ্ধ উত্তৰ।',
       tryAgainFeedback: 'আকৌ চেষ্টা কৰক।',
       routineSuccess: 'বৰ ধুনীয়া! আপোনাৰ দৈনিক নিয়ম শুদ্ধ হʼল।',
-      routineMixed: 'ক্ৰমটো অলপ খেলিমেলি হʼল। পুনৰ চেষ্টা কৰক।'
+      routineMixed: 'ক্ৰমটো অলপ খেলিমেলি হʼল। পুনৰ চেষ্টা কৰক।',
+      patternTitle: 'প্যাটাৰ্ণ ট্ৰেচ স্মৃতি খেল',
+      patternSubtitle: 'বিন্দুসমূহ মনত ৰাখি ক্ৰমত সংযোগ কৰক',
+      watchPattern: 'মন দি চাওক বিন্দুসমূহ কেনেকৈ সংযোগ হৈছে।',
+      yourTurn: 'আপোনাৰ পাল। বিন্দুসমূহ সংযোগ কৰক।',
+      patternSuccess: 'বৰ ধুনীয়া! পেটাৰ্ণ সঠিকভাৱে মিলি গʼল।',
+      patternGentleRetry: 'ভাল প্ৰয়াস! আহক পুনৰ চাওঁ।',
+      clearPattern: 'মচি পেলাওক',
+      submitPattern: 'পৰীক্ষা কৰক',
+      level: 'স্তৰ'
     },
     vault: {
       title: 'পৰিয়ালৰ স্মৃতি ভঁৰাল',
@@ -334,7 +364,8 @@ export const TRANSLATIONS = {
       sync: 'Sync',
       signConsent: 'Sign Consent',
       consentSigned: 'Consent Verified',
-      menu: 'Menu'
+      menu: 'Menu',
+      backToHome: 'Back to Home'
     },
     asha: {
       tierBadge: 'Rural Health Tier: Primary Health Centre (PHC) Field Portal',
@@ -364,7 +395,16 @@ export const TRANSLATIONS = {
       correctFeedback: 'Well done! Correct answer.',
       tryAgainFeedback: 'Please try again.',
       routineSuccess: 'Great job! Daily routine sequenced correctly.',
-      routineMixed: 'Sequence was slightly mixed up. Let us try again.'
+      routineMixed: 'Sequence was slightly mixed up. Let us try again.',
+      patternTitle: 'PatternTrace Memory',
+      patternSubtitle: 'Watch the dots connect, then recreate the pattern',
+      watchPattern: 'Watch the pattern carefully.',
+      yourTurn: 'Your turn. Connect the dots.',
+      patternSuccess: 'Splendid! Pattern matched perfectly.',
+      patternGentleRetry: 'Good effort! Let us watch the pattern again.',
+      clearPattern: 'Clear',
+      submitPattern: 'Check Pattern',
+      level: 'Level'
     },
     vault: {
       title: 'Family Memory Vault',

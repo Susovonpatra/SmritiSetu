@@ -12,7 +12,9 @@ import {
   LayoutGrid,
   RefreshCw,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Home,
+  ArrowLeft
 } from 'lucide-react';
 import { DementiaLanguageToggle } from './DementiaLanguageToggle';
 import { useLocale } from '../context/LocaleContext';
@@ -97,10 +99,11 @@ export function Navbar({
 
         {/* Main Navigation Bar */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-          {/* Brand Identity */}
+          {/* Brand Identity - Navigates to Home */}
           <div
-            onClick={() => handleNavClick('pitch')}
+            onClick={() => handleNavClick('patient_games')}
             className="flex items-center gap-3 cursor-pointer group select-none"
+            title="Go to Home"
           >
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-900 text-white flex items-center justify-center font-bold text-xl shadow-sm group-hover:scale-105 transition-transform border border-emerald-600/40">
               {regionInfo.nativeName ? regionInfo.nativeName.substring(0, 2) : 'ସ୍ମୃ'}
@@ -122,6 +125,20 @@ export function Navbar({
 
           {/* Main Primary Navigation Tabs */}
           <nav className="hidden lg:flex items-center gap-1.5">
+            {/* 0. Home */}
+            <button
+              onClick={() => handleNavClick('patient_games')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all border ${
+                currentView === 'patient_games'
+                  ? 'bg-slate-900 text-white border-slate-950 shadow-sm'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:text-slate-950'
+              }`}
+              title={t('nav.backToHome') || 'Home'}
+            >
+              <Home className={`w-4 h-4 ${currentView === 'patient_games' ? 'text-emerald-400' : 'text-slate-600'}`} />
+              <span>{t('nav.backToHome') || 'Home'}</span>
+            </button>
+
             {/* 1. Caretaker Portal */}
             <button
               onClick={() => handleNavClick('caretaker_portal')}
@@ -339,6 +356,21 @@ export function Navbar({
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block px-1">
                     Application Modules
                   </span>
+
+                  <button
+                    onClick={() => handleNavClick('patient_games')}
+                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors ${
+                      currentView === 'patient_games'
+                        ? 'bg-slate-900 text-white shadow-sm'
+                        : 'hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Home className={`w-4 h-4 ${currentView === 'patient_games' ? 'text-emerald-400' : 'text-slate-600'}`} />
+                      <span>{t('nav.backToHome') || 'Home / Games'}</span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </button>
 
                   <button
                     onClick={() => handleNavClick('patient_games')}
