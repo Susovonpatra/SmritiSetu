@@ -84,3 +84,38 @@ def search_memories(query: str):
             
     results.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
     return results or DEFAULT_MEMORIES
+
+
+class BiographicalQuestionItem(BaseModel):
+    questionId: str
+    patientId: Optional[int] = 1
+    questionText: str
+    relationTier: str
+    options: List[str]
+    correctOptionIndex: int
+    orderIndex: Optional[int] = 0
+    createdAt: Optional[str] = None
+    updatedAt: Optional[str] = None
+
+
+class BatchBiographicalQuestionsPayload(BaseModel):
+    patientId: Optional[int] = 1
+    questions: List[BiographicalQuestionItem]
+
+
+BIOGRAPHICAL_QUESTIONS_CACHE = {}
+
+
+@router.post("/biographical-questions")
+def save_biographical_questions(payload: BatchBiographicalQuestionsPayload):
+    """Batch save or update biographical questions for a patient"""
+    p_id = payload.patientId or 1
+    BIOGRAPHICAL_QUESTIONS_CACHE[p_id] = [q.dict() for q in payload.questions]
+    return {"status": "success", "count": len(payload.questions)}
+
+
+@router.get("/biographical-questions/{patient_id}")
+def get_biographical_questions(patient_id: int):
+    """Retrieve all stored biographical questions for a patient"""
+    return BIOGRAPHICAL_QUESTIONS_CACHE.get(patient_id, [])
+

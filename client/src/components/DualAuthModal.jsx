@@ -62,14 +62,21 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
 
     try {
       if (isCaretakerSignUp) {
-        if (!caretakerFullName.trim()) throw new Error('Please enter your full name.');
+        if (!caretakerFullName.trim()) {
+          setErrorMsg('Please enter your full name.');
+          setLoading(false);
+          return;
+        }
         const { data, error } = await signUpCaretaker({
           email: caretakerEmail,
           password: caretakerPassword,
           fullName: caretakerFullName,
           phoneNumber: caretakerPhone
         });
-        if (error) throw error;
+        if (error) {
+          setErrorMsg(error.message || 'Registration failed. Please check your details.');
+          return;
+        }
         setSuccessMsg('Account created successfully! Redirecting...');
         setTimeout(() => {
           if (onSuccess) onSuccess('caretaker_portal');
@@ -80,12 +87,15 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
           email: caretakerEmail,
           password: caretakerPassword
         });
-        if (error) throw error;
+        if (error) {
+          setErrorMsg(error.message || 'Invalid email or password.');
+          return;
+        }
         if (onSuccess) onSuccess('caretaker_portal');
         onClose();
       }
     } catch (err) {
-      setErrorMsg('Invalid credentials. Please check your email and password.');
+      setErrorMsg(err?.message || 'Authentication error.');
     } finally {
       setLoading(false);
     }
@@ -105,7 +115,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
       if (onSuccess) onSuccess('patient_portal');
       onClose();
     } catch (err) {
-      setErrorMsg('Invalid credentials. Please verify caretaker email and patient password.');
+      setErrorMsg(err?.message || 'Invalid caretaker email or patient password.');
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { DementiaLanguageToggle } from './DementiaLanguageToggle';
 import { PatternTraceGame } from './PatternTraceGame';
 import { VisualSemanticGame } from './VisualSemanticGame';
 import { DailyRoutineGame } from './DailyRoutineGame';
+import { BiographicalRecognitionGame } from './BiographicalRecognitionGame';
 import {
   Heart,
   KeyRound,
@@ -79,7 +80,7 @@ export function PatientPortal({ onExitToHome }) {
   const { patientSession, patientProfile, patientLogin, signOutPatient } = useDualAuth();
   const { activeLang, regionInfo, t } = useLocale();
 
-  const [activeGameTab, setActiveGameTab] = useState('pattern'); // 'pattern' | 'visual' | 'routine'
+  const [activeGameTab, setActiveGameTab] = useState('biographical'); // 'biographical' | 'pattern' | 'visual' | 'routine'
   const [caretakerEmail, setCaretakerEmail] = useState('');
   const [patientPassword, setPatientPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState(null);
@@ -103,23 +104,7 @@ export function PatientPortal({ onExitToHome }) {
     try {
       await patientLogin({ caretakerEmail, patientPassword });
     } catch (err) {
-      setErrorMsg('Invalid credentials. Please verify caretaker email and patient password.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Quick 1-Click Demo Login for Patient
-  const handleQuickDemoPatientLogin = async () => {
-    setErrorMsg(null);
-    setLoading(true);
-    try {
-      await patientLogin({
-        caretakerEmail: 'caretaker@smritisetu.in',
-        patientPassword: 'Setu@2026'
-      });
-    } catch (err) {
-      setErrorMsg('Quick patient sign-in failed.');
+      setErrorMsg(err?.message || 'Invalid credentials. Please verify caretaker email and patient password.');
     } finally {
       setLoading(false);
     }
@@ -331,53 +316,70 @@ export function PatientPortal({ onExitToHome }) {
         {/* ── 2. PRESCRIBED COGNITIVE GAMES SECTION ── */}
         <div className="space-y-4">
           {/* Game Switcher Tabs */}
-          <div className="max-w-2xl mx-auto grid grid-cols-3 gap-1.5 p-1.5 bg-slate-200/80 rounded-2xl border border-slate-300 shadow-inner">
+          <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-slate-200/80 rounded-2xl border border-slate-300 shadow-inner">
+            <button
+              onClick={() => setActiveGameTab('biographical')}
+              className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
+                activeGameTab === 'biographical'
+                  ? 'bg-emerald-800 text-white shadow border border-emerald-900'
+                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+              }`}
+            >
+              <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'biographical' ? 'text-emerald-300' : 'text-emerald-700'}`} />
+              <span className="truncate">1. Family Memory</span>
+            </button>
+
             <button
               onClick={() => setActiveGameTab('pattern')}
-              className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer text-center ${
+              className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
                 activeGameTab === 'pattern'
                   ? 'bg-indigo-900 text-white shadow border border-indigo-950'
                   : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
               }`}
             >
               <Layers className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'pattern' ? 'text-indigo-300' : 'text-indigo-700'}`} />
-              <span className="hidden sm:inline">1. {t('games.patternTitle') || 'PatternTrace'}</span>
-              <span className="sm:hidden">1. Pattern</span>
+              <span className="truncate">2. PatternTrace</span>
             </button>
 
             <button
               onClick={() => setActiveGameTab('visual')}
-              className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer text-center ${
+              className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
                 activeGameTab === 'visual'
                   ? 'bg-emerald-800 text-white shadow border border-emerald-900'
                   : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
               }`}
             >
               <Brain className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'visual' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-              <span className="hidden sm:inline">2. {t('games.visualTitle') || 'Picture Match'}</span>
-              <span className="sm:hidden">2. Picture</span>
+              <span className="truncate">3. Picture Match</span>
             </button>
 
             <button
               onClick={() => setActiveGameTab('routine')}
-              className={`py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all cursor-pointer text-center ${
+              className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
                 activeGameTab === 'routine'
                   ? 'bg-emerald-800 text-white shadow border border-emerald-900'
                   : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
               }`}
             >
               <Calendar className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'routine' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-              <span className="hidden sm:inline">3. {t('games.routineTitle') || 'Daily Routine'}</span>
-              <span className="sm:hidden">3. Routine</span>
+              <span className="truncate">4. Daily Routine</span>
             </button>
           </div>
 
           {/* Active Game Renderer */}
           <div className="pt-2">
+            {activeGameTab === 'biographical' && (
+              <BiographicalRecognitionGame
+                patientId={patientSession?.id || patientProfile?.id || 1}
+                dialect={regionInfo.englishName || 'Odia'}
+                onExitToRest={onExitToHome}
+              />
+            )}
+
             {activeGameTab === 'pattern' && (
               <PatternTraceGame
                 patientId={1}
-                onComplete={() => setActiveGameTab('visual')}
+                onComplete={() => setActiveGameTab('biographical')}
               />
             )}
 
@@ -391,7 +393,7 @@ export function PatientPortal({ onExitToHome }) {
             {activeGameTab === 'routine' && (
               <DailyRoutineGame
                 dialect={regionInfo.englishName || 'Odia'}
-                onGameComplete={() => setActiveGameTab('pattern')}
+                onGameComplete={() => setActiveGameTab('biographical')}
               />
             )}
           </div>
@@ -417,23 +419,6 @@ export function PatientPortal({ onExitToHome }) {
             <>Sign in with your caretaker credentials to enter your daily companion portal.</>
           )}
         </p>
-      </div>
-
-      {/* Quick 1-Click Patient Sign-in Button */}
-      <button
-        type="button"
-        onClick={handleQuickDemoPatientLogin}
-        disabled={loading}
-        className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-300 font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
-      >
-        <Sparkles className="w-4 h-4 text-emerald-700" />
-        <span>⚡ Quick Access (1-Click Patient Sign In)</span>
-      </button>
-
-      <div className="relative flex py-1 items-center">
-        <div className="flex-grow border-t border-slate-200"></div>
-        <span className="flex-shrink mx-3 text-[11px] font-semibold text-slate-400 uppercase">Or Enter Caretaker Email</span>
-        <div className="flex-grow border-t border-slate-200"></div>
       </div>
 
       {errorMsg && (

@@ -31,7 +31,8 @@ import {
   Compass,
   Home,
   UserCheck,
-  RefreshCw
+  RefreshCw,
+  HelpCircle
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -49,6 +50,8 @@ import {
 import { db } from '../db/db';
 import { PatternTraceTelemetryService } from '../services/patternTraceTelemetry';
 import { PatternTraceReportModal } from './PatternTraceReportModal';
+import { BiographicalQuestionManager } from './BiographicalQuestionManager';
+import { BiographicalAnalyticsDashboard } from './BiographicalAnalyticsDashboard';
 
 export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }) {
   const {
@@ -181,36 +184,30 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
 
     try {
       if (isSignUp) {
-        if (!fullName.trim()) throw new Error('Full Name is required');
-        const { error } = await signUpCaretaker({
+        if (!fullName.trim()) {
+          setErrorMsg('Full Name is required.');
+          setLoading(false);
+          return;
+        }
+        const { data, error } = await signUpCaretaker({
           email,
           password,
           fullName,
           phoneNumber
         });
-        if (error) throw error;
+        if (error) {
+          setErrorMsg(error.message || 'Registration failed. Please check your details.');
+          return;
+        }
       } else {
-        const { error } = await signInCaretaker({ email, password });
-        if (error) throw error;
+        const { data, error } = await signInCaretaker({ email, password });
+        if (error) {
+          setErrorMsg(error.message || 'Invalid email or password.');
+          return;
+        }
       }
     } catch (err) {
-      setErrorMsg('Invalid credentials. Please verify your email and password.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Quick 1-Click Demo Login
-  const handleQuickDemoLogin = async () => {
-    setLoading(true);
-    setErrorMsg(null);
-    try {
-      await signInCaretaker({
-        email: 'caretaker@smritisetu.in',
-        password: 'Password@123'
-      });
-    } catch (e) {
-      setErrorMsg('Demo sign-in failed');
+      setErrorMsg(err?.message || 'Authentication failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -391,8 +388,32 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
           </button>
 
           <button
+            onClick={() => setActiveTab('biographical_cms')}
+            className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              activeTab === 'biographical_cms'
+                ? 'bg-emerald-800 text-white shadow-md border border-emerald-900'
+                : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <HelpCircle className={`w-4 h-4 shrink-0 ${activeTab === 'biographical_cms' ? 'text-emerald-200' : 'text-emerald-700'}`} />
+            <span>Biographical CMS (Questions)</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('biographical_analytics')}
+            className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              activeTab === 'biographical_analytics'
+                ? 'bg-blue-900 text-white shadow-md border border-blue-950'
+                : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+            }`}
+          >
+            <Activity className={`w-4 h-4 shrink-0 ${activeTab === 'biographical_analytics' ? 'text-blue-300' : 'text-blue-700'}`} />
+            <span>Biographical Telemetry &amp; Decay</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('security')}
-            className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
               activeTab === 'security'
                 ? 'bg-slate-900 text-white shadow-md border border-slate-950'
                 : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
@@ -1107,6 +1128,20 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
           </div>
         )}
 
+        {/* ══════════════════════════════════════════════════════════ */}
+        {/* TAB 4: BIOGRAPHICAL QUESTION & OPTION MANAGER (CMS)       */}
+        {/* ══════════════════════════════════════════════════════════ */}
+        {activeTab === 'biographical_cms' && (
+          <BiographicalQuestionManager patientId={patientProfile?.id || 1} />
+        )}
+
+        {/* ══════════════════════════════════════════════════════════ */}
+        {/* TAB 5: CLINICAL BIOGRAPHICAL TELEMETRY & ANALYTICS        */}
+        {/* ══════════════════════════════════════════════════════════ */}
+        {activeTab === 'biographical_analytics' && (
+          <BiographicalAnalyticsDashboard patientId={patientProfile?.id || 1} />
+        )}
+
         {/* Clinical Summary Report Modal */}
         <PatternTraceReportModal
           isOpen={isReportModalOpen}
@@ -1140,23 +1175,6 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
           <span>{errorMsg}</span>
         </div>
       )}
-
-      {/* 1-Click Quick Demo Sign In Button */}
-      <button
-        type="button"
-        onClick={handleQuickDemoLogin}
-        disabled={loading}
-        className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-300 font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
-      >
-        <Sparkles className="w-4 h-4 text-emerald-700" />
-        <span>⚡ Quick Demo Access (1-Click Caretaker Sign In)</span>
-      </button>
-
-      <div className="relative flex py-1 items-center">
-        <div className="flex-grow border-t border-slate-200"></div>
-        <span className="flex-shrink mx-3 text-[11px] font-semibold text-slate-400 uppercase">Or Continue With Email</span>
-        <div className="flex-grow border-t border-slate-200"></div>
-      </div>
 
       <form onSubmit={handleAuthSubmit} className="space-y-4">
         {isSignUp && (

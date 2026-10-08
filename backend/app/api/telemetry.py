@@ -1,4 +1,6 @@
 import datetime
+from typing import Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -161,3 +163,39 @@ def get_longitudinal_analytics(patient_id: int, days: int = 30, db: Session = De
         "baseline_ms": baseline,
         "timeline": timeline_data
     }
+
+
+class BiographicalTrialPayload(BaseModel):
+    trialId: str
+    sessionId: str
+    timestamp: str
+    questionId: str
+    patientId: Optional[int] = 1
+    relationTier: str
+    selectedOptionIndex: int
+    correctOptionIndex: int
+    isCorrect: bool
+    selectedText: str
+    correctText: str
+    latencyMs: float
+    hesitationCount: int
+    selectedPosition: int
+
+
+BIOGRAPHICAL_TRIALS_CACHE = []
+
+
+@router.post("/biographical")
+def log_biographical_trial(payload: BiographicalTrialPayload):
+    """Log an immutable biographical recognition trial"""
+    BIOGRAPHICAL_TRIALS_CACHE.append(payload.dict())
+    if len(BIOGRAPHICAL_TRIALS_CACHE) > 1000:
+        BIOGRAPHICAL_TRIALS_CACHE.pop(0)
+    return {"status": "success", "trialId": payload.trialId}
+
+
+@router.get("/biographical/{patient_id}")
+def get_biographical_trials(patient_id: int):
+    """Retrieve logged biographical trials for patient"""
+    return [t for t in BIOGRAPHICAL_TRIALS_CACHE if t.get("patientId") == patient_id]
+
