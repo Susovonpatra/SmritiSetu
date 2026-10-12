@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "frontend": "npm run dev --prefix client",
-    "backend": "npm run dev --prefix backend",
-    "server": "node server/src/index.js",
-    "test:geoip": "node server/tests/geoip.test.js",
     "dev:frontend": "npm run dev --prefix client",
     "dev:backend": "npm run dev --prefix backend",
-    "dev:server": "node server/src/index.js",
-    "dev": "npx -y concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:server\""
+    "dev": "npx -y concurrently -k \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "npm run build --prefix client",
+    "test:frontend": "npm run test --prefix client",
+    "test:backend": "npm run test --prefix backend",
+    "test": "npm run test:frontend && npm run test:backend",
+    "lint:frontend": "npm run lint --prefix client"
   }
 }
-

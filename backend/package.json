@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "python run.py",
-    "start": "python run.py"
+    "start": "python run.py",
+    "test": "python -m unittest discover -s tests -p \"test_*.py\""
   }
 }
