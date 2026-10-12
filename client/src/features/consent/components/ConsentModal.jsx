@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Check, Key, FileText, X } from 'lucide-react';
-import { generateSessionHash } from '../utils/crypto';
-import { db } from '../db/db';
+import { generateSessionHash } from '@/utils/crypto';
+import { db } from '@/db/db';
 
 export function ConsentModal({ isOpen, onClose, onConsentComplete, patient }) {
   const [caregiverName, setCaregiverName] = useState(patient?.caregiver_name || '');

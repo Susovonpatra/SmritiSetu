@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
-import { db } from '../db/db';
+import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
+import { db } from '@/db/db';
 
 const DualAuthContext = createContext(null);
 

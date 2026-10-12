@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { audioChime } from '../utils/audioChime';
-import { BiographicalTelemetryService } from '../services/biographicalTelemetry';
+import { audioChime } from '@/utils/audioChime';
+import { BiographicalTelemetryService } from '@/services/biographicalTelemetry';
 import {
   Heart,
   Coffee,

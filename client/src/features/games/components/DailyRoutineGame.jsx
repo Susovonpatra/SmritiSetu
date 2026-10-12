@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { CheckCircle2, RotateCcw, Volume2, ArrowRight } from 'lucide-react';
-import { useElderlyTouch } from '../hooks/useElderlyTouch';
-import { speakCognitivePrompt } from '../services/speechController';
-import { useLocale } from '../context/LocaleContext';
-import { db } from '../db/db';
+import { useElderlyTouch } from '@/hooks/useElderlyTouch';
+import { speakCognitivePrompt } from '@/services/speechController';
+import { useLocale } from '@/features/localization/context/LocaleContext';
+import { db } from '@/db/db';
 
 const ROUTINE_STEPS = [
   {

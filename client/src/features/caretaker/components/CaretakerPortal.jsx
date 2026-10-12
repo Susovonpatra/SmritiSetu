@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDualAuth } from '../context/DualAuthContext';
+import { useDualAuth } from '@/features/auth/context/DualAuthContext';
 import {
   Shield,
   Key,
@@ -47,11 +47,11 @@ import {
   Legend,
   ReferenceLine
 } from 'recharts';
-import { db } from '../db/db';
-import { PatternTraceTelemetryService } from '../services/patternTraceTelemetry';
-import { PatternTraceReportModal } from './PatternTraceReportModal';
-import { BiographicalQuestionManager } from './BiographicalQuestionManager';
-import { BiographicalAnalyticsDashboard } from './BiographicalAnalyticsDashboard';
+import { db } from '@/db/db';
+import { PatternTraceTelemetryService } from '@/services/patternTraceTelemetry';
+import { PatternTraceReportModal } from '@/features/games/components/PatternTraceReportModal';
+import { BiographicalQuestionManager } from '@/features/caretaker/components/BiographicalQuestionManager';
+import { BiographicalAnalyticsDashboard } from '@/features/caretaker/components/BiographicalAnalyticsDashboard';
 
 export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }) {
   const {

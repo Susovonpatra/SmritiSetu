@@ -15,7 +15,7 @@ import {
   Layers,
   Sparkles
 } from 'lucide-react';
-import { PatternTraceTelemetryService } from '../services/patternTraceTelemetry';
+import { PatternTraceTelemetryService } from '@/services/patternTraceTelemetry';
 
 export function PatternTraceReportModal({ isOpen, onClose, patient }) {
   const [analytics, setAnalytics] = useState(null);

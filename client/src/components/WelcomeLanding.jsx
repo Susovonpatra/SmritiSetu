@@ -16,7 +16,7 @@ import {
   FileText,
   Calendar
 } from 'lucide-react';
-import { useLocale } from '../context/LocaleContext';
+import { useLocale } from '@/features/localization/context/LocaleContext';
 
 export function WelcomeLanding({ onOpenAuthModal }) {
   const { regionInfo } = useLocale();

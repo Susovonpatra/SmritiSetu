@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BiographicalTelemetryService } from '../services/biographicalTelemetry';
+import { BiographicalTelemetryService } from '@/services/biographicalTelemetry';
 import {
   ResponsiveContainer,
   ComposedChart,

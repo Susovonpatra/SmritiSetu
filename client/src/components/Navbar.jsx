@@ -16,9 +16,9 @@ import {
   LogIn,
   ArrowRight
 } from 'lucide-react';
-import { DementiaLanguageToggle } from './DementiaLanguageToggle';
-import { useLocale } from '../context/LocaleContext';
-import { useDualAuth } from '../context/DualAuthContext';
+import { DementiaLanguageToggle } from '@/features/localization/components/DementiaLanguageToggle';
+import { useLocale } from '@/features/localization/context/LocaleContext';
+import { useDualAuth } from '@/features/auth/context/DualAuthContext';
 
 export function Navbar({
   currentView,

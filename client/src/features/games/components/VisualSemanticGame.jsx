@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Volume2, CheckCircle2, RotateCcw, Activity } from 'lucide-react';
-import { useElderlyTouch } from '../hooks/useElderlyTouch';
-import { speakCognitivePrompt, cancelSpeech } from '../services/speechController';
-import { useLocale } from '../context/LocaleContext';
-import { db } from '../db/db';
+import { useElderlyTouch } from '@/hooks/useElderlyTouch';
+import { speakCognitivePrompt, cancelSpeech } from '@/services/speechController';
+import { useLocale } from '@/features/localization/context/LocaleContext';
+import { db } from '@/db/db';
 
 const CULTURAL_ITEMS = [
   {

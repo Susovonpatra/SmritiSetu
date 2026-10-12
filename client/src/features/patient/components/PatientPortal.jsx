@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useDualAuth } from '../context/DualAuthContext';
-import { useLocale } from '../context/LocaleContext';
-import { DementiaLanguageToggle } from './DementiaLanguageToggle';
-import { PatternTraceGame } from './PatternTraceGame';
-import { VisualSemanticGame } from './VisualSemanticGame';
-import { DailyRoutineGame } from './DailyRoutineGame';
-import { BiographicalRecognitionGame } from './BiographicalRecognitionGame';
+import { useDualAuth } from '@/features/auth/context/DualAuthContext';
+import { useLocale } from '@/features/localization/context/LocaleContext';
+import { DementiaLanguageToggle } from '@/features/localization/components/DementiaLanguageToggle';
+import { PatternTraceGame } from '@/features/games/components/PatternTraceGame';
+import { VisualSemanticGame } from '@/features/games/components/VisualSemanticGame';
+import { DailyRoutineGame } from '@/features/games/components/DailyRoutineGame';
+import { BiographicalRecognitionGame } from '@/features/games/components/BiographicalRecognitionGame';
 import {
   Heart,
   KeyRound,

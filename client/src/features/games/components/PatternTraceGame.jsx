@@ -15,9 +15,9 @@ import {
   Layers,
   HelpCircle
 } from 'lucide-react';
-import { useLocale } from '../context/LocaleContext';
-import { soundEngine } from '../utils/audioFeedback';
-import { PatternTraceTelemetryService } from '../services/patternTraceTelemetry';
+import { useLocale } from '@/features/localization/context/LocaleContext';
+import { soundEngine } from '@/utils/audioFeedback';
+import { PatternTraceTelemetryService } from '@/services/patternTraceTelemetry';
 
 // 3x3 Dot Matrix Node Coordinates in 360x360 SVG Viewport
 const NODE_COORDINATES = [

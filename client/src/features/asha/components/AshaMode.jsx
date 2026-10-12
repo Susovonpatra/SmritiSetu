@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserCheck, Plus, CloudUpload, AlertTriangle, CheckCircle, ShieldAlert, MapPin, ClipboardList, Send } from 'lucide-react';
-import { db } from '../db/db';
-import { useLocale } from '../context/LocaleContext';
+import { db } from '@/db/db';
+import { useLocale } from '@/features/localization/context/LocaleContext';
 
 export function AshaMode({ onOpenTeleconsult }) {
   const { t } = useLocale();

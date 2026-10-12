@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, PhoneCall, PhoneOff, Volume2, Code, CheckCircle, Radio } from 'lucide-react';
-import { speakPrompt } from '../services/speechService';
-import { db } from '../db/db';
+import { speakPrompt } from '@/services/speechService';
+import { db } from '@/db/db';
 
 const QUESTIONS = [
   {

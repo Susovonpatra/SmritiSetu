@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocale } from '../context/LocaleContext';
+import { useLocale } from '@/features/localization/context/LocaleContext';
 import { Globe, Check } from 'lucide-react';
 
 /**

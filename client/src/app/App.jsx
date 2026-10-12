@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { LocaleProvider, useLocale } from './context/LocaleContext';
-import { DualAuthProvider, useDualAuth } from './context/DualAuthContext';
-import { Navbar } from './components/Navbar';
-import { WelcomeLanding } from './components/WelcomeLanding';
-import { DualAuthModal } from './components/DualAuthModal';
-import { PatientPortal } from './components/PatientPortal';
-import { CaretakerPortal } from './components/CaretakerPortal';
-import { AshaMode } from './components/AshaMode';
-import { IVRSimulator } from './components/IVRSimulator';
-import { PitchArchitectureView } from './components/PitchArchitectureView';
-import { ConsentModal } from './components/ConsentModal';
-import { EsanjeevaniModal } from './components/EsanjeevaniModal';
-import { MotionAlertBanner } from './components/MotionAlertBanner';
+import { LocaleProvider, useLocale } from '@/features/localization/context/LocaleContext';
+import { DualAuthProvider, useDualAuth } from '@/features/auth/context/DualAuthContext';
+import { Navbar } from '@/components/Navbar';
+import { WelcomeLanding } from '@/components/WelcomeLanding';
+import { DualAuthModal } from '@/features/auth/components/DualAuthModal';
+import { PatientPortal } from '@/features/patient/components/PatientPortal';
+import { CaretakerPortal } from '@/features/caretaker/components/CaretakerPortal';
+import { AshaMode } from '@/features/asha/components/AshaMode';
+import { IVRSimulator } from '@/features/ivr/components/IVRSimulator';
+import { PitchArchitectureView } from '@/features/pitch/components/PitchArchitectureView';
+import { ConsentModal } from '@/features/consent/components/ConsentModal';
+import { EsanjeevaniModal } from '@/features/teleconsult/components/EsanjeevaniModal';
+import { MotionAlertBanner } from '@/components/MotionAlertBanner';
 
-import { useSyncEngine } from './hooks/useSyncEngine';
-import { useMotionDetector } from './hooks/useMotionDetector';
-import { initDefaultData, db } from './db/db';
+import { useSyncEngine } from '@/hooks/useSyncEngine';
+import { useMotionDetector } from '@/hooks/useMotionDetector';
+import { initDefaultData, db } from '@/db/db';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 
 // Error boundary to catch runtime crashes and show a helpful message instead of a blank page

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BiographicalTelemetryService } from '../services/biographicalTelemetry';
-import { DEFAULT_BIOGRAPHICAL_QUESTIONS } from '../db/db';
+import { BiographicalTelemetryService } from '@/services/biographicalTelemetry';
+import { DEFAULT_BIOGRAPHICAL_QUESTIONS } from '@/db/db';
 import {
   Plus,
   Trash2,
