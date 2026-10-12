@@ -12,7 +12,8 @@
  * - Full IndexedDB with LocalStorage fallback & backend synchronization
  */
 
-import { db, DEFAULT_BIOGRAPHICAL_QUESTIONS } from '../db/db';
+import { db, DEFAULT_BIOGRAPHICAL_QUESTIONS } from '@/db/db';
+import { apiClient } from '@/services/api/client';
 
 const STORAGE_KEY_QUESTIONS = 'smriti_biographical_questions';
 const STORAGE_KEY_TRIALS = 'smriti_biographical_trials_backup';
@@ -79,10 +80,9 @@ export class BiographicalTelemetryService {
 
     // 3. Optional backend sync attempt
     try {
-      fetch('http://localhost:8000/api/v1/memory/biographical-questions', {
+      apiClient('/api/v1/memory/biographical-questions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ patientId, questions: formatted })
+        body: { patientId, questions: formatted }
       }).catch(() => {
         // Silent catch for offline PWA operation
       });
@@ -136,10 +136,9 @@ export class BiographicalTelemetryService {
 
     // 3. Optional backend telemetry sync
     try {
-      fetch('http://localhost:8000/api/v1/telemetry/biographical', {
+      apiClient('/api/v1/telemetry/biographical', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(trialRecord)
+        body: trialRecord
       }).catch(() => {});
     } catch {}
 

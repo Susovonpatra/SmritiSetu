@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Send, FileText, CheckCircle2, X, AlertTriangle, Building2, User } from 'lucide-react';
+import { esanjeevaniApi } from '@/services/api/esanjeevaniApi';
 
 export function EsanjeevaniModal({ isOpen, onClose, patient, triageRecord }) {
   const [urgency, setUrgency] = useState(triageRecord?.triage_status === 'Red' ? 'Urgent' : 'Priority');
@@ -12,21 +13,13 @@ export function EsanjeevaniModal({ isOpen, onClose, patient, triageRecord }) {
   const handleDispatch = async () => {
     setIsSubmitting(true);
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/esanjeevani/dispatch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          patient_id: patient?.id || 1,
-          abha_id: patient?.abha_id || '',
-          urgency_level: urgency,
-          clinical_notes: notes
-        })
+      const data = await esanjeevaniApi.dispatchConsultation({
+        patient_id: patient?.id || 1,
+        abha_id: patient?.abha_id || '',
+        urgency_level: urgency,
+        clinical_notes: notes
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        setDispatchResult(data);
-      }
+      setDispatchResult(data);
     } catch (err) {
       // Offline fallback simulation
       setDispatchResult({
@@ -94,7 +87,7 @@ export function EsanjeevaniModal({ isOpen, onClose, patient, triageRecord }) {
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <a
-                href="http://127.0.0.1:8000/report/1/pdf"
+                href={esanjeevaniApi.getPdfReportUrl(patient?.id || 1)}
                 target="_blank"
                 rel="noreferrer"
                 className="flex-1 min-h-[52px] sm:min-h-[64px] rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-base sm:text-lg flex items-center justify-center gap-2 border-2 border-zinc-900"

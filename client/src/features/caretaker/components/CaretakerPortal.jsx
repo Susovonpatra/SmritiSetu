@@ -52,6 +52,7 @@ import { PatternTraceTelemetryService } from '@/services/patternTraceTelemetry';
 import { PatternTraceReportModal } from '@/features/games/components/PatternTraceReportModal';
 import { BiographicalQuestionManager } from '@/features/caretaker/components/BiographicalQuestionManager';
 import { BiographicalAnalyticsDashboard } from '@/features/caretaker/components/BiographicalAnalyticsDashboard';
+import { useCaretakerAnalytics } from '../hooks/useCaretakerAnalytics';
 
 export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }) {
   const {
@@ -101,18 +102,9 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
   const [errorMsg, setErrorMsg] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Clinical Telemetry State
-  const [analyticsData, setAnalyticsData] = useState([]);
-  const [patternAnalytics, setPatternAnalytics] = useState(null);
+  // Clinical Telemetry State via extracted hook
+  const { analyticsData, patternAnalytics, driftMetrics } = useCaretakerAnalytics(patientProfile?.id || 1, caretakerUser);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [driftMetrics, setDriftMetrics] = useState({
-    drift_percent: 28.4,
-    current_latency: 1025,
-    baseline_latency: 800,
-    jitter: 18.2,
-    accuracy: 86.5,
-    alert: false
-  });
 
   // Populate profile form whenever patientProfile loads/changes
   useEffect(() => {
@@ -130,51 +122,6 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
       });
     }
   }, [patientProfile]);
-
-  // Load telemetry data on mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const patternData = await PatternTraceTelemetryService.getLongitudinalAnalytics(1);
-        setPatternAnalytics(patternData);
-
-        // Fetch or simulate 30-day timeline
-        const baseline = 800;
-        const timeline = [];
-        const now = Date.now();
-        for (let i = 29; i >= 0; i--) {
-          const d = new Date(now - i * 24 * 3600 * 1000);
-          const dayStr = d.toISOString().slice(5, 10);
-          const driftFactor = 1.0 + (30 - i) * 0.011;
-          timeline.push({
-            date: d.toISOString().slice(0, 10),
-            day: dayStr,
-            latency_ms: Math.round(baseline * driftFactor),
-            accuracy_pct: Math.max(65, Math.round(96 - (30 - i) * 0.6)),
-            jitter_px: Math.round(11 + (30 - i) * 0.4),
-            baseline: baseline
-          });
-        }
-
-        const recentLatency = timeline.slice(-7).reduce((acc, c) => acc + c.latency_ms, 0) / 7;
-        const drift = ((recentLatency - baseline) / baseline) * 100;
-
-        setDriftMetrics({
-          drift_percent: Math.round(drift * 10) / 10,
-          current_latency: Math.round(recentLatency),
-          baseline_latency: baseline,
-          jitter: 19.4,
-          accuracy: 84.0,
-          alert: drift > 35.0
-        });
-        setAnalyticsData(timeline);
-      } catch (err) {
-        console.warn('Telemetry load error:', err);
-      }
-    };
-
-    loadData();
-  }, [caretakerUser]);
 
   // Handle Caretaker Sign In / Sign Up
   const handleAuthSubmit = async (e) => {

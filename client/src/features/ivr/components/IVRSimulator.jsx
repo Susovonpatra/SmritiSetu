@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Phone, PhoneCall, PhoneOff, Volume2, Code, CheckCircle, Radio } from 'lucide-react';
 import { speakPrompt } from '@/services/speechService';
 import { db } from '@/db/db';
+import { ivrApi } from '@/services/api/ivrApi';
 
 const QUESTIONS = [
   {
@@ -89,22 +90,14 @@ export function IVRSimulator({ dialect = 'Assamese' }) {
 
       // Submit to backend
       try {
-        const res = await fetch('http://127.0.0.1:8000/api/v1/ivr/simulate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            patient_id: 1,
-            q1: newResponses.q1 || '1',
-            q2: newResponses.q2 || '1',
-            q3: newResponses.q3 || '1',
-            call_sid: 'IVR-CALL-' + Date.now().toString().slice(-6)
-          })
+        const data = await ivrApi.simulateCall({
+          patient_id: 1,
+          q1: newResponses.q1 || '1',
+          q2: newResponses.q2 || '1',
+          q3: newResponses.q3 || '1',
+          call_sid: 'IVR-CALL-' + Date.now().toString().slice(-6)
         });
-
-        if (res.ok) {
-          const data = await res.json();
-          setResult(data);
-        }
+        setResult(data);
       } catch (err) {
         console.warn('Backend offline, logging IVR telemetry locally');
       }

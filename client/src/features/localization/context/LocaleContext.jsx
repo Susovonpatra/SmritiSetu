@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { TRANSLATIONS } from '@/locales/translations';
+import { localeApi } from '@/services/api/localeApi';
 
 const LocaleContext = createContext(null);
 
@@ -80,24 +81,21 @@ export function LocaleProvider({ children }) {
       } catch (err) {
         // Fallback to backend / API endpoint
         try {
-          const res = await fetch('http://127.0.0.1:8000/api/v1/locale/detect', { credentials: 'include' });
-          if (res.ok) {
-            const body = await res.json();
-            const data = body.data;
-            if (data) {
-              setRegionInfo({
-                stateCode: data.stateCode || 'OD',
-                stateName: data.stateName || 'Odisha',
-                nativeName: data.nativeName || 'ଓଡ଼ିଆ',
-                englishName: data.englishName || 'Odia',
-                isDetected: true,
-                detectionSource: 'backend_geoip'
-              });
-              if (data.pair) setAvailablePair(data.pair);
-              if (!savedOverride) setActiveLang(data.activeLocale || 'or');
-              setIsLoading(false);
-              return;
-            }
+          const body = await localeApi.detectLocale();
+          const data = body?.data;
+          if (data) {
+            setRegionInfo({
+              stateCode: data.stateCode || 'OD',
+              stateName: data.stateName || 'Odisha',
+              nativeName: data.nativeName || 'ଓଡ଼ିଆ',
+              englishName: data.englishName || 'Odia',
+              isDetected: true,
+              detectionSource: 'backend_geoip'
+            });
+            if (data.pair) setAvailablePair(data.pair);
+            if (!savedOverride) setActiveLang(data.activeLocale || 'or');
+            setIsLoading(false);
+            return;
           }
         } catch (e) {
           // Default fallback

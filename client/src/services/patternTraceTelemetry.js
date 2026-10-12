@@ -13,7 +13,7 @@
  * - Longitudinal Rolling Analytics & Clinical Working Memory Index
  */
 
-import { db } from '../db/db';
+import { db } from '@/db/db';
 
 export class PatternTraceTelemetryService {
   /**

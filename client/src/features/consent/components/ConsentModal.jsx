@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, Check, Key, FileText, X } from 'lucide-react';
 import { generateSessionHash } from '@/utils/crypto';
 import { db } from '@/db/db';
+import { consentApi } from '@/services/api/consentApi';
 
 export function ConsentModal({ isOpen, onClose, onConsentComplete, patient }) {
   const [caregiverName, setCaregiverName] = useState(patient?.caregiver_name || '');
@@ -36,11 +37,7 @@ export function ConsentModal({ isOpen, onClose, onConsentComplete, patient }) {
 
       // Try syncing to backend
       try {
-        await fetch('http://127.0.0.1:8000/api/v1/consent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...payload, signature_hash: hash })
-        });
+        await consentApi.createRecord({ ...payload, signature_hash: hash });
       } catch (e) {
         // Offline safe: stored in Dexie
       }

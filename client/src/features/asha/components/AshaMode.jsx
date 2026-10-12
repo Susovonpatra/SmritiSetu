@@ -1,72 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { UserCheck, Plus, CloudUpload, AlertTriangle, CheckCircle, ShieldAlert, MapPin, ClipboardList, Send } from 'lucide-react';
-import { db } from '@/db/db';
 import { useLocale } from '@/features/localization/context/LocaleContext';
+import { useAshaTriage } from '../hooks/useAshaTriage';
 
 export function AshaMode({ onOpenTeleconsult }) {
   const { t } = useLocale();
-  const [queue, setQueue] = useState([]);
+  const { queue, isSyncing, addScreeningRecord, syncQueueToPhc } = useAshaTriage();
   const [showAddModal, setShowAddModal] = useState(false);
   const [patientName, setPatientName] = useState('');
   const [village, setVillage] = useState('');
   const [triageStatus, setTriageStatus] = useState('Amber');
   const [notes, setNotes] = useState('');
-  const [isSyncing, setIsSyncing] = useState(false);
-
-  const loadQueue = async () => {
-    const records = await db.asha_queue.reverse().toArray();
-    setQueue(records);
-  };
-
-  useEffect(() => {
-    loadQueue();
-  }, []);
 
   const handleAddVisit = async (e) => {
     e.preventDefault();
     if (!patientName) return;
 
-    await db.asha_queue.add({
-      patient_id: Math.floor(Math.random() * 1000) + 1,
-      patient_name: patientName,
+    await addScreeningRecord({
+      patientId: Math.floor(Math.random() * 1000) + 1,
+      patientName,
       village,
-      triage_status: triageStatus,
-      notes,
-      timestamp: new Date().toISOString(),
-      synced: false
+      triageStatus,
+      notes
     });
 
     setPatientName('');
     setNotes('');
     setShowAddModal(false);
-    loadQueue();
   };
 
   const handleSyncToPHC = async () => {
-    setIsSyncing(true);
     try {
-      const unsynced = await db.asha_queue.filter(q => q.synced === false).toArray();
-      if (unsynced.length > 0) {
-        await fetch('http://127.0.0.1:8000/api/v1/asha/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(unsynced.map(u => ({
-            patient_id: u.patient_id,
-            patient_name: u.patient_name,
-            village: u.village,
-            triage_status: u.triage_status,
-            notes: u.notes,
-            worker_id: 'ASHA-NAGAON-01'
-          })))
-        });
-
-        await db.asha_queue.filter(q => q.synced === false).modify({ synced: true });
-        await loadQueue();
-      }
-    } catch (err) {
-      console.warn('Sync failed (server offline), saved locally in Dexie');
-    } finally {
-      setIsSyncing(false);
+      await syncQueueToPhc();
+    } catch {
+      // Offline fallback already preserved locally in Dexie
     }
   };
 
