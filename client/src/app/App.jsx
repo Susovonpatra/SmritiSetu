@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { LocaleProvider, useLocale } from '@/features/localization/context/LocaleContext';
 import { DualAuthProvider, useDualAuth } from '@/features/auth/context/DualAuthContext';
 import { Navbar } from '@/components/Navbar';
 import { WelcomeLanding } from '@/components/WelcomeLanding';
 import { DualAuthModal } from '@/features/auth/components/DualAuthModal';
-import { PatientPortal } from '@/features/patient/components/PatientPortal';
-import { CaretakerPortal } from '@/features/caretaker/components/CaretakerPortal';
-import { AshaMode } from '@/features/asha/components/AshaMode';
-import { IVRSimulator } from '@/features/ivr/components/IVRSimulator';
-import { PitchArchitectureView } from '@/features/pitch/components/PitchArchitectureView';
 import { ConsentModal } from '@/features/consent/components/ConsentModal';
 import { EsanjeevaniModal } from '@/features/teleconsult/components/EsanjeevaniModal';
 import { MotionAlertBanner } from '@/components/MotionAlertBanner';
@@ -18,6 +13,14 @@ import { useMotionDetector } from '@/hooks/useMotionDetector';
 import { initDefaultData, db } from '@/db/db';
 import { AlertCircle } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+
+// Lazy-loaded routes for code splitting and optimal bundle performance
+const PatientPortal = lazy(() => import('@/features/patient/components/PatientPortal').then(m => ({ default: m.PatientPortal })));
+const CaretakerPortal = lazy(() => import('@/features/caretaker/components/CaretakerPortal').then(m => ({ default: m.CaretakerPortal })));
+const AshaMode = lazy(() => import('@/features/asha/components/AshaMode').then(m => ({ default: m.AshaMode })));
+const IVRSimulator = lazy(() => import('@/features/ivr/components/IVRSimulator').then(m => ({ default: m.IVRSimulator })));
+const PitchArchitectureView = lazy(() => import('@/features/pitch/components/PitchArchitectureView').then(m => ({ default: m.PitchArchitectureView })));
 
 function SmritiSetuApp() {
   const { caretakerUser, patientSession, patientProfile } = useDualAuth();
@@ -129,50 +132,52 @@ function SmritiSetuApp() {
 
       {/* Main Page Body Router */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 min-w-0">
-        {/* 1. Welcoming Public Landing Page (Default for new users / guest mode) */}
-        {currentView === 'landing' && (
-          <ErrorBoundary title="Welcome Portal Error">
-            <WelcomeLanding onOpenAuthModal={handleOpenAuthModal} />
-          </ErrorBoundary>
-        )}
+        <Suspense fallback={<LoadingSpinner message="Loading portal view..." />}>
+          {/* 1. Welcoming Public Landing Page (Default for new users / guest mode) */}
+          {currentView === 'landing' && (
+            <ErrorBoundary title="Welcome Portal Error">
+              <WelcomeLanding onOpenAuthModal={handleOpenAuthModal} />
+            </ErrorBoundary>
+          )}
 
-        {/* 2. Dedicated Patient Companion Portal */}
-        {currentView === 'patient_portal' && (
-          <ErrorBoundary title="Patient Companion Portal Error">
-            <PatientPortal onExitToHome={() => setCurrentView('landing')} />
-          </ErrorBoundary>
-        )}
+          {/* 2. Dedicated Patient Companion Portal */}
+          {currentView === 'patient_portal' && (
+            <ErrorBoundary title="Patient Companion Portal Error">
+              <PatientPortal onExitToHome={() => setCurrentView('landing')} />
+            </ErrorBoundary>
+          )}
 
-        {/* 3. Dedicated Caretaker Portal & Clinical Hub */}
-        {currentView === 'caretaker_portal' && (
-          <ErrorBoundary title="Caretaker Clinical Hub Error">
-            <CaretakerPortal
-              onNavigateToPatientPortal={() => setCurrentView('patient_portal')}
-              onOpenTeleconsult={handleOpenTeleconsult}
-            />
-          </ErrorBoundary>
-        )}
+          {/* 3. Dedicated Caretaker Portal & Clinical Hub */}
+          {currentView === 'caretaker_portal' && (
+            <ErrorBoundary title="Caretaker Clinical Hub Error">
+              <CaretakerPortal
+                onNavigateToPatientPortal={() => setCurrentView('patient_portal')}
+                onOpenTeleconsult={handleOpenTeleconsult}
+              />
+            </ErrorBoundary>
+          )}
 
-        {/* 4. ASHA Companion Door-to-Door Triage */}
-        {currentView === 'asha' && (
-          <ErrorBoundary title="ASHA Screening Portal Error">
-            <AshaMode onOpenTeleconsult={handleOpenTeleconsult} />
-          </ErrorBoundary>
-        )}
+          {/* 4. ASHA Companion Door-to-Door Triage */}
+          {currentView === 'asha' && (
+            <ErrorBoundary title="ASHA Screening Portal Error">
+              <AshaMode onOpenTeleconsult={handleOpenTeleconsult} />
+            </ErrorBoundary>
+          )}
 
-        {/* 5. 2G Feature Phone IVR Simulator */}
-        {currentView === 'ivr' && (
-          <ErrorBoundary title="IVR Telephony Simulator Error">
-            <IVRSimulator patient={patient} dialect={dialect} />
-          </ErrorBoundary>
-        )}
+          {/* 5. 2G Feature Phone IVR Simulator */}
+          {currentView === 'ivr' && (
+            <ErrorBoundary title="IVR Telephony Simulator Error">
+              <IVRSimulator patient={patient} dialect={dialect} />
+            </ErrorBoundary>
+          )}
 
-        {/* 6. Pitch & System Architecture View */}
-        {currentView === 'pitch' && (
-          <ErrorBoundary title="Architecture View Error">
-            <PitchArchitectureView onSelectTier={(view) => setCurrentView(view)} />
-          </ErrorBoundary>
-        )}
+          {/* 6. Pitch & System Architecture View */}
+          {currentView === 'pitch' && (
+            <ErrorBoundary title="Architecture View Error">
+              <PitchArchitectureView onSelectTier={(view) => setCurrentView(view)} />
+            </ErrorBoundary>
+          )}
+        </Suspense>
       </main>
 
       {/* Accessible Footer */}
