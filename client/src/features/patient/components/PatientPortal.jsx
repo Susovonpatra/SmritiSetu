@@ -15,17 +15,12 @@ import {
   AlertCircle,
   Brain,
   Calendar,
-  CheckCircle2,
-  Clock,
   Layers,
-  Sparkles,
   Sun,
   Sunset,
   Moon,
   MapPin,
-  User,
-  Shield,
-  Home
+  User
 } from 'lucide-react';
 
 function getTimeBasedGreeting(patientName = '', lang = 'en') {

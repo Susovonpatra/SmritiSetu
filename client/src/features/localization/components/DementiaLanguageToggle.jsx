@@ -13,7 +13,7 @@ export function DementiaLanguageToggle({ className = '', showRegionOnly = false,
     toggleLanguage
   } = useLocale();
 
-  const [primaryLang, secondaryLang] = availablePair;
+  const [primaryLang] = availablePair;
 
   const LANG_LABELS = {
     or: { native: 'ଓଡ଼ିଆ', english: 'ODIA' },

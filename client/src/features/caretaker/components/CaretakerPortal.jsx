@@ -12,15 +12,11 @@ import {
   CheckCircle2,
   AlertCircle,
   Copy,
-  ExternalLink,
   Brain,
   Activity,
   Layers,
   Sparkles,
-  TrendingUp,
   AlertOctagon,
-  Download,
-  Send,
   Clock,
   FileText,
   Heart,
@@ -29,9 +25,7 @@ import {
   Calendar,
   Stethoscope,
   Compass,
-  Home,
   UserCheck,
-  RefreshCw,
   HelpCircle
 } from 'lucide-react';
 import {
@@ -44,11 +38,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ReferenceLine
 } from 'recharts';
-import { db } from '@/db/db';
-import { PatternTraceTelemetryService } from '@/services/patternTraceTelemetry';
 import { PatternTraceReportModal } from '@/features/games/components/PatternTraceReportModal';
 import { BiographicalQuestionManager } from '@/features/caretaker/components/BiographicalQuestionManager';
 import { BiographicalAnalyticsDashboard } from '@/features/caretaker/components/BiographicalAnalyticsDashboard';
