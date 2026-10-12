@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { TRANSLATIONS } from '@/locales/translations';
 import { localeApi } from '@/services/api/localeApi';
 
@@ -176,19 +176,28 @@ export function LocaleProvider({ children }) {
     return defaultVal || path;
   }, [activeLang]);
 
+  const contextValue = useMemo(() => ({
+    activeLang,
+    availablePair,
+    regionInfo,
+    isManualOverride,
+    isLoading,
+    toggleLanguage,
+    setLanguage,
+    t
+  }), [
+    activeLang,
+    availablePair,
+    regionInfo,
+    isManualOverride,
+    isLoading,
+    toggleLanguage,
+    setLanguage,
+    t
+  ]);
+
   return (
-    <LocaleContext.Provider
-      value={{
-        activeLang,
-        availablePair,
-        regionInfo,
-        isManualOverride,
-        isLoading,
-        toggleLanguage,
-        setLanguage,
-        t
-      }}
-    >
+    <LocaleContext.Provider value={contextValue}>
       {children}
     </LocaleContext.Provider>
   );
@@ -200,4 +209,9 @@ export function useLocale() {
     throw new Error('useLocale must be used within a LocaleProvider');
   }
   return context;
+}
+
+export function useTranslation() {
+  const { t, activeLang } = useLocale();
+  return { t, activeLang };
 }

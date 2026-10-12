@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 import { db } from '@/db/db';
 
@@ -367,29 +367,35 @@ export function DualAuthProvider({ children }) {
     setPatientSession(null);
   };
 
+  const contextValue = useMemo(() => ({
+    // Caretaker
+    caretakerUser,
+    caretakerSession,
+    isCaretakerLoading,
+    signUpCaretaker,
+    signInCaretaker,
+    signOutCaretaker,
+    updatePatientAccessPassword,
+
+    // Patient Profile (Configured by Caretaker)
+    patientProfile,
+    updatePatientProfile,
+
+    // Patient Auth & Session
+    patientSession,
+    patientLogin,
+    signOutPatient,
+    isPatientLoggedIn: Boolean(patientSession),
+  }), [
+    caretakerUser,
+    caretakerSession,
+    isCaretakerLoading,
+    patientProfile,
+    patientSession
+  ]);
+
   return (
-    <DualAuthContext.Provider
-      value={{
-        // Caretaker
-        caretakerUser,
-        caretakerSession,
-        isCaretakerLoading,
-        signUpCaretaker,
-        signInCaretaker,
-        signOutCaretaker,
-        updatePatientAccessPassword,
-
-        // Patient Profile (Configured by Caretaker)
-        patientProfile,
-        updatePatientProfile,
-
-        // Patient Auth & Session
-        patientSession,
-        patientLogin,
-        signOutPatient,
-        isPatientLoggedIn: Boolean(patientSession),
-      }}
-    >
+    <DualAuthContext.Provider value={contextValue}>
       {children}
     </DualAuthContext.Provider>
   );
@@ -401,4 +407,44 @@ export const useDualAuth = () => {
     throw new Error('useDualAuth must be used within a DualAuthProvider');
   }
   return context;
+};
+
+export const useCaretakerAuth = () => {
+  const {
+    caretakerUser,
+    caretakerSession,
+    isCaretakerLoading,
+    signUpCaretaker,
+    signInCaretaker,
+    signOutCaretaker,
+    updatePatientAccessPassword,
+  } = useDualAuth();
+  return {
+    caretakerUser,
+    caretakerSession,
+    isCaretakerLoading,
+    signUpCaretaker,
+    signInCaretaker,
+    signOutCaretaker,
+    updatePatientAccessPassword,
+  };
+};
+
+export const usePatientAuth = () => {
+  const {
+    patientProfile,
+    updatePatientProfile,
+    patientSession,
+    patientLogin,
+    signOutPatient,
+    isPatientLoggedIn,
+  } = useDualAuth();
+  return {
+    patientProfile,
+    updatePatientProfile,
+    patientSession,
+    patientLogin,
+    signOutPatient,
+    isPatientLoggedIn,
+  };
 };
