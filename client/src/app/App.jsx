@@ -16,49 +16,8 @@ import { MotionAlertBanner } from '@/components/MotionAlertBanner';
 import { useSyncEngine } from '@/hooks/useSyncEngine';
 import { useMotionDetector } from '@/hooks/useMotionDetector';
 import { initDefaultData, db } from '@/db/db';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-
-// Error boundary to catch runtime crashes and show a helpful message instead of a blank page
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('SmritiSetu Portal Error:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-[300px] flex flex-col items-center justify-center text-center p-8 space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
-            <AlertCircle className="w-7 h-7" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-900">Something went wrong</h3>
-            <p className="text-sm text-slate-500 mt-1 max-w-md">
-              {this.state.error?.message || 'An unexpected error occurred. Please try refreshing the page.'}
-            </p>
-          </div>
-          <button
-            onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-sm rounded-xl shadow cursor-pointer"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Reload Page
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+import { AlertCircle } from 'lucide-react';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
 function SmritiSetuApp() {
   const { caretakerUser, patientSession, patientProfile } = useDualAuth();
@@ -172,17 +131,21 @@ function SmritiSetuApp() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 min-w-0">
         {/* 1. Welcoming Public Landing Page (Default for new users / guest mode) */}
         {currentView === 'landing' && (
-          <WelcomeLanding onOpenAuthModal={handleOpenAuthModal} />
+          <ErrorBoundary title="Welcome Portal Error">
+            <WelcomeLanding onOpenAuthModal={handleOpenAuthModal} />
+          </ErrorBoundary>
         )}
 
         {/* 2. Dedicated Patient Companion Portal */}
         {currentView === 'patient_portal' && (
-          <PatientPortal onExitToHome={() => setCurrentView('landing')} />
+          <ErrorBoundary title="Patient Companion Portal Error">
+            <PatientPortal onExitToHome={() => setCurrentView('landing')} />
+          </ErrorBoundary>
         )}
 
         {/* 3. Dedicated Caretaker Portal & Clinical Hub */}
         {currentView === 'caretaker_portal' && (
-          <ErrorBoundary>
+          <ErrorBoundary title="Caretaker Clinical Hub Error">
             <CaretakerPortal
               onNavigateToPatientPortal={() => setCurrentView('patient_portal')}
               onOpenTeleconsult={handleOpenTeleconsult}
@@ -192,17 +155,23 @@ function SmritiSetuApp() {
 
         {/* 4. ASHA Companion Door-to-Door Triage */}
         {currentView === 'asha' && (
-          <AshaMode onOpenTeleconsult={handleOpenTeleconsult} />
+          <ErrorBoundary title="ASHA Screening Portal Error">
+            <AshaMode onOpenTeleconsult={handleOpenTeleconsult} />
+          </ErrorBoundary>
         )}
 
         {/* 5. 2G Feature Phone IVR Simulator */}
         {currentView === 'ivr' && (
-          <IVRSimulator patient={patient} dialect={dialect} />
+          <ErrorBoundary title="IVR Telephony Simulator Error">
+            <IVRSimulator patient={patient} dialect={dialect} />
+          </ErrorBoundary>
         )}
 
         {/* 6. Pitch & System Architecture View */}
         {currentView === 'pitch' && (
-          <PitchArchitectureView onSelectTier={(view) => setCurrentView(view)} />
+          <ErrorBoundary title="Architecture View Error">
+            <PitchArchitectureView onSelectTier={(view) => setCurrentView(view)} />
+          </ErrorBoundary>
         )}
       </main>
 

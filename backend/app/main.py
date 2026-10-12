@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.models.database import engine, Base, SessionLocal
@@ -23,6 +23,18 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from fastapi.exceptions import RequestValidationError
+from app.core.exceptions import (
+    AppException,
+    app_exception_handler,
+    http_exception_handler,
+    validation_exception_handler,
+)
+
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 # Seed initial patient & baseline telemetry if empty
 def seed_database():
