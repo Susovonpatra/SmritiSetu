@@ -17,6 +17,7 @@ class eSanjeevaniDispatchRequest(BaseModel):
     clinical_notes: str = ""
 
 @router.get("/report/{patient_id}/pdf")
+@router.get("/api/v1/report/{patient_id}/pdf")
 def download_patient_clinical_pdf(patient_id: int, db: Session = Depends(get_db)):
     """
     Generate and stream MoCA/ICMR-NARI aligned clinical PDF report
