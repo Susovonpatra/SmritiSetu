@@ -368,7 +368,7 @@ export function BiographicalAnalyticsDashboard({ patientId = 1 }) {
             </h3>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Logs recurring mistaken selections to identify specific confabulatory associations (e.g. consistently clicking "Sister" when asked for "Daughter").
+            Logs recurring mistaken selections to identify specific confabulatory associations and familial substitution patterns.
           </p>
         </div>
 

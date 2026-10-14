@@ -11,15 +11,21 @@ export function ConsentModal({ isOpen, onClose, onConsentComplete, patient }) {
   const [abhaLinkageConsent, setAbhaLinkageConsent] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [signatureHash, setSignatureHash] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
   const handleGrantConsent = async () => {
+    if (!caregiverName?.trim()) {
+      setErrorMsg('Please specify the legal caregiver or guardian name.');
+      return;
+    }
+    setErrorMsg('');
     setIsSubmitting(true);
     try {
       const payload = {
         patient_id: patient?.id || 1,
-        caregiver_name: caregiverName,
+        caregiver_name: caregiverName.trim(),
         telemetry_consent: telemetryConsent,
         voice_storage_consent: voiceStorageConsent,
         abha_linkage_consent: abhaLinkageConsent,
@@ -177,11 +183,19 @@ export function ConsentModal({ isOpen, onClose, onConsentComplete, patient }) {
           </div>
         )}
 
+        {/* Validation Error */}
+        {errorMsg && (
+          <div role="alert" className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs sm:text-sm font-semibold">
+            {errorMsg}
+          </div>
+        )}
+
         {/* Action Button */}
         <button
+          type="button"
           onClick={handleGrantConsent}
-          disabled={isSubmitting || !caregiverName}
-          className="w-full min-h-[54px] sm:min-h-[64px] rounded-2xl bg-emerald-800 hover:bg-emerald-900 active:scale-[0.98] text-white text-base sm:text-xl font-black flex items-center justify-center gap-2 sm:gap-3 border-2 sm:border-3 border-zinc-900 shadow-[0_4px_0_#18181B] transition-transform cursor-pointer"
+          disabled={isSubmitting}
+          className="w-full min-h-[54px] sm:min-h-[64px] rounded-2xl bg-emerald-800 hover:bg-emerald-900 active:scale-[0.98] text-white text-base sm:text-xl font-black flex items-center justify-center gap-2 sm:gap-3 border-2 sm:border-3 border-zinc-900 shadow-[0_4px_0_#18181B] transition-transform cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
         >
           <Check className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-300" />
           <span>{isSubmitting ? 'Registering...' : 'Sign & Authorize (DPDP)'}</span>

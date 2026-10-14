@@ -12,28 +12,43 @@ export function AshaMode({ onOpenTeleconsult }) {
   const [triageStatus, setTriageStatus] = useState('Amber');
   const [notes, setNotes] = useState('');
 
+  const [feedback, setFeedback] = useState(null);
+
   const handleAddVisit = async (e) => {
     e.preventDefault();
-    if (!patientName) return;
+    if (!patientName.trim()) {
+      setFeedback({ type: 'error', message: 'Please enter patient name.' });
+      return;
+    }
 
-    await addScreeningRecord({
-      patientId: Math.floor(Math.random() * 1000) + 1,
-      patientName,
-      village,
-      triageStatus,
-      notes
-    });
+    try {
+      await addScreeningRecord({
+        patientId: Math.floor(Math.random() * 1000) + 1,
+        patientName: patientName.trim(),
+        village: village.trim(),
+        triageStatus,
+        notes: notes.trim()
+      });
 
-    setPatientName('');
-    setNotes('');
-    setShowAddModal(false);
+      const savedName = patientName.trim();
+      setPatientName('');
+      setNotes('');
+      setShowAddModal(false);
+      setFeedback({ type: 'success', message: `Screening for "${savedName}" recorded into offline Dexie triage database.` });
+      setTimeout(() => setFeedback(null), 4000);
+    } catch (err) {
+      setFeedback({ type: 'error', message: 'Could not record screening. Please verify details and try again.' });
+    }
   };
 
   const handleSyncToPHC = async () => {
     try {
       await syncQueueToPhc();
+      setFeedback({ type: 'success', message: 'Household screenings successfully synced to PHC server!' });
+      setTimeout(() => setFeedback(null), 4000);
     } catch {
-      // Offline fallback already preserved locally in Dexie
+      setFeedback({ type: 'error', message: 'Network unavailable. Records safely preserved in on-device storage.' });
+      setTimeout(() => setFeedback(null), 5000);
     }
   };
 
@@ -83,6 +98,35 @@ export function AshaMode({ onOpenTeleconsult }) {
           </button>
         </div>
       </div>
+
+      {/* Dynamic Feedback Banner */}
+      {feedback && (
+        <div
+          role="alert"
+          className={`p-3.5 rounded-xl border text-xs sm:text-sm font-semibold flex items-center justify-between transition-all ${
+            feedback.type === 'success'
+              ? 'bg-emerald-50 border-emerald-300 text-emerald-950'
+              : 'bg-rose-50 border-rose-300 text-rose-950'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {feedback.type === 'success' ? (
+              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+            )}
+            <span>{feedback.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedback(null)}
+            className="text-slate-400 hover:text-slate-700 text-xs font-bold px-2 py-0.5"
+            aria-label="Dismiss alert"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Triage Overview Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">

@@ -23,25 +23,25 @@ const RELATION_TIERS = [
   {
     key: 'TIER_1_CORE',
     label: 'Tier 1: Core (Spouse / Primary)',
-    description: 'Closest lifelong anchor (e.g. Spouse, Self identity, First ancestral home)',
+    description: 'Closest lifelong anchor including Spouse, Self identity, and Ancestral home',
     badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300'
   },
   {
     key: 'TIER_2_CHILD',
     label: 'Tier 2: Child (Children & Immediate)',
-    description: 'Immediate filial bonds (e.g. Daughters, Sons, Grandchildren)',
+    description: 'Immediate filial bonds including Daughters, Sons, and Grandchildren',
     badgeColor: 'bg-sky-100 text-sky-800 border-sky-300'
   },
   {
     key: 'TIER_3_SIBLING',
     label: 'Tier 3: Sibling (Brothers / Sisters / Close Kin)',
-    description: 'Early generational connections (e.g. Brothers, Sisters, Childhood schools)',
+    description: 'Early generational connections including Brothers, Sisters, and Childhood environs',
     badgeColor: 'bg-amber-100 text-amber-800 border-amber-300'
   },
   {
     key: 'TIER_4_EXTENDED',
     label: 'Tier 4: Extended (Distant Memories / Nostalgia)',
-    description: 'Contextual distant memories (e.g. First vacations, Favorite pet, Old colleagues)',
+    description: 'Contextual distant memories including Formative trips, Pets, and Colleagues',
     badgeColor: 'bg-violet-100 text-violet-800 border-violet-300'
   }
 ];

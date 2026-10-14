@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, FileText, CheckCircle2, X, AlertTriangle, Building2, User } from 'lucide-react';
+import { Send, FileText, CheckCircle2, X, AlertTriangle, Building2, User, Phone } from 'lucide-react';
 import { esanjeevaniApi } from '@/services/api/esanjeevaniApi';
 
 export function EsanjeevaniModal({ isOpen, onClose, patient, triageRecord }) {
@@ -114,7 +114,17 @@ export function EsanjeevaniModal({ isOpen, onClose, patient, triageRecord }) {
                 {patient?.name || 'Registered Patient'} {patient?.age ? `(Age ${patient.age})` : ''}
               </span>
               <span className="text-xs sm:text-sm font-semibold text-indigo-800 block mt-0.5">
-                ABHA ID: {patient?.abha_id || 'Not Linked'} | Caregiver: {patient?.caregiver_name || 'Assigned Caregiver'} {patient?.caregiver_phone ? `(${patient.caregiver_phone})` : ''}
+                ABHA ID: {patient?.abha_id || 'Not Linked'} | Caregiver: {patient?.caregiver_name || 'Assigned Caregiver'}{' '}
+                {patient?.caregiver_phone && (
+                  <a
+                    href={`tel:${patient.caregiver_phone}`}
+                    className="inline-flex items-center gap-1 font-bold text-indigo-950 hover:underline hover:text-indigo-800 ml-1"
+                    title="Call Caregiver"
+                  >
+                    <Phone className="w-3 h-3 inline" />
+                    <span>({patient.caregiver_phone})</span>
+                  </a>
+                )}
               </span>
             </div>
 

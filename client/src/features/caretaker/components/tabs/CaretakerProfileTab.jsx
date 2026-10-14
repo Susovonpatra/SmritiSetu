@@ -307,9 +307,20 @@ export function CaretakerProfileTab({
 
             {/* 8. Emergency Phone */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                <Phone className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Emergency Caretaker Phone</span>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-emerald-700" />
+                  <span>Emergency Caretaker Phone</span>
+                </span>
+                {profileForm.emergency_contact && profileForm.emergency_contact.trim().length > 3 && (
+                  <a
+                    href={`tel:${profileForm.emergency_contact.trim()}`}
+                    className="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 hover:underline normal-case flex items-center gap-1"
+                    title="Direct call emergency phone"
+                  >
+                    Call ({profileForm.emergency_contact.trim()})
+                  </a>
+                )}
               </label>
               <input
                 type="tel"

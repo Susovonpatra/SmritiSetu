@@ -14,6 +14,8 @@ import { initDefaultData, db } from '@/db/db';
 import { AlertCircle } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { Footer } from '@/components/Footer';
+import { NotFoundView } from '@/components/NotFoundView';
 
 // Lazy-loaded routes for code splitting and optimal bundle performance
 const PatientPortal = lazy(() => import('@/features/patient/components/PatientPortal').then(m => ({ default: m.PatientPortal })));
@@ -84,6 +86,21 @@ function SmritiSetuApp() {
     }
   }, [patientSession]);
 
+  // Dynamic document title update per active route and localized dialect
+  useEffect(() => {
+    const titles = {
+      landing: 'SmritiSetu | AI Cognitive & Memory Platform for Elderly Dementia',
+      patient_portal: 'Patient Companion Portal | SmritiSetu',
+      caretaker_portal: 'Caretaker Clinical Hub | SmritiSetu',
+      asha: 'ASHA Door-to-Door Triage Network | SmritiSetu',
+      ivr: '2G Feature Phone IVR Simulator | SmritiSetu',
+      pitch: 'System Architecture & Implementation Specs | SmritiSetu'
+    };
+    const title = titles[currentView] || '404 Page Not Found | SmritiSetu';
+    const prefix = regionInfo.nativeName ? `${regionInfo.nativeName} | ` : '';
+    document.title = `${prefix}${title}`;
+  }, [currentView, regionInfo]);
+
   const handleOpenAuthModal = (tab = 'caretaker') => {
     setAuthModalTab(tab);
     setIsAuthModalOpen(true);
@@ -97,7 +114,7 @@ function SmritiSetuApp() {
   const dialect = regionInfo.englishName || 'Odia';
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-200">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-200 overflow-x-hidden w-full max-w-full">
       {/* Emergency Motion Alert Banner (HTML5 devicemotion >25 m/s^2) */}
       <MotionAlertBanner
         isAlertActive={isAlertActive}
@@ -177,31 +194,25 @@ function SmritiSetuApp() {
               <PitchArchitectureView onSelectTier={(view) => setCurrentView(view)} />
             </ErrorBoundary>
           )}
+
+          {/* 7. Dedicated 404 Route Fallback */}
+          {!['landing', 'patient_portal', 'caretaker_portal', 'asha', 'ivr', 'pitch'].includes(currentView) && (
+            <ErrorBoundary title="404 Page Error">
+              <NotFoundView
+                onNavigateHome={() => setCurrentView('landing')}
+                onSelectView={(view) => setCurrentView(view)}
+              />
+            </ErrorBoundary>
+          )}
         </Suspense>
       </main>
 
-      {/* Accessible Footer */}
-      <footer className="bg-zinc-900 text-zinc-400 py-4 sm:py-6 px-3 sm:px-4 border-t-4 border-zinc-950 mt-auto">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 text-center sm:text-left">
-          <div>
-            <p className="font-bold text-white text-sm sm:text-base">
-              SmritiSetu | <span className="text-emerald-400 font-mono">ସ୍ମୃତିସେତୁ</span>
-            </p>
-            <p className="text-[11px] sm:text-xs text-zinc-500 mt-0.5">
-              Accessible Dementia Localization Engine | Odisha, Gujarat &amp; National Dialects
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 sm:gap-3 text-[10px] sm:text-xs font-semibold text-zinc-400">
-            <span>Server: FastAPI (8000)</span>
-            <span>•</span>
-            <span>Offline: Dexie.js</span>
-            <span>•</span>
-            <span>Acoustic Rate: 0.88x</span>
-            <span>•</span>
-            <span>WCAG AAA Compliant</span>
-          </div>
-        </div>
-      </footer>
+      {/* Accessible Multi-Column Footer with working links and clickable contacts */}
+      <Footer
+        onSelectView={setCurrentView}
+        onOpenConsent={() => setIsConsentOpen(true)}
+        onOpenAuthModal={handleOpenAuthModal}
+      />
 
       {/* Dual Portal Login / Sign-Up Modal */}
       <DualAuthModal
