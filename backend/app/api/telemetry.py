@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional
+from typing import Optional, Union
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -49,28 +49,33 @@ def sync_telemetry_batch(payload: TelemetrySyncRequest, db: Session = Depends(ge
 
 
 @router.get("/drift/{patient_id}")
-def get_cognitive_drift(patient_id: int, db: Session = Depends(get_db)):
+def get_cognitive_drift(patient_id: str, db: Session = Depends(get_db)):
     """
     Calculate rolling 7-day cognitive drift:
     Drift = ((L_current_mean - L_baseline_mean) / L_baseline_mean) * 100
+    Supports both integer IDs and Supabase UUID strings.
     """
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
-    if not patient:
-        baseline = 800.0
-    else:
-        baseline = patient.baseline_latency or 800.0
+    patient = None
+    query_id = None
+    try:
+        query_id = int(patient_id)
+        patient = db.query(Patient).filter(Patient.id == query_id).first()
+    except (ValueError, TypeError):
+        patient = db.query(Patient).filter(Patient.abha_id == str(patient_id)).first()
+
+    baseline = patient.baseline_latency if (patient and patient.baseline_latency) else 800.0
 
     now = datetime.datetime.utcnow()
     seven_days_ago = now - datetime.timedelta(days=7)
 
-    # Get records from last 7 days
-    recent_logs = db.query(TelemetryLog).filter(
-        TelemetryLog.patient_id == patient_id,
-        TelemetryLog.timestamp >= seven_days_ago
-    ).all()
+    recent_logs = []
+    if query_id is not None:
+        recent_logs = db.query(TelemetryLog).filter(
+            TelemetryLog.patient_id == query_id,
+            TelemetryLog.timestamp >= seven_days_ago
+        ).all()
 
     if not recent_logs:
-        # No recent logs; return 0 drift
         return {
             "patient_id": patient_id,
             "baseline_latency_ms": baseline,
@@ -85,10 +90,7 @@ def get_cognitive_drift(patient_id: int, db: Session = Depends(get_db)):
     current_mean_jitter = sum(l.jitter_px for l in recent_logs) / len(recent_logs)
     current_accuracy = sum(l.accuracy_score for l in recent_logs) / len(recent_logs)
 
-    # Drift formula: ((L_curr - L_base) / L_base) * 100
     drift_percent = ((current_mean_latency - baseline) / baseline) * 100
-
-    # Clinical alert if drift > 35%
     alert = drift_percent > 35.0
 
     return {
@@ -105,21 +107,31 @@ def get_cognitive_drift(patient_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/analytics/{patient_id}")
-def get_longitudinal_analytics(patient_id: int, days: int = 30, db: Session = Depends(get_db)):
+def get_longitudinal_analytics(patient_id: str, days: int = 30, db: Session = Depends(get_db)):
     """
     Returns daily aggregated timeline of reaction latency drift vs accuracy
     for Caregiver Analytics Recharts visualization
+    Supports both integer IDs and Supabase UUID strings.
     """
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
-    baseline = patient.baseline_latency if patient else 800.0
+    patient = None
+    query_id = None
+    try:
+        query_id = int(patient_id)
+        patient = db.query(Patient).filter(Patient.id == query_id).first()
+    except (ValueError, TypeError):
+        patient = db.query(Patient).filter(Patient.abha_id == str(patient_id)).first()
+
+    baseline = patient.baseline_latency if (patient and patient.baseline_latency) else 800.0
 
     now = datetime.datetime.utcnow()
     start_date = now - datetime.timedelta(days=days)
 
-    logs = db.query(TelemetryLog).filter(
-        TelemetryLog.patient_id == patient_id,
-        TelemetryLog.timestamp >= start_date
-    ).order_by(TelemetryLog.timestamp.asc()).all()
+    logs = []
+    if query_id is not None:
+        logs = db.query(TelemetryLog).filter(
+            TelemetryLog.patient_id == query_id,
+            TelemetryLog.timestamp >= start_date
+        ).order_by(TelemetryLog.timestamp.asc()).all()
 
     # Aggregate by date
     timeline_dict = {}
@@ -132,7 +144,6 @@ def get_longitudinal_analytics(patient_id: int, days: int = 30, db: Session = De
         timeline_dict[date_str]["jitters"].append(log.jitter_px)
 
     timeline_data = []
-    # If no data or sparse data, fill reasonable sequence
     for i in range(days, -1, -1):
         d = (now - datetime.timedelta(days=i)).strftime("%Y-%m-%d")
         if d in timeline_dict:
@@ -141,7 +152,6 @@ def get_longitudinal_analytics(patient_id: int, days: int = 30, db: Session = De
             avg_acc = (sum(entry["accuracies"]) / len(entry["accuracies"])) * 100
             avg_jit = sum(entry["jitters"]) / len(entry["jitters"])
         else:
-            # Generate trend showing realistic progression
             trend_factor = 1.0 + (days - i) * 0.012
             avg_lat = round(baseline * trend_factor, 1)
             avg_acc = max(60, round(96 - (days - i) * 0.7, 1))
@@ -170,7 +180,7 @@ class BiographicalTrialPayload(BaseModel):
     sessionId: str
     timestamp: str
     questionId: str
-    patientId: Optional[int] = 1
+    patientId: Optional[Union[int, str]] = 1
     relationTier: str
     selectedOptionIndex: int
     correctOptionIndex: int
@@ -195,7 +205,7 @@ def log_biographical_trial(payload: BiographicalTrialPayload):
 
 
 @router.get("/biographical/{patient_id}")
-def get_biographical_trials(patient_id: int):
+def get_biographical_trials(patient_id: str):
     """Retrieve logged biographical trials for patient"""
-    return [t for t in BIOGRAPHICAL_TRIALS_CACHE if t.get("patientId") == patient_id]
+    return [t for t in BIOGRAPHICAL_TRIALS_CACHE if str(t.get("patientId")) == str(patient_id)]
 

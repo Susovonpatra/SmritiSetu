@@ -56,6 +56,16 @@ class BackendSmokeTestCase(unittest.TestCase):
         self.assertIn("timeline", data)
         self.assertIsInstance(data["timeline"], list)
 
+    def test_telemetry_uuid_patient_id(self):
+        uuid_str = "793802bc-1943-46dd-a80f-01f4941c28e7"
+        res_drift = self.client.get(f"/api/v1/telemetry/drift/{uuid_str}")
+        self.assertEqual(res_drift.status_code, 200)
+        self.assertEqual(res_drift.json().get("patient_id"), uuid_str)
+
+        res_analytics = self.client.get(f"/api/v1/telemetry/analytics/{uuid_str}?days=30")
+        self.assertEqual(res_analytics.status_code, 200)
+        self.assertEqual(res_analytics.json().get("patient_id"), uuid_str)
+
     def test_ivr_simulation(self):
         payload = {
             "patient_id": 1,

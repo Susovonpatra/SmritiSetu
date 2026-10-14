@@ -1,5 +1,5 @@
 import math
-from typing import List, Optional
+from typing import List, Optional, Union
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
@@ -88,7 +88,7 @@ def search_memories(query: str):
 
 class BiographicalQuestionItem(BaseModel):
     questionId: str
-    patientId: Optional[int] = 1
+    patientId: Optional[Union[int, str]] = 1
     questionText: str
     relationTier: str
     options: List[str]
@@ -99,7 +99,7 @@ class BiographicalQuestionItem(BaseModel):
 
 
 class BatchBiographicalQuestionsPayload(BaseModel):
-    patientId: Optional[int] = 1
+    patientId: Optional[Union[int, str]] = 1
     questions: List[BiographicalQuestionItem]
 
 
@@ -109,13 +109,14 @@ BIOGRAPHICAL_QUESTIONS_CACHE = {}
 @router.post("/biographical-questions")
 def save_biographical_questions(payload: BatchBiographicalQuestionsPayload):
     """Batch save or update biographical questions for a patient"""
-    p_id = payload.patientId or 1
+    p_id = str(payload.patientId) if payload.patientId is not None else "1"
     BIOGRAPHICAL_QUESTIONS_CACHE[p_id] = [q.dict() for q in payload.questions]
     return {"status": "success", "count": len(payload.questions)}
 
 
 @router.get("/biographical-questions/{patient_id}")
-def get_biographical_questions(patient_id: int):
+def get_biographical_questions(patient_id: str):
     """Retrieve all stored biographical questions for a patient"""
-    return BIOGRAPHICAL_QUESTIONS_CACHE.get(patient_id, [])
+    p_id = str(patient_id)
+    return BIOGRAPHICAL_QUESTIONS_CACHE.get(p_id, BIOGRAPHICAL_QUESTIONS_CACHE.get(int(p_id) if p_id.isdigit() else p_id, []))
 

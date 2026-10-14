@@ -38,8 +38,13 @@ def create_consent_record(payload: ConsentCreate, db: Session = Depends(get_db))
     return consent
 
 @router.get("/{patient_id}", response_model=ConsentResponse)
-def get_patient_consent(patient_id: int, db: Session = Depends(get_db)):
-    record = db.query(ConsentRecord).filter(ConsentRecord.patient_id == patient_id).order_by(ConsentRecord.timestamp.desc()).first()
+def get_patient_consent(patient_id: str, db: Session = Depends(get_db)):
+    record = None
+    try:
+        int_id = int(patient_id)
+        record = db.query(ConsentRecord).filter(ConsentRecord.patient_id == int_id).order_by(ConsentRecord.timestamp.desc()).first()
+    except (ValueError, TypeError):
+        pass
     if not record:
         raise HTTPException(status_code=404, detail="Consent record not found for patient")
     return record
