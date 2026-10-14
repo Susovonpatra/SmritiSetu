@@ -63,7 +63,7 @@ export function PatientSecurityTab({
                 minLength={6}
                 value={patientPassword}
                 onChange={(e) => setPatientPassword(e.target.value)}
-                placeholder="e.g. Setu@2026 or EasyMemory123"
+                placeholder="New Patient Password"
                 className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
               />
             </div>

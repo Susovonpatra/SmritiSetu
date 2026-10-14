@@ -166,7 +166,7 @@ export function CaretakerProfileTab({
                 required
                 value={profileForm.name}
                 onChange={(e) => onProfileChange('name', e.target.value)}
-                placeholder="e.g. Patient Full Name"
+                placeholder="Patient Full Name"
                 className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
               />
               <p className="text-[11px] text-slate-500">
@@ -187,7 +187,7 @@ export function CaretakerProfileTab({
                 max={125}
                 value={profileForm.age}
                 onChange={(e) => onProfileChange('age', e.target.value)}
-                placeholder="e.g. 72"
+                placeholder="Age in Years"
                 className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
               />
               <p className="text-[11px] text-slate-500">
@@ -206,7 +206,7 @@ export function CaretakerProfileTab({
                 required
                 value={profileForm.locality}
                 onChange={(e) => onProfileChange('locality', e.target.value)}
-                placeholder="e.g. Guwahati, Assam"
+                placeholder="Locality, District, State"
                 className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
               />
               <p className="text-[11px] text-slate-500">
@@ -225,7 +225,7 @@ export function CaretakerProfileTab({
                 required
                 value={profileForm.dementia_duration}
                 onChange={(e) => onProfileChange('dementia_duration', e.target.value)}
-                placeholder="e.g. 2 Years, 6 Months, or 3-5 Years"
+                placeholder="Dementia Duration"
                 className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
               />
               <div className="flex flex-wrap gap-1 pt-1">
@@ -278,7 +278,7 @@ export function CaretakerProfileTab({
                 type="text"
                 value={profileForm.abha_id}
                 onChange={(e) => onProfileChange('abha_id', e.target.value)}
-                placeholder="e.g. ABHA-1234-5678-9012"
+                placeholder="ABHA Health ID"
                 className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
               />
               <p className="text-[11px] text-slate-500">
@@ -315,7 +315,7 @@ export function CaretakerProfileTab({
                 type="tel"
                 value={profileForm.emergency_contact}
                 onChange={(e) => onProfileChange('emergency_contact', e.target.value)}
-                placeholder="e.g. +91 98765 43210"
+                placeholder="Emergency Contact Number"
                 className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
               />
             </div>
@@ -330,7 +330,7 @@ export function CaretakerProfileTab({
                 type="text"
                 value={profileForm.notes}
                 onChange={(e) => onProfileChange('notes', e.target.value)}
-                placeholder="e.g. Likes morning tea at 8 AM, responsive to audio prompts"
+                placeholder="Caregiver Notes & Routine Tips"
                 className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-3.5 text-xs sm:text-sm font-semibold text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition shadow-sm"
               />
             </div>

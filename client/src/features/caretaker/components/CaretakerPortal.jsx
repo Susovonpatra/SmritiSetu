@@ -190,7 +190,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
   };
 
   const handleCopyCredentials = () => {
-    const text = `Caretaker Email: ${caretakerUser?.email || 'caretaker@smritisetu.in'}\nPatient Password: ${patientPassword || 'Setu@2026'}\nPortal URL: /patient_portal`;
+    const text = `Caretaker Email: ${caretakerUser?.email || ''}\nPatient Password: ${patientPassword || ''}\nPortal URL: /patient_portal`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

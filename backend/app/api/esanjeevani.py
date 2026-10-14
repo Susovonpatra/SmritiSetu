@@ -24,23 +24,16 @@ def download_patient_clinical_pdf(patient_id: int, db: Session = Depends(get_db)
     """
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
-        patient_data = {
-            "name": "Bhaben Baruah",
-            "age": 74,
-            "abha_id": "NER-ASM-9821-4412",
-            "dialect": "Assamese",
-            "caregiver_name": "Ananya Baruah",
-            "caregiver_phone": "+91 94350 12345"
-        }
-    else:
-        patient_data = {
-            "name": patient.name,
-            "age": patient.age,
-            "abha_id": patient.abha_id,
-            "dialect": patient.dialect,
-            "caregiver_name": patient.caregiver_name,
-            "caregiver_phone": patient.caregiver_phone
-        }
+        raise HTTPException(status_code=404, detail=f"Patient {patient_id} not found")
+
+    patient_data = {
+        "name": patient.name,
+        "age": patient.age,
+        "abha_id": patient.abha_id,
+        "dialect": patient.dialect,
+        "caregiver_name": patient.caregiver_name,
+        "caregiver_phone": patient.caregiver_phone
+    }
 
     drift_data = get_cognitive_drift(patient_id=patient_id, db=db)
     

@@ -105,7 +105,7 @@ export function ConsentModal({ isOpen, onClose, onConsentComplete, patient }) {
               value={caregiverName}
               onChange={(e) => setCaregiverName(e.target.value)}
               className="w-full px-3.5 py-2.5 sm:py-3 rounded-xl border-2 sm:border-3 border-zinc-800 text-sm sm:text-lg font-medium focus:border-emerald-700"
-              placeholder="e.g., Caregiver Legal Name"
+              placeholder="Caregiver Legal Name"
             />
           </div>
 

@@ -455,7 +455,7 @@ export function BiographicalQuestionManager({ patientId = 1 }) {
                   type="text"
                   value={formData.questionText}
                   onChange={(e) => setFormData({ ...formData, questionText: e.target.value })}
-                  placeholder="e.g. Who is your eldest daughter who visits on weekends?"
+                  placeholder="Enter biographical question..."
                   className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-slate-900 text-sm font-semibold focus:outline-none focus:border-indigo-500 transition"
                   required
                 />

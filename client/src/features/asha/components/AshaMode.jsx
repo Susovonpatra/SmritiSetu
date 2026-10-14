@@ -181,7 +181,7 @@ export function AshaMode({ onOpenTeleconsult }) {
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs text-slate-900 focus:bg-white focus:border-teal-600 focus:outline-none"
-                  placeholder="e.g. Ramesh Chandra Dash"
+                  placeholder="Patient Name"
                 />
               </div>
 

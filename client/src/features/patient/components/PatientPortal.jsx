@@ -435,7 +435,7 @@ export function PatientPortal({ onExitToHome }) {
               required
               value={caretakerEmail}
               onChange={(e) => setCaretakerEmail(e.target.value)}
-              placeholder="caretaker@example.com"
+              placeholder="Caretaker Email Address"
               className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition"
             />
           </div>

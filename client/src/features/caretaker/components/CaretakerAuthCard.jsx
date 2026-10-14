@@ -53,7 +53,7 @@ export function CaretakerAuthCard({
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Caretaker Full Name"
+                  placeholder="Full Name"
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                 />
               </div>
@@ -69,7 +69,7 @@ export function CaretakerAuthCard({
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+91 94350 12345"
+                  placeholder="Phone Number"
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                 />
               </div>
@@ -88,7 +88,7 @@ export function CaretakerAuthCard({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="caretaker@example.com"
+              placeholder="Email Address"
               className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
             />
           </div>

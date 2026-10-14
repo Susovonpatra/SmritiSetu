@@ -236,7 +236,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
                           required
                           value={caretakerFullName}
                           onChange={(e) => setCaretakerFullName(e.target.value)}
-                          placeholder="e.g. Caretaker Full Name"
+                          placeholder="Full Name"
                           className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                         />
                       </div>
@@ -252,7 +252,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
                           type="tel"
                           value={caretakerPhone}
                           onChange={(e) => setCaretakerPhone(e.target.value)}
-                          placeholder="e.g. +91 98765 43210"
+                          placeholder="Phone Number"
                           className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                         />
                       </div>
@@ -271,7 +271,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
                       required
                       value={caretakerEmail}
                       onChange={(e) => setCaretakerEmail(e.target.value)}
-                      placeholder="caretaker@example.com"
+                      placeholder="Email Address"
                       className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-indigo-600 focus:bg-white focus:outline-none transition"
                     />
                   </div>
@@ -339,7 +339,7 @@ export function DualAuthModal({ isOpen, onClose, initialTab = 'caretaker', onSuc
                       required
                       value={patientCaretakerEmail}
                       onChange={(e) => setPatientCaretakerEmail(e.target.value)}
-                      placeholder="caretaker@example.com"
+                      placeholder="Caretaker Email Address"
                       className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition"
                     />
                   </div>
