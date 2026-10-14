@@ -174,39 +174,6 @@ export function WelcomeLanding({ onOpenAuthModal }) {
           </button>
         </div>
       </div>
-
-      {/* ── 3 CLINICAL PILLARS SECTION ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4">
-        <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-          <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold mb-3">
-            <Brain className="w-5 h-5" />
-          </div>
-          <h4 className="font-extrabold text-slate-900 text-sm">Adaptive Working Memory</h4>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Non-punitive 3×3 matrix puzzles that scale based on real-time neurocognitive capacity without creating patient distress.
-          </p>
-        </div>
-
-        <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold mb-3">
-            <Activity className="w-5 h-5" />
-          </div>
-          <h4 className="font-extrabold text-slate-900 text-sm">Longitudinal Telemetry</h4>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Passive touch latency and psychomotor tremor tracking to detect subtle cognitive slowdowns weeks before clinical visits.
-          </p>
-        </div>
-
-        <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-          <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-800 flex items-center justify-center font-bold mb-3">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <h4 className="font-extrabold text-slate-900 text-sm">DPDP &amp; eSanjeevani Ready</h4>
-          <p className="text-xs text-slate-600 leading-relaxed">
-            Offline-first Dexie.js database with ABHA linkage and instantaneous telemedicine dispatch to state medical institutions.
-          </p>
-        </div>
-      </div>
     </div>
   );
 }
