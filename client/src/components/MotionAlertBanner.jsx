@@ -2,22 +2,7 @@ import React from 'react';
 import { AlertTriangle, PhoneCall, X, ShieldAlert } from 'lucide-react';
 
 export function MotionAlertBanner({ isAlertActive, peakAcceleration, lastDropTime, onDismiss, onSimulate }) {
-  if (!isAlertActive) {
-    return (
-      <div className="bg-zinc-100 border-b border-zinc-300 py-1.5 px-3 sm:px-4 text-[11px] sm:text-xs font-bold text-zinc-600 flex flex-col xs:flex-row items-center justify-between gap-1.5 sm:gap-2">
-        <span className="flex items-center gap-1.5 sm:gap-2 text-center xs:text-left">
-          <ShieldAlert className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700 shrink-0" />
-          <span>Motion Safety Guard Active (HTML5 devicemotion &gt;25 m/s² drop detector)</span>
-        </span>
-        <button
-          onClick={onSimulate}
-          className="text-[11px] sm:text-xs bg-white hover:bg-zinc-200 text-zinc-800 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-md border border-zinc-400 font-semibold shadow-sm shrink-0 cursor-pointer"
-        >
-          Test Tablet Drop Alert (28 m/s²)
-        </button>
-      </div>
-    );
-  }
+  if (!isAlertActive) return null;
 
   return (
     <div className="bg-rose-600 text-white p-3 sm:p-4 shadow-xl border-b-4 border-rose-950 animate-pulse">

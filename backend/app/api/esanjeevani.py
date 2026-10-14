@@ -1,6 +1,7 @@
 import uuid
 import datetime
 from fastapi import APIRouter, Depends, HTTPException, Response
+from typing import Union
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.models.database import get_db
@@ -11,35 +12,35 @@ from app.core.pdf_report import generate_clinical_pdf
 router = APIRouter(prefix="", tags=["Clinical Reports & eSanjeevani"])
 
 class eSanjeevaniDispatchRequest(BaseModel):
-    patient_id: int
+    patient_id: Union[int, str]
     abha_id: str
     urgency_level: str = "Routine"  # Routine, Priority, Urgent
     clinical_notes: str = ""
 
 @router.get("/report/{patient_id}/pdf")
-def download_patient_clinical_pdf(patient_id: int, db: Session = Depends(get_db)):
+@router.get("/api/v1/report/{patient_id}/pdf")
+def download_patient_clinical_pdf(patient_id: str, db: Session = Depends(get_db)):
     """
     Generate and stream MoCA/ICMR-NARI aligned clinical PDF report
     """
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    patient = None
+    try:
+        int_id = int(patient_id)
+        patient = db.query(Patient).filter(Patient.id == int_id).first()
+    except (ValueError, TypeError):
+        patient = db.query(Patient).filter(Patient.abha_id == str(patient_id)).first()
+
     if not patient:
-        patient_data = {
-            "name": "Bhaben Baruah",
-            "age": 74,
-            "abha_id": "NER-ASM-9821-4412",
-            "dialect": "Assamese",
-            "caregiver_name": "Ananya Baruah",
-            "caregiver_phone": "+91 94350 12345"
-        }
-    else:
-        patient_data = {
-            "name": patient.name,
-            "age": patient.age,
-            "abha_id": patient.abha_id,
-            "dialect": patient.dialect,
-            "caregiver_name": patient.caregiver_name,
-            "caregiver_phone": patient.caregiver_phone
-        }
+        raise HTTPException(status_code=404, detail=f"Patient {patient_id} not found")
+
+    patient_data = {
+        "name": patient.name,
+        "age": patient.age,
+        "abha_id": patient.abha_id,
+        "dialect": patient.dialect,
+        "caregiver_name": patient.caregiver_name,
+        "caregiver_phone": patient.caregiver_phone
+    }
 
     drift_data = get_cognitive_drift(patient_id=patient_id, db=db)
     

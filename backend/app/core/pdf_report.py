@@ -73,18 +73,19 @@ def generate_clinical_pdf(patient_data: dict, drift_data: dict, telemetry_summar
     elements.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor('#065F46'), spaceAfter=10))
 
     # Patient & Caregiver Info Table
+    age_str = f"{patient_data.get('age')} Y" if patient_data.get('age') else "N/A"
     pat_table_data = [
         [
-            Paragraph("<b>Patient Name:</b> " + str(patient_data.get("name", "Bhaben Baruah")), body_style),
-            Paragraph("<b>ABHA Health ID:</b> " + str(patient_data.get("abha_id", "NER-ASM-9821-4412")), body_style)
+            Paragraph("<b>Patient Name:</b> " + str(patient_data.get("name", "N/A")), body_style),
+            Paragraph("<b>ABHA Health ID:</b> " + str(patient_data.get("abha_id", "N/A")), body_style)
         ],
         [
-            Paragraph("<b>Age / Gender:</b> " + str(patient_data.get("age", 74)) + " Y / Male", body_style),
-            Paragraph("<b>Primary Dialect:</b> " + str(patient_data.get("dialect", "Assamese")), body_style)
+            Paragraph("<b>Age / Gender:</b> " + age_str, body_style),
+            Paragraph("<b>Primary Dialect:</b> " + str(patient_data.get("dialect", "N/A")), body_style)
         ],
         [
-            Paragraph("<b>Primary Caregiver:</b> " + str(patient_data.get("caregiver_name", "Ananya Baruah")), body_style),
-            Paragraph("<b>Contact / Phone:</b> " + str(patient_data.get("caregiver_phone", "+91 94350 12345")), body_style)
+            Paragraph("<b>Primary Caregiver:</b> " + str(patient_data.get("caregiver_name", "N/A")), body_style),
+            Paragraph("<b>Contact / Phone:</b> " + str(patient_data.get("caregiver_phone", "N/A")), body_style)
         ],
         [
             Paragraph("<b>Report Timestamp:</b> " + datetime.datetime.now().strftime("%d %b %Y, %I:%M %p"), body_style),

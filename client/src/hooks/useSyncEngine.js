@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '../db/db';
-
-const API_BASE = 'http://127.0.0.1:8000';
+import { db } from '@/db/db';
+import { telemetryApi } from '@/services/api/telemetryApi';
+import { ashaApi } from '@/services/api/ashaApi';
 
 export function useSyncEngine() {
   const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -62,32 +62,21 @@ export function useSyncEngine() {
           }))
         };
 
-        const res = await fetch(`${API_BASE}/api/v1/telemetry/sync`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) {
-          setLastSyncTime(new Date().toLocaleTimeString());
-        }
+        await telemetryApi.syncBatch(payload.records);
+        setLastSyncTime(new Date().toLocaleTimeString());
       }
 
       // Also sync ASHA queue if unsynced
       const unsyncedAsha = await db.asha_queue.filter(a => a.synced === false).toArray();
       if (unsyncedAsha.length > 0) {
-        await fetch(`${API_BASE}/api/v1/asha/sync`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(unsyncedAsha.map(a => ({
-            patient_id: a.patient_id,
-            patient_name: a.patient_name,
-            village: a.village,
-            triage_status: a.triage_status,
-            notes: a.notes,
-            worker_id: 'ASHA-NAGAON-01'
-          })))
-        });
+        await ashaApi.syncBatch(unsyncedAsha.map(a => ({
+          patient_id: a.patient_id,
+          patient_name: a.patient_name,
+          village: a.village,
+          triage_status: a.triage_status,
+          notes: a.notes,
+          worker_id: 'ASHA-NAGAON-01'
+        })));
 
         await db.asha_queue.filter(a => a.synced === false).modify({ synced: true });
       }

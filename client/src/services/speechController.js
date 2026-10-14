@@ -5,7 +5,9 @@
  * - Handles interruptions: Cancels ongoing utterance before speaking.
  */
 
-const TTS_ENDPOINT = 'http://127.0.0.1:8000/api/v1/tts';
+import { config } from '@/config/env';
+
+const getTtsEndpoint = () => `${config.apiBaseUrl}/api/v1/tts`;
 
 
 // Audio element and concurrency control singleton
@@ -57,7 +59,7 @@ export async function speakCognitivePrompt(text, langCode = 'hi', onFinished, op
   }, 5000);
 
   try {
-    const response = await fetch(TTS_ENDPOINT, {
+    const response = await fetch(getTtsEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
