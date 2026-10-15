@@ -4,8 +4,10 @@ import { useLocale } from '@/features/localization/context/LocaleContext';
 import { DementiaLanguageToggle } from '@/features/localization/components/DementiaLanguageToggle';
 import { PatternTraceGame } from '@/features/games/components/PatternTraceGame';
 import { VisualSemanticGame } from '@/features/games/components/VisualSemanticGame';
+import { ShapeMatchGame } from '@/features/games/components/ShapeMatchGame';
 import { DailyRoutineGame } from '@/features/games/components/DailyRoutineGame';
 import { BiographicalRecognitionGame } from '@/features/games/components/BiographicalRecognitionGame';
+import { FEATURE_FLAGS } from '@/config/features';
 import {
   Heart,
   KeyRound,
@@ -16,6 +18,7 @@ import {
   Brain,
   Calendar,
   Layers,
+  Shapes,
   Sun,
   Sunset,
   Moon,
@@ -344,8 +347,10 @@ export function PatientPortal({ onExitToHome }) {
                   : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
               }`}
             >
-              <Brain className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'visual' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-              <span className="truncate">3. Picture Match</span>
+              <Shapes className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'visual' ? 'text-emerald-300' : 'text-emerald-700'}`} />
+              <span className="truncate">
+                {FEATURE_FLAGS.SHAPE_GAME_ENABLED ? '3. Match the Shapes' : '3. Picture Match'}
+              </span>
             </button>
 
             <button
@@ -379,10 +384,18 @@ export function PatientPortal({ onExitToHome }) {
             )}
 
             {activeGameTab === 'visual' && (
-              <VisualSemanticGame
-                dialect={regionInfo.englishName || 'Odia'}
-                onGameComplete={() => setActiveGameTab('routine')}
-              />
+              FEATURE_FLAGS.SHAPE_GAME_ENABLED ? (
+                <ShapeMatchGame
+                  patientId={patientSession?.id || patientProfile?.id || 1}
+                  dialect={regionInfo.englishName || 'Assamese'}
+                  onExitToRest={onExitToHome}
+                />
+              ) : (
+                <VisualSemanticGame
+                  dialect={regionInfo.englishName || 'Odia'}
+                  onGameComplete={() => setActiveGameTab('routine')}
+                />
+              )
             )}
 
             {activeGameTab === 'routine' && (

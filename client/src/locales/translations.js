@@ -49,6 +49,8 @@ export const TRANSLATIONS = {
     },
     // Cognitive Games
     games: {
+      shapeTitle: 'ଆକୃତି ମିଳାଅ (Match Shapes)',
+      shapeSubtitle: 'ଆକୃତିଗୁଡ଼ିକୁ ସେମାନଙ୍କ ସଠିକ୍ ସ୍ଥାନରେ ମିଳାନ୍ତୁ:',
       visualTitle: 'ଚିତ୍ର ଚିହ୍ନିବା ଖେଳ',
       visualSubtitle: 'ତଳେ ଥିବା ଚିତ୍ରଟିକୁ ଦେଖନ୍ତୁ ଏବଂ ସଠିକ୍ ନାମ ବାଛନ୍ତୁ:',
       listenPrompt: 'ପ୍ରଶ୍ନ ଶୁଣନ୍ତୁ',
@@ -164,6 +166,8 @@ export const TRANSLATIONS = {
       pending: 'સિંક બાકી છે'
     },
     games: {
+      shapeTitle: 'આકાર મેળવો (Match Shapes)',
+      shapeSubtitle: 'આકારોને તેમના યોગ્ય સ્થાનમાં મૂકો:',
       visualTitle: 'ચિત્ર ઓળખ રમત',
       visualSubtitle: 'નીચે આપેલું ચિત્ર જુઓ અને સાચું નામ પસંદ કરો:',
       listenPrompt: 'સૂચના સાંભળો',
@@ -275,6 +279,8 @@ export const TRANSLATIONS = {
       pending: 'চিংক বাকী আছে'
     },
     games: {
+      shapeTitle: 'আকৃতি মিলাওক (Match Shapes)',
+      shapeSubtitle: 'আকৃতিসমূহ নিজৰ নিজৰ স্থানত মিলাওক:',
       visualTitle: 'সাংস্কৃতিক স্মৃতি খেল',
       visualSubtitle: 'তলৰ ছবিখন লক্ষ্য কৰক আৰু শুদ্ধ নাম বাছক:',
       listenPrompt: 'কথা শুনক',
@@ -386,6 +392,8 @@ export const TRANSLATIONS = {
       pending: 'Pending Sync'
     },
     games: {
+      shapeTitle: 'Match the Shapes',
+      shapeSubtitle: 'Drag each shape into its matching holder:',
       visualTitle: 'Cognitive Memory Game',
       visualSubtitle: 'Look at the image below and select the correct name:',
       listenPrompt: 'Listen to Voice',

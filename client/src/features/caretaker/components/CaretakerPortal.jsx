@@ -9,6 +9,7 @@ import { CaretakerHeader } from './CaretakerHeader';
 import { CaretakerTabsNav } from './CaretakerTabsNav';
 import { CaretakerProfileTab } from './tabs/CaretakerProfileTab';
 import { ClinicalTelemetryTab } from './tabs/ClinicalTelemetryTab';
+import { ShapeGameAnalyticsTab } from './tabs/ShapeGameAnalyticsTab';
 import { PatientSecurityTab } from './tabs/PatientSecurityTab';
 
 export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }) {
@@ -251,6 +252,13 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
             patternAnalytics={patternAnalytics}
             displayPatientName={displayPatientName}
             onOpenReportModal={() => setIsReportModalOpen(true)}
+          />
+        )}
+
+        {activeTab === 'shape_analytics' && (
+          <ShapeGameAnalyticsTab
+            patientId={patientProfile?.id || 1}
+            displayPatientName={displayPatientName}
           />
         )}
 
