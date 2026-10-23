@@ -17,15 +17,15 @@ export function CaretakerTabsNav({ activeTab, onSelectTab }) {
       </button>
 
       <button
-        onClick={() => onSelectTab('telemetry')}
+        onClick={() => onSelectTab('analytics')}
         className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
-          activeTab === 'telemetry'
+          activeTab === 'analytics' || activeTab === 'telemetry' || activeTab === 'biographical_analytics'
             ? 'bg-indigo-900 text-white shadow-md border border-indigo-950'
             : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
         }`}
       >
-        <Brain className={`w-4 h-4 shrink-0 ${activeTab === 'telemetry' ? 'text-indigo-300' : 'text-indigo-700'}`} />
-        <span>Clinical Biomarkers &amp; Telemetry</span>
+        <Brain className={`w-4 h-4 shrink-0 ${activeTab === 'analytics' || activeTab === 'telemetry' || activeTab === 'biographical_analytics' ? 'text-indigo-300' : 'text-indigo-700'}`} />
+        <span>Cognitive Analytics &amp; Progress (All 3 Games)</span>
       </button>
 
       <button
@@ -50,18 +50,6 @@ export function CaretakerTabsNav({ activeTab, onSelectTab }) {
       >
         <HelpCircle className={`w-4 h-4 shrink-0 ${activeTab === 'biographical_cms' ? 'text-emerald-200' : 'text-emerald-700'}`} />
         <span>Biographical CMS (Questions)</span>
-      </button>
-
-      <button
-        onClick={() => onSelectTab('biographical_analytics')}
-        className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-3 sm:px-5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
-          activeTab === 'biographical_analytics'
-            ? 'bg-blue-900 text-white shadow-md border border-blue-950'
-            : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
-        }`}
-      >
-        <Activity className={`w-4 h-4 shrink-0 ${activeTab === 'biographical_analytics' ? 'text-blue-300' : 'text-blue-700'}`} />
-        <span>Biographical Telemetry &amp; Decay</span>
       </button>
 
       <button
