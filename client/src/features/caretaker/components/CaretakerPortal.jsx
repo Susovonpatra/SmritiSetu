@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useDualAuth } from '@/features/auth/context/DualAuthContext';
 import { PatternTraceReportModal } from '@/features/games/components/PatternTraceReportModal';
 import { BiographicalQuestionManager } from '@/features/caretaker/components/BiographicalQuestionManager';
-import { BiographicalAnalyticsDashboard } from '@/features/caretaker/components/BiographicalAnalyticsDashboard';
+import { UnifiedAnalyticsDashboard } from '@/features/caretaker/components/UnifiedAnalyticsDashboard';
 import { useCaretakerAnalytics } from '../hooks/useCaretakerAnalytics';
 import { CaretakerAuthCard } from './CaretakerAuthCard';
 import { CaretakerHeader } from './CaretakerHeader';
 import { CaretakerTabsNav } from './CaretakerTabsNav';
 import { CaretakerProfileTab } from './tabs/CaretakerProfileTab';
-import { ClinicalTelemetryTab } from './tabs/ClinicalTelemetryTab';
 import { PatientSecurityTab } from './tabs/PatientSecurityTab';
 
 export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }) {
@@ -58,8 +57,16 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
   const [errorMsg, setErrorMsg] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Clinical Telemetry State via extracted hook
-  const { analyticsData, patternAnalytics, driftMetrics } = useCaretakerAnalytics(patientProfile?.id || 1, caretakerUser);
+  // Comprehensive Multi-Game Analytics State via extracted hook
+  const {
+    patternAnalytics,
+    biographicalAnalytics,
+    routineAnalytics,
+    unifiedTimeline,
+    driftMetrics,
+    isLoading: isAnalyticsLoading,
+    refetch: refetchAnalytics
+  } = useCaretakerAnalytics(patientProfile?.id || 1, caretakerUser);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Populate profile form whenever patientProfile loads/changes
@@ -244,12 +251,16 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
           />
         )}
 
-        {activeTab === 'telemetry' && (
-          <ClinicalTelemetryTab
-            driftMetrics={driftMetrics}
-            analyticsData={analyticsData}
-            patternAnalytics={patternAnalytics}
+        {(activeTab === 'analytics' || activeTab === 'telemetry' || activeTab === 'biographical_analytics') && (
+          <UnifiedAnalyticsDashboard
             displayPatientName={displayPatientName}
+            driftMetrics={driftMetrics}
+            patternAnalytics={patternAnalytics}
+            biographicalAnalytics={biographicalAnalytics}
+            routineAnalytics={routineAnalytics}
+            unifiedTimeline={unifiedTimeline}
+            isLoading={isAnalyticsLoading}
+            onRefresh={refetchAnalytics}
             onOpenReportModal={() => setIsReportModalOpen(true)}
           />
         )}
@@ -273,10 +284,6 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
 
         {activeTab === 'biographical_cms' && (
           <BiographicalQuestionManager patientId={patientProfile?.id || 1} />
-        )}
-
-        {activeTab === 'biographical_analytics' && (
-          <BiographicalAnalyticsDashboard patientId={patientProfile?.id || 1} />
         )}
 
         <PatternTraceReportModal

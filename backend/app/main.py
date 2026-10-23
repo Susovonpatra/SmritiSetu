@@ -6,35 +6,10 @@ from app.models.schemas import Patient, TelemetryLog, AshaQueue, ConsentRecord
 from app.api import consent, telemetry, memory, asha, tts, ivr, esanjeevani, locale
 import datetime
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+from contextlib import asynccontextmanager
+import logging
 
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description="AI-Based Cognitive Gaming and Memory Assistance Platform for Elderly Dementia Patients in North Eastern Region (NER)."
-)
-
-# Enable CORS for localhost:5173
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-from fastapi.exceptions import RequestValidationError
-from app.core.exceptions import (
-    AppException,
-    app_exception_handler,
-    http_exception_handler,
-    validation_exception_handler,
-)
-
-app.add_exception_handler(AppException, app_exception_handler)
-app.add_exception_handler(HTTPException, http_exception_handler)
-app.add_exception_handler(RequestValidationError, validation_exception_handler)
+logger = logging.getLogger("uvicorn.error")
 
 # Seed initial patient & baseline telemetry if empty
 def seed_database():
@@ -51,7 +26,7 @@ def seed_database():
                 caregiver_name="Ananya Baruah",
                 caregiver_phone="+91 94350 12345",
                 baseline_latency=800.0,
-                created_at=datetime.datetime.utcnow() - datetime.timedelta(days=30)
+                created_at=datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=30)
             )
             db.add(patient)
             db.commit()
@@ -64,12 +39,12 @@ def seed_database():
                 voice_storage_consent=True,
                 abha_linkage_consent=True,
                 signature_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-                timestamp=datetime.datetime.utcnow() - datetime.timedelta(days=30)
+                timestamp=datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=30)
             )
             db.add(consent_rec)
 
             # Seed historical telemetry logs for longitudinal analytics
-            now = datetime.datetime.utcnow()
+            now = datetime.datetime.now(datetime.timezone.utc)
             for day_offset in range(30, 0, -1):
                 t_date = now - datetime.timedelta(days=day_offset)
                 # simulate gradual drift over last 10 days
@@ -100,7 +75,43 @@ def seed_database():
     finally:
         db.close()
 
-seed_database()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        Base.metadata.create_all(bind=engine)
+        seed_database()
+        logger.info("Database schema initialized and baseline data seeded.")
+    except Exception as e:
+        logger.error(f"Database initialization error: {e}")
+    yield
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description="AI-Based Cognitive Gaming and Memory Assistance Platform for Elderly Dementia Patients in North Eastern Region (NER).",
+    lifespan=lifespan
+)
+
+# Enable CORS for localhost:5173
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+from fastapi.exceptions import RequestValidationError
+from app.core.exceptions import (
+    AppException,
+    app_exception_handler,
+    http_exception_handler,
+    validation_exception_handler,
+)
+
+app.add_exception_handler(AppException, app_exception_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 # Register API routers under /api/v1
 app.include_router(consent.router, prefix=settings.API_V1_STR)
