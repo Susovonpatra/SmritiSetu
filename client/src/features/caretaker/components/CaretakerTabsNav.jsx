@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Brain, HelpCircle, Activity, Key } from 'lucide-react';
+import { User, Brain, HelpCircle, Activity, Key, Shapes } from 'lucide-react';
 
 export function CaretakerTabsNav({ activeTab, onSelectTab }) {
   return (
@@ -26,6 +26,18 @@ export function CaretakerTabsNav({ activeTab, onSelectTab }) {
       >
         <Brain className={`w-4 h-4 shrink-0 ${activeTab === 'analytics' || activeTab === 'telemetry' || activeTab === 'biographical_analytics' ? 'text-indigo-300' : 'text-indigo-700'}`} />
         <span>Cognitive Analytics &amp; Progress (All 3 Games)</span>
+      </button>
+
+      <button
+        onClick={() => onSelectTab('shape_analytics')}
+        className={`flex-1 sm:flex-none py-2.5 sm:py-3 px-4 sm:px-6 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer ${
+          activeTab === 'shape_analytics'
+            ? 'bg-teal-800 text-white shadow-md border border-teal-900'
+            : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+        }`}
+      >
+        <Shapes className={`w-4 h-4 shrink-0 ${activeTab === 'shape_analytics' ? 'text-teal-200' : 'text-teal-700'}`} />
+        <span>Shape Match Progress</span>
       </button>
 
       <button

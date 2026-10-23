@@ -33,6 +33,21 @@ db.version(3).stores({
   asha_queue: '++id, patient_id, patient_name, village, triage_status, notes, timestamp, synced'
 });
 
+// ── Version 4: Added Match the Shapes sessions & offline events tables ──
+db.version(4).stores({
+  patients: '++id, abha_id, name, age, dialect, locality, dementia_duration, caregiver_name, caregiver_phone, created_at',
+  telemetry: '++id, patient_id, game_type, timestamp, latency_ms, jitter_px, accuracy_score, source',
+  patterntrace_trials: '++id, trial_id, patient_id, level, accuracy_score, sequence_match, spatial_match, initiation_latency_ms, total_execution_time_ms, perseveration_detected, omission_count, commission_count, timestamp',
+  biographical_questions: '++id, questionId, patientId, relationTier, orderIndex, updatedAt',
+  biographical_trials: '++id, trialId, sessionId, patientId, timestamp, questionId, relationTier, isCorrect, latencyMs',
+  shape_game_sessions: '++id, sessionId, patientId, status, roundsCompleted, independenceScore, startedAt, synced',
+  shape_game_events: '++id, eventId, sessionId, eventType, roundNumber, shapeId, timestamp, synced',
+  shape_game_attempts: '++id, attemptId, sessionId, shapeId, roundNumber, solveTimeMs, hintsNeeded, synced',
+  consent: '++id, patient_id, caregiver_name, telemetry_consent, voice_storage_consent, abha_linkage_consent, signature_hash, timestamp',
+  pending_sync: '++id, type, timestamp, status',
+  asha_queue: '++id, patient_id, patient_name, village, triage_status, notes, timestamp, synced'
+});
+
 export const DEFAULT_BIOGRAPHICAL_QUESTIONS = [
   {
     questionId: 'bio-q1',
