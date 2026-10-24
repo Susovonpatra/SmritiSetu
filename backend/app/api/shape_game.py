@@ -405,9 +405,13 @@ def list_caregiver_shape_sessions(
     """Lists completed and active shape game sessions for patient drill-down."""
     patient = verify_caregiver_access(db, patient_id, x_caregiver_id, request, "VIEW_SESSIONS")
 
-    total = db.query(ShapeGameSession).filter(ShapeGameSession.patient_id == patient.id).count()
+    total = db.query(ShapeGameSession).filter(
+        ShapeGameSession.patient_id == patient.id,
+        ShapeGameSession.status == "COMPLETED"
+    ).count()
     sessions = db.query(ShapeGameSession).filter(
-        ShapeGameSession.patient_id == patient.id
+        ShapeGameSession.patient_id == patient.id,
+        ShapeGameSession.status == "COMPLETED"
     ).order_by(ShapeGameSession.started_at.desc()).offset(offset).limit(limit).all()
 
     return {

@@ -305,10 +305,13 @@ export class BiographicalTelemetryService {
         ? Number((data.hesitations.reduce((a, b) => a + b, 0) / data.hesitations.length).toFixed(1))
         : 0;
 
-      let riskAssessment = 'Robust Stability';
-      if (accuracy < 60) riskAssessment = 'Marked Degradation';
-      else if (accuracy < 75) riskAssessment = 'Moderate Attenuation';
-      else if (accuracy < 88) riskAssessment = 'Mild Drift';
+      let riskAssessment = 'Awaiting Play';
+      if (data.total > 0) {
+        if (accuracy < 60) riskAssessment = 'Marked Degradation';
+        else if (accuracy < 75) riskAssessment = 'Moderate Attenuation';
+        else if (accuracy < 88) riskAssessment = 'Mild Drift';
+        else riskAssessment = 'Robust Stability';
+      }
 
       return {
         tierKey: key,

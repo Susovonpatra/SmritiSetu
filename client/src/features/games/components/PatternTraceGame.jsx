@@ -200,6 +200,9 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
 
     // Persist to Dexie DB
     await PatternTraceTelemetryService.recordTrial(trialPayload);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'pattern' } }));
+    }
     setLastTrialResult(trialPayload);
     setRecentTelemetry(trialPayload);
     setPreviousTargetSequence(targetSequence);

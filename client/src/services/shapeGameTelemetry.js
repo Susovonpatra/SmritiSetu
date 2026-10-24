@@ -318,18 +318,27 @@ export class ShapeGameTelemetryService {
         events: []
       });
 
-      // Save summary in Dexie if IndexedDB is available
+      // Save summary in Dexie if IndexedDB is available (upsert by sessionId to prevent duplicates)
       if (typeof globalThis !== 'undefined' && globalThis.indexedDB && db.shape_game_sessions) {
         try {
-          await db.shape_game_sessions.add({
+          const sessionPayload = {
             sessionId: this.sessionId,
             patientId: this.patientId,
             status,
             roundsCompleted,
-            independenceScore: res?.independenceScore || 100,
+            independenceScore: res?.independenceScore != null ? res.independenceScore : 100,
+            accuracyPct: res?.accuracyPct != null ? res.accuracyPct : 100,
+            medianSolveTimeMs: res?.medianSolveTimeMs || 0,
+            medianLatencyMs: res?.medianLatencyMs || 0,
             startedAt: new Date().toISOString(),
             synced: 1
-          });
+          };
+          const existing = await db.shape_game_sessions.where('sessionId').equals(this.sessionId).first();
+          if (existing) {
+            await db.shape_game_sessions.update(existing.id, sessionPayload);
+          } else {
+            await db.shape_game_sessions.add(sessionPayload);
+          }
         } catch (e) {
           // Non-critical
         }
@@ -339,15 +348,29 @@ export class ShapeGameTelemetryService {
     } catch (e) {
       if (typeof globalThis !== 'undefined' && globalThis.indexedDB && db.shape_game_sessions) {
         try {
-          await db.shape_game_sessions.add({
+          const totalAttempts = this.attemptRecords.length;
+          const independentCount = this.attemptRecords.filter(a => a.hintsNeeded === 0).length;
+          const correctFirstTry = this.attemptRecords.filter(a => a.incorrectAttempts === 0).length;
+          const solveTimes = this.attemptRecords.map(a => a.solveTimeMs).filter(t => t > 0);
+          const medianSolve = solveTimes.length > 0 ? solveTimes.sort((a,b)=>a-b)[Math.floor(solveTimes.length/2)] : 0;
+          const offlinePayload = {
             sessionId: this.sessionId,
             patientId: this.patientId,
             status,
             roundsCompleted,
-            independenceScore: 100,
+            independenceScore: totalAttempts > 0 ? Math.round((independentCount / totalAttempts) * 100) : 100,
+            accuracyPct: totalAttempts > 0 ? Math.round((correctFirstTry / totalAttempts) * 100) : 100,
+            medianSolveTimeMs: medianSolve,
+            medianLatencyMs: 0,
             startedAt: new Date().toISOString(),
             synced: 0
-          });
+          };
+          const existing = await db.shape_game_sessions.where('sessionId').equals(this.sessionId).first();
+          if (existing) {
+            await db.shape_game_sessions.update(existing.id, offlinePayload);
+          } else {
+            await db.shape_game_sessions.add(offlinePayload);
+          }
         } catch (err) {
           // Non-critical
         }

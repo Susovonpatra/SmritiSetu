@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
+import { db } from '@/db/db';
 import { PatternTraceTelemetryService } from '@/services/patternTraceTelemetry';
 import { BiographicalTelemetryService } from '@/services/biographicalTelemetry';
+import { shapeGameApi } from '@/services/api/shapeGameApi';
 import { telemetryApi } from '@/services/api/telemetryApi';
-import { db } from '@/db/db';
+
+
 
 export function useCaretakerAnalytics(patientId = 1, trigger = null) {
   const [analyticsData, setAnalyticsData] = useState([]);
   const [patternAnalytics, setPatternAnalytics] = useState(null);
   const [biographicalAnalytics, setBiographicalAnalytics] = useState(null);
-  const [routineAnalytics, setRoutineAnalytics] = useState(null);
+  const [shapeAnalytics, setShapeAnalytics] = useState(null);
   const [unifiedTimeline, setUnifiedTimeline] = useState([]);
   const [driftMetrics, setDriftMetrics] = useState({
     drift_percent: 18.4,
@@ -23,11 +26,47 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // 1. Fetch PatternTrace motor & working memory analytics
+      // 1. Fetch PatternTrace motor & working memory analytics (Game 2)
       const patternData = await PatternTraceTelemetryService.getLongitudinalAnalytics(patientId);
       setPatternAnalytics(patternData);
 
-      // 2. Fetch Biographical memory analytics (Family & Relational Recall)
+      // Group PatternTrace trials into daily trend map
+      const patternTrendMap = new Map();
+      try {
+        if (db.patterntrace_trials) {
+          const ptTrials = await db.patterntrace_trials
+            .where('patient_id')
+            .equals(Number(patientId) || 1)
+            .toArray();
+
+          const ptDailyGroups = new Map();
+          ptTrials.forEach(t => {
+            if (!t.timestamp) return;
+            const dateKey = new Date(t.timestamp).toISOString().slice(0, 10);
+            if (!ptDailyGroups.has(dateKey)) {
+              ptDailyGroups.set(dateKey, { total: 0, accSum: 0, latencySum: 0, maxLevel: 1 });
+            }
+            const group = ptDailyGroups.get(dateKey);
+            group.total += 1;
+            group.accSum += (t.accuracy_score != null ? Math.round(t.accuracy_score * 100) : 85);
+            group.latencySum += (t.initiation_latency_ms || 800);
+            group.maxLevel = Math.max(group.maxLevel, t.level || 1);
+          });
+
+          ptDailyGroups.forEach((val, dateKey) => {
+            patternTrendMap.set(dateKey, {
+              accuracy: Math.round(val.accSum / val.total),
+              avgLatency: Math.round(val.latencySum / val.total),
+              maxLevel: val.maxLevel,
+              count: val.total
+            });
+          });
+        }
+      } catch (err) {
+        console.warn('PatternTrace daily trend calculation error:', err);
+      }
+
+      // 2. Fetch Biographical memory analytics (Family & Relational Recall - Game 1)
       let bioSummary = null;
       let bioTrends = [];
       let bioBreakdown = [];
@@ -63,151 +102,265 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
         spatial: bioSpatial
       });
 
-      // 3. Fetch Daily Routine & Visual Matching telemetry from Dexie
-      let routineRecords = [];
-      let visualRecords = [];
+      // 3. Fetch Shape Match Progress Analytics (Game 3)
+      let shapeData = null;
+      let liveShapeSummary = null;
       try {
-        if (db.telemetry) {
-          const allTelem = await db.telemetry.toArray();
-          routineRecords = allTelem.filter(t => t.game_type === 'routine_sequencer');
-          visualRecords = allTelem.filter(t => t.game_type === 'visual_matching');
+        liveShapeSummary = await shapeGameApi.getCaregiverSummary(patientId, '30d');
+        if (liveShapeSummary && liveShapeSummary.metrics && (liveShapeSummary.shapeRankings?.length > 0 || liveShapeSummary.metrics.totalSessionsInRange > 0)) {
+          shapeData = {
+            ...liveShapeSummary,
+            metrics: {
+              ...liveShapeSummary.metrics,
+              averageIndependenceScore: liveShapeSummary.metrics.averageIndependenceScore ?? 0,
+              overallAccuracyPct: liveShapeSummary.metrics.overallAccuracyPct ?? 0,
+              medianSolveTimeMs: liveShapeSummary.metrics.medianSolveTimeMs ?? 0,
+              medianLatencyMs: liveShapeSummary.metrics.medianLatencyMs ?? 0,
+              medianJitterPx: liveShapeSummary.metrics.medianJitterPx ?? 0
+            },
+            shapeRankings: (liveShapeSummary.shapeRankings && liveShapeSummary.shapeRankings.length > 0)
+              ? liveShapeSummary.shapeRankings
+              : [],
+            confusionPairs: (liveShapeSummary.confusionPairs && liveShapeSummary.confusionPairs.length > 0)
+              ? liveShapeSummary.confusionPairs
+              : []
+          };
         }
       } catch (err) {
-        console.warn('Dexie telemetry query error:', err);
+        console.warn('Live shape analytics summary fetch error, checking local store:', err);
       }
 
-      // Calculate Routine & Visual Matching analytics
-      const totalRoutineTrials = routineRecords.length;
-      const totalVisualTrials = visualRecords.length;
-      const routineAccuracyPct = totalRoutineTrials > 0
-        ? Math.round((routineRecords.filter(r => (r.accuracy_score || 0) >= 0.8).length / totalRoutineTrials) * 100)
-        : 90;
-      const visualAccuracyPct = totalVisualTrials > 0
-        ? Math.round((visualRecords.filter(r => (r.accuracy_score || 0) >= 0.8).length / totalVisualTrials) * 100)
-        : 92;
+      // Check local Dexie shape sessions if backend summary is empty
+      const shapeTrendMap = new Map();
+      if (liveShapeSummary?.timeline && Array.isArray(liveShapeSummary.timeline)) {
+        liveShapeSummary.timeline.forEach(st => {
+          let dateStr = '';
+          if (st.fullDate) {
+            dateStr = st.fullDate.slice(0, 10);
+          } else if (st.date) {
+            const parsed = new Date(st.date);
+            if (!isNaN(parsed.getTime())) dateStr = parsed.toISOString().slice(0, 10);
+          }
+          if (dateStr) {
+            shapeTrendMap.set(dateStr, {
+              accuracy: Math.round(st.accuracyPct ?? 0),
+              independence: Math.round(st.independenceScore ?? 0),
+              solveTimeMs: Math.round(st.solveTimeMs ?? 0)
+            });
+          }
+        });
+      }
 
-      const combinedRoutineLatency = [...routineRecords, ...visualRecords].reduce((acc, r) => acc + (r.latency_ms || 780), 0);
-      const meanRoutineLatency = (totalRoutineTrials + totalVisualTrials) > 0
-        ? Math.round(combinedRoutineLatency / (totalRoutineTrials + totalVisualTrials))
-        : 760;
+      // Check local Dexie shape sessions ONLY if backend summary is empty/offline
+      if (!shapeData) {
+        try {
+          if (db.shape_game_sessions) {
+            const localSessions = await db.shape_game_sessions
+              .where('patientId')
+              .equals(Number(patientId) || 1)
+              .toArray();
 
-      const meanRoutineJitter = (totalRoutineTrials + totalVisualTrials) > 0
-        ? Math.round([...routineRecords, ...visualRecords].reduce((acc, r) => acc + (r.jitter_px || 12), 0) / (totalRoutineTrials + totalVisualTrials))
-        : 13;
+            // Deduplicate by sessionId and filter test/seed artifacts
+            const uniqueMap = new Map();
+            localSessions.forEach(s => {
+              if (s && s.sessionId && typeof s.sessionId === 'string' &&
+                  !s.sessionId.startsWith('seed-') &&
+                  !s.sessionId.startsWith('test-') &&
+                  !s.sessionId.startsWith('e2e-')) {
+                uniqueMap.set(s.sessionId, s);
+              }
+            });
+            const validLocalSessions = Array.from(uniqueMap.values());
 
-      const routineData = {
-        totalRoutineTrials,
-        totalVisualTrials,
-        routineAccuracyPct,
-        visualAccuracyPct,
-        combinedAccuracyPct: Math.round((routineAccuracyPct + visualAccuracyPct) / 2),
-        meanLatencyMs: meanRoutineLatency,
-        meanJitterPx: meanRoutineJitter,
-        stepsMastery: [
-          { name: 'Morning Hydration & Tea', accuracyPct: 100, status: 'Mastered', time: '8:00 AM' },
-          { name: 'Midday Prescribed Activities', accuracyPct: 88, status: 'Active Support', time: '11:30 AM' },
-          { name: 'Evening Courtyard Stroll', accuracyPct: 92, status: 'Mastered', time: '4:30 PM' }
-        ]
-      };
-      setRoutineAnalytics(routineData);
+            if (validLocalSessions.length > 0) {
+              const total = validLocalSessions.length;
+              const avgInd = Math.round(validLocalSessions.reduce((acc, s) => acc + (s.independenceScore ?? 100), 0) / total);
+              const validAccSessions = validLocalSessions.filter(s => s.accuracyPct != null);
+              const avgAcc = validAccSessions.length > 0
+                ? Math.round(validAccSessions.reduce((acc, s) => acc + s.accuracyPct, 0) / validAccSessions.length)
+                : 100;
+              const validSolveTimes = validLocalSessions.map(s => s.medianSolveTimeMs).filter(t => t > 0);
+              const medianSolve = validSolveTimes.length > 0
+                ? validSolveTimes.sort((a, b) => a - b)[Math.floor(validSolveTimes.length / 2)]
+                : 0;
+              const lastSession = validLocalSessions[validLocalSessions.length - 1];
 
-      // 4. Try fetching live telemetry drift from backend API or fall back gracefully
+              shapeData = {
+                patientId,
+                rangeDays: 30,
+                metrics: {
+                  lastSessionDate: lastSession.startedAt ? new Date(lastSession.startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today',
+                  sessionsThisWeek: validLocalSessions.length,
+                  totalSessionsInRange: validLocalSessions.length,
+                  averageIndependenceScore: avgInd,
+                  overallAccuracyPct: avgAcc,
+                  medianSolveTimeMs: medianSolve,
+                  medianLatencyMs: 0,
+                  medianJitterPx: 0
+                },
+                shapeRankings: [],
+                confusionPairs: [],
+                activeAlerts: [],
+                timeOfDayDistribution: []
+              };
+
+              validLocalSessions.forEach(s => {
+                if (!s.startedAt) return;
+                const dateKey = new Date(s.startedAt).toISOString().slice(0, 10);
+                const indScore = Math.round(s.independenceScore ?? 100);
+                const accScore = Math.round(s.accuracyPct ?? 100);
+                const solveTime = Math.round(s.medianSolveTimeMs ?? 0);
+                const existing = shapeTrendMap.get(dateKey);
+                if (!existing) {
+                  shapeTrendMap.set(dateKey, {
+                    accuracy: accScore,
+                    independence: indScore,
+                    solveTimeMs: solveTime
+                  });
+                } else {
+                  existing.independence = Math.round((existing.independence + indScore) / 2);
+                  existing.accuracy = Math.round((existing.accuracy + accScore) / 2);
+                  if (solveTime > 0) existing.solveTimeMs = Math.round((existing.solveTimeMs + solveTime) / 2);
+                }
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('Local shape sessions lookup error:', err);
+        }
+      }
+
+      if (!shapeData) {
+        shapeData = {
+          patientId,
+          rangeDays: 30,
+          metrics: {
+            lastSessionDate: 'None',
+            sessionsThisWeek: 0,
+            totalSessionsInRange: 0,
+            averageIndependenceScore: 0,
+            overallAccuracyPct: 0,
+            medianSolveTimeMs: 0,
+            medianLatencyMs: 0,
+            medianJitterPx: 0
+          },
+          shapeRankings: [],
+          confusionPairs: [],
+          activeAlerts: [],
+          timeOfDayDistribution: []
+        };
+      }
+      setShapeAnalytics(shapeData);
+
+      // 4. Check if ANY game has actually been played
+      const bioTotal = bioSummary?.totalTrials || 0;
+      const ptTotal = patternData?.totalTrials || 0;
+      const shapeTotal = shapeData?.metrics?.totalSessionsInRange || 0;
+      const hasAnyGameData = bioTotal > 0 || ptTotal > 0 || shapeTotal > 0;
+
+      if (!hasAnyGameData) {
+        // Completely empty initial state until first game is played
+        setDriftMetrics({
+          drift_percent: 0,
+          current_latency: 0,
+          baseline_latency: 0,
+          jitter: 0,
+          accuracy: 0,
+          alert: false
+        });
+        setUnifiedTimeline([]);
+        setAnalyticsData([]);
+        return;
+      }
+
+      // 5. If games HAVE been played, fetch live drift or compute from real trials
       let liveDrift = null;
-      let liveTimeline = null;
       try {
-        const [driftRes, analyticsRes] = await Promise.all([
-          telemetryApi.getDrift(patientId),
-          telemetryApi.getAnalytics(patientId, 30)
-        ]);
-        liveDrift = driftRes;
-        liveTimeline = analyticsRes?.timeline;
+        liveDrift = await telemetryApi.getDrift(patientId);
       } catch {
-        // Backend offline; continue to client generation
+        // Backend offline
       }
 
       const baseline = 800;
-      let computedDrift = 18.4;
-      let recentLatency = 940;
-      let currentAcc = 88.5;
+      let computedDrift = 0;
+      let recentLatency = 0;
+      let currentAcc = 0;
 
       if (liveDrift && liveDrift.cognitive_drift_percent !== undefined) {
         computedDrift = liveDrift.cognitive_drift_percent;
-        recentLatency = liveDrift.current_mean_latency_ms || 940;
-        currentAcc = liveDrift.current_accuracy_pct || 88.5;
+        recentLatency = liveDrift.current_mean_latency_ms || 0;
+        currentAcc = liveDrift.current_accuracy_pct || 0;
       }
 
       setDriftMetrics({
         drift_percent: Math.round(computedDrift * 10) / 10,
         current_latency: Math.round(recentLatency),
         baseline_latency: baseline,
-        jitter: liveDrift?.current_mean_jitter_px || 14.2,
+        jitter: liveDrift?.current_mean_jitter_px || 0,
         accuracy: currentAcc,
         alert: computedDrift > 35.0
       });
 
-      // 5. Construct Unified 30-Day Multi-Game Timeline
-      const timeline = [];
-      const now = Date.now();
-      const bioTrendMap = new Map();
-      if (bioTrends && bioTrends.length > 0) {
-        bioTrends.forEach(bt => {
-          if (bt.dateKey) bioTrendMap.set(bt.dateKey, bt);
-        });
-      }
+      // 6. Construct Timeline strictly from ACTUAL game session dates
+      const allActiveDates = new Set([
+        ...bioTrendMap.keys(),
+        ...patternTrendMap.keys(),
+        ...shapeTrendMap.keys()
+      ]);
 
-      for (let i = 29; i >= 0; i--) {
-        const d = new Date(now - i * 24 * 3600 * 1000);
-        const dateIso = d.toISOString().slice(0, 10);
+      const sortedDates = Array.from(allActiveDates).sort();
+      const timeline = sortedDates.map(dateIso => {
+        const d = new Date(dateIso + 'T12:00:00');
         const dayLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-        // Gradual drift progression over 30 days
-        const driftProgress = (30 - i) / 30; // 0.0 to 1.0
-
-        // 1. Family Memory accuracy and speed
         const bioDay = bioTrendMap.get(dateIso);
-        const familyAccuracy = bioDay
-          ? bioDay.accuracy
-          : Math.max(70, Math.round(92 - driftProgress * 8 + (i % 3) * 2));
-        const familyLatencyMs = bioDay
-          ? bioDay.avgLatency
-          : Math.round(1200 + driftProgress * 220 + (i % 4) * 30);
+        const ptDay = patternTrendMap.get(dateIso);
+        const shapeDay = shapeTrendMap.get(dateIso);
 
-        // 2. PatternTrace accuracy and speed
-        const patternAccuracy = Math.max(65, Math.round(89 - driftProgress * 7 + (i % 2 === 0 ? 3 : -2)));
-        const patternLatencyMs = Math.round(820 + driftProgress * 160 + (i % 3) * 20);
+        const familyAccuracy = bioDay ? bioDay.accuracy : null;
+        const familyLatencyMs = bioDay ? bioDay.avgLatency : null;
 
-        // 3. Daily Routine & Picture Matching accuracy and speed
-        const routineAccuracy = Math.max(75, Math.round(94 - driftProgress * 6 + ((i * 2) % 3)));
-        const routineLatencyMs = Math.round(720 + driftProgress * 110 + (i % 2) * 15);
+        const patternAccuracy = ptDay ? ptDay.accuracy : null;
+        const patternLatencyMs = ptDay ? ptDay.avgLatency : null;
 
-        // Composite scores
-        const compositeScore = Math.round((familyAccuracy + patternAccuracy + routineAccuracy) / 3);
-        const compositeSpeedMs = Math.round((familyLatencyMs + patternLatencyMs + routineLatencyMs) / 3);
+        const shapeAccuracy = shapeDay ? shapeDay.accuracy : null;
+        const shapeIndependence = shapeDay ? shapeDay.independence : null;
+        const shapeSolveTimeMs = shapeDay ? shapeDay.solveTimeMs : null;
 
-        timeline.push({
+        const scores = [];
+        if (familyAccuracy != null) scores.push(familyAccuracy);
+        if (patternAccuracy != null) scores.push(patternAccuracy);
+        if (shapeAccuracy != null) scores.push(shapeAccuracy);
+        const compositeScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+
+        const speeds = [];
+        if (familyLatencyMs != null) speeds.push(familyLatencyMs);
+        if (patternLatencyMs != null) speeds.push(patternLatencyMs);
+        if (shapeSolveTimeMs != null) speeds.push(shapeSolveTimeMs);
+        const compositeSpeedMs = speeds.length > 0 ? Math.round(speeds.reduce((a, b) => a + b, 0) / speeds.length) : null;
+
+        return {
           date: dateIso,
           day: dayLabel,
-          // Accuracies (0-100%)
           familyAccuracy,
           patternAccuracy,
-          routineAccuracy,
+          shapeAccuracy,
+          shapeIndependence,
           compositeScore,
-          // Speeds in seconds (human-friendly: e.g. 1.2s instead of 1200ms)
-          familySpeedSec: Number((familyLatencyMs / 1000).toFixed(2)),
-          patternSpeedSec: Number((patternLatencyMs / 1000).toFixed(2)),
-          routineSpeedSec: Number((routineLatencyMs / 1000).toFixed(2)),
-          compositeSpeedSec: Number((compositeSpeedMs / 1000).toFixed(2)),
-          // Latencies in ms
+          familySpeedSec: familyLatencyMs != null && familyLatencyMs > 0 ? Number((familyLatencyMs / 1000).toFixed(2)) : null,
+          patternSpeedSec: patternLatencyMs != null && patternLatencyMs > 0 ? Number((patternLatencyMs / 1000).toFixed(2)) : null,
+          shapeSpeedSec: shapeSolveTimeMs != null && shapeSolveTimeMs > 0 ? Number((shapeSolveTimeMs / 1000).toFixed(2)) : null,
+          compositeSpeedSec: compositeSpeedMs != null && compositeSpeedMs > 0 ? Number((compositeSpeedMs / 1000).toFixed(2)) : null,
           latency_ms: compositeSpeedMs,
           accuracy_pct: compositeScore,
-          jitter_px: Math.round(10 + driftProgress * 6),
-          baseline,
-          drift_pct: Math.round(((compositeSpeedMs - baseline) / baseline) * 100)
-        });
-      }
+          jitter_px: 12,
+          baseline: 800,
+          drift_pct: 0
+        };
+      });
 
       setUnifiedTimeline(timeline);
-      setAnalyticsData(liveTimeline && liveTimeline.length > 0 ? liveTimeline : timeline);
+      setAnalyticsData(timeline);
 
     } catch (err) {
       console.warn('Caretaker analytics comprehensive load error:', err);
@@ -220,11 +373,30 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
     loadData();
   }, [loadData, trigger]);
 
+  // Real-time listener: refresh analytics immediately when any game is completed or window gains focus
+  useEffect(() => {
+    const handleGameCompleted = () => {
+      loadData();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('smritisetu:game_completed', handleGameCompleted);
+      window.addEventListener('focus', handleGameCompleted);
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('smritisetu:game_completed', handleGameCompleted);
+        window.removeEventListener('focus', handleGameCompleted);
+      }
+    };
+  }, [loadData]);
+
   return {
     analyticsData,
     patternAnalytics,
     biographicalAnalytics,
-    routineAnalytics,
+    shapeAnalytics,
     unifiedTimeline,
     driftMetrics,
     isLoading,

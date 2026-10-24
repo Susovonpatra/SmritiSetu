@@ -60,6 +60,7 @@ export function ShapeMatchGame({
 
   // ── Refs ──
   const telemetryRef = useRef(null);
+  const sessionStartTimeRef = useRef(Date.now());
   const lastProgressTimeRef = useRef(Date.now());
   const lastTouchedShapeIdRef = useRef(null);
   const roundStartTimeRef = useRef(Date.now());
@@ -74,6 +75,7 @@ export function ShapeMatchGame({
   // Initialize Telemetry Service on session start or restart
   useEffect(() => {
     let isCancelled = false;
+    sessionStartTimeRef.current = Date.now();
     const localSessionId = `shape-sess-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const tel = new ShapeGameTelemetryService(localSessionId, patientId);
     telemetryRef.current = tel;
@@ -454,13 +456,18 @@ export function ShapeMatchGame({
       }, 1000);
     } else {
       // Completed all 5 rounds!
-      setTimeout(() => {
+      setTimeout(async () => {
         setIsComplete(true);
-        telemetryRef.current?.endSession({
-          status: 'COMPLETED',
-          totalDurationMs: Date.now() - (roundStartTimeRef.current - 4 * 30000),
-          roundsCompleted: 5
-        });
+        if (telemetryRef.current) {
+          await telemetryRef.current.endSession({
+            status: 'COMPLETED',
+            totalDurationMs: Math.max(1000, Date.now() - sessionStartTimeRef.current),
+            roundsCompleted: 5
+          });
+        }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'shape' } }));
+        }
       }, 1000);
     }
   };
@@ -468,6 +475,7 @@ export function ShapeMatchGame({
   // ── Play Again Action ──
   const handlePlayAgain = () => {
     const newSeed = String(Date.now());
+    sessionStartTimeRef.current = Date.now();
     setSessionSeed(newSeed);
     setRounds(generateShapeGameRounds(Date.now()));
     setCurrentRoundIndex(0);
@@ -485,9 +493,12 @@ export function ShapeMatchGame({
     if (telemetryRef.current) {
       await telemetryRef.current.endSession({
         status: isComplete ? 'COMPLETED' : 'ABANDONED',
-        totalDurationMs: Date.now() - roundStartTimeRef.current,
+        totalDurationMs: Math.max(1000, Date.now() - sessionStartTimeRef.current),
         roundsCompleted: currentRoundIndex + (isComplete ? 1 : 0)
       });
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'shape' } }));
+      }
     }
     onExitToRest();
   };

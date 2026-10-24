@@ -39,6 +39,39 @@ class ShapeGameTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.client = TestClient(app)
 
+    def tearDown(self):
+        db = SessionLocal()
+        try:
+            db.query(ShapeGameAttempt).delete()
+            db.query(ShapeGameRound).delete()
+            db.query(ShapeGameEvent).delete()
+            db.query(ShapeGameSessionSummary).delete()
+            db.query(ShapeGameAlert).delete()
+            db.query(ShapeGameSession).delete()
+            db.query(ShapeGameBaseline).delete()
+            db.commit()
+        except Exception:
+            db.rollback()
+        finally:
+            db.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        db = SessionLocal()
+        try:
+            db.query(ShapeGameAttempt).delete()
+            db.query(ShapeGameRound).delete()
+            db.query(ShapeGameEvent).delete()
+            db.query(ShapeGameSessionSummary).delete()
+            db.query(ShapeGameAlert).delete()
+            db.query(ShapeGameSession).delete()
+            db.query(ShapeGameBaseline).delete()
+            db.commit()
+        except Exception:
+            db.rollback()
+        finally:
+            db.close()
+
     # ---------------------------------------------------------
     # 1. Round Generation Invariant Tests
     # ---------------------------------------------------------
@@ -114,6 +147,8 @@ class ShapeGameTestCase(unittest.TestCase):
             baseline = db.query(ShapeGameBaseline).filter(ShapeGameBaseline.patient_id == 1).first()
             if not baseline:
                 baseline = update_patient_baseline(db, 1)
+            baseline.session_count = 5
+            db.commit()
 
             # Create a mock session with elevated solve time (> baseline * 1.6)
             mock_sess = ShapeGameSession(

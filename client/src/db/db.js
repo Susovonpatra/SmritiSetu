@@ -150,244 +150,61 @@ export async function initDefaultData() {
     await db.patients.delete(p.id);
   }
 
-  // Seed baseline telemetry for the past 14 days so caregiver charts & drift work immediately
-  const telemetryCount = await db.telemetry.count();
-  if (telemetryCount === 0) {
-    const baselineRecords = [];
-    const now = Date.now();
-    for (let i = 14; i >= 1; i--) {
-      const pastTime = new Date(now - i * 24 * 60 * 60 * 1000).toISOString();
-      const driftFactor = i <= 7 ? 1.25 : 1.0;
-      baselineRecords.push({
-        patient_id: 1,
-        game_type: i % 2 === 0 ? 'visual_matching' : 'routine_sequencer',
-        timestamp: pastTime,
-        latency_ms: Math.round((820 + Math.random() * 80) * driftFactor),
-        jitter_px: Math.round(12 + Math.random() * 10),
-        accuracy_score: i <= 3 ? 0.8 : 0.95,
-        source: 'PWA'
-      });
+  // Clear any historical seed/mock trials so the dashboard starts clean until first game
+  try {
+    if (db.biographical_trials) {
+      await db.biographical_trials.filter(t => typeof t.trialId === 'string' && t.trialId.startsWith('seed-')).delete();
     }
-    await db.telemetry.bulkAdd(baselineRecords);
-  }
+    if (db.patterntrace_trials) {
+      await db.patterntrace_trials.filter(t => typeof t.trial_id === 'string' && t.trial_id.startsWith('seed-')).delete();
+    }
+    if (db.shape_game_sessions) {
+      // Remove mock, seed, or test sessions
+      await db.shape_game_sessions.filter(s =>
+        !s.sessionId ||
+        typeof s.sessionId !== 'string' ||
+        s.sessionId.startsWith('seed-') ||
+        s.sessionId.startsWith('test-') ||
+        s.sessionId.startsWith('e2e-')
+      ).delete();
 
-  // Seed realistic PatternTrace baseline trials
-  const trialsCount = await db.patterntrace_trials?.count();
-  if (trialsCount === 0 && db.patterntrace_trials) {
-    const now = Date.now();
-    const patternTraceSeed = [
-      {
-        trial_id: 'seed-pt-01',
-        patient_id: patientId,
-        level: 1,
-        target_sequence: [0, 1],
-        user_sequence: [0, 1],
-        accuracy_score: 1.0,
-        sequence_match: true,
-        spatial_match: true,
-        initiation_latency_ms: 780,
-        total_execution_time_ms: 1850,
-        perseveration_detected: false,
-        omission_count: 0,
-        commission_count: 0,
-        timestamp: new Date(now - 6 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        trial_id: 'seed-pt-02',
-        patient_id: patientId,
-        level: 1,
-        target_sequence: [3, 4],
-        user_sequence: [3, 4],
-        accuracy_score: 1.0,
-        sequence_match: true,
-        spatial_match: true,
-        initiation_latency_ms: 810,
-        total_execution_time_ms: 1920,
-        perseveration_detected: false,
-        omission_count: 0,
-        commission_count: 0,
-        timestamp: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        trial_id: 'seed-pt-03',
-        patient_id: patientId,
-        level: 2,
-        target_sequence: [0, 1, 2],
-        user_sequence: [0, 1, 2],
-        accuracy_score: 1.0,
-        sequence_match: true,
-        spatial_match: true,
-        initiation_latency_ms: 890,
-        total_execution_time_ms: 2200,
-        perseveration_detected: false,
-        omission_count: 0,
-        commission_count: 0,
-        timestamp: new Date(now - 4 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        trial_id: 'seed-pt-04',
-        patient_id: patientId,
-        level: 2,
-        target_sequence: [0, 3, 6],
-        user_sequence: [0, 3, 6],
-        accuracy_score: 1.0,
-        sequence_match: true,
-        spatial_match: true,
-        initiation_latency_ms: 920,
-        total_execution_time_ms: 2350,
-        perseveration_detected: false,
-        omission_count: 0,
-        commission_count: 0,
-        timestamp: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        trial_id: 'seed-pt-05',
-        patient_id: patientId,
-        level: 3,
-        target_sequence: [0, 1, 4, 3],
-        user_sequence: [0, 1, 4, 3],
-        accuracy_score: 1.0,
-        sequence_match: true,
-        spatial_match: true,
-        initiation_latency_ms: 1050,
-        total_execution_time_ms: 3100,
-        perseveration_detected: false,
-        omission_count: 0,
-        commission_count: 0,
-        timestamp: new Date(now - 2 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        trial_id: 'seed-pt-06',
-        patient_id: patientId,
-        level: 3,
-        target_sequence: [1, 2, 5, 4],
-        user_sequence: [0, 1, 4, 3], // perseveration of previous pattern
-        accuracy_score: 0.25,
-        sequence_match: false,
-        spatial_match: false,
-        initiation_latency_ms: 1280,
-        total_execution_time_ms: 3400,
-        perseveration_detected: true,
-        omission_count: 2,
-        commission_count: 2,
-        timestamp: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        trial_id: 'seed-pt-07',
-        patient_id: patientId,
-        level: 2,
-        target_sequence: [3, 4, 7],
-        user_sequence: [3, 4, 7],
-        accuracy_score: 1.0,
-        sequence_match: true,
-        spatial_match: true,
-        initiation_latency_ms: 860,
-        total_execution_time_ms: 2150,
-        perseveration_detected: false,
-        omission_count: 0,
-        commission_count: 0,
-        timestamp: new Date(now - 12 * 60 * 60 * 1000).toISOString()
+      // Deduplicate any repeated sessionId
+      const allSessions = await db.shape_game_sessions.toArray();
+      const seenSessionIds = new Set();
+      for (const s of allSessions) {
+        if (seenSessionIds.has(s.sessionId)) {
+          await db.shape_game_sessions.delete(s.id);
+        } else {
+          seenSessionIds.add(s.sessionId);
+        }
       }
-    ];
-    await db.patterntrace_trials.bulkAdd(patternTraceSeed);
+    }
+    if (db.shape_game_attempts) {
+      await db.shape_game_attempts.filter(a =>
+        !a.sessionId ||
+        typeof a.sessionId !== 'string' ||
+        a.sessionId.startsWith('seed-') ||
+        a.sessionId.startsWith('test-') ||
+        a.sessionId.startsWith('e2e-')
+      ).delete();
+    }
+    if (db.shape_game_alerts) {
+      await db.shape_game_alerts.clear();
+    }
+    if (db.telemetry) {
+      await db.telemetry.clear();
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('smriti_biographical_trials_backup');
+    }
+  } catch (err) {
+    console.warn('Initial seed cleanup error:', err);
   }
 
-  // Seed Biographical Questions if empty
+  // Seed Biographical Questions if empty (required for playing Family Recognition)
   const bioQCount = await db.biographical_questions?.count();
   if (bioQCount === 0 && db.biographical_questions) {
     await db.biographical_questions.bulkAdd(DEFAULT_BIOGRAPHICAL_QUESTIONS);
-  }
-
-  // Seed Longitudinal Biographical Trials if empty (past 30 days)
-  const bioTrialsCount = await db.biographical_trials?.count();
-  if (bioTrialsCount === 0 && db.biographical_trials) {
-    const now = Date.now();
-    const seedTrials = [];
-    const questions = DEFAULT_BIOGRAPHICAL_QUESTIONS;
-
-    // Simulate 12 historical sessions across 30 days
-    const dayIntervals = [28, 25, 22, 19, 16, 13, 10, 7, 5, 3, 2, 1];
-
-    dayIntervals.forEach((dayOffset, sIdx) => {
-      const sessionDate = new Date(now - dayOffset * 24 * 60 * 60 * 1000 + 10 * 3600 * 1000); // around 10am
-      const sessionId = `seed-session-${30 - dayOffset}`;
-      
-      // Each session has 8 questions (simulating sequence 0 to 7)
-      questions.forEach((q, qIndexInSession) => {
-        const trialTime = new Date(sessionDate.getTime() + qIndexInSession * 25000).toISOString();
-        
-        // Tier properties:
-        // Tier 1: 94% accuracy, ~1200ms
-        // Tier 2: 83% accuracy, ~1600ms
-        // Tier 3: 72% accuracy, ~2200ms
-        // Tier 4: 55% accuracy, ~2900ms
-        // Fatigue effect: Questions 7+ have higher latency (+800ms) and lower accuracy (-25%)
-        let baseAccProbability = 0.94;
-        let baseLatency = 1200;
-
-        if (q.relationTier === 'TIER_2_CHILD') {
-          baseAccProbability = 0.83;
-          baseLatency = 1600;
-        } else if (q.relationTier === 'TIER_3_SIBLING') {
-          baseAccProbability = 0.72;
-          baseLatency = 2200;
-        } else if (q.relationTier === 'TIER_4_EXTENDED') {
-          baseAccProbability = 0.55;
-          baseLatency = 2800;
-        }
-
-        // Apply progressive cognitive fatigue for questions 7+ (index >= 6)
-        if (qIndexInSession >= 6) {
-          baseAccProbability -= 0.22;
-          baseLatency += 750;
-        }
-
-        const isCorrect = Math.random() < baseAccProbability;
-        let selectedOptionIndex = q.correctOptionIndex;
-        let selectedText = q.options[q.correctOptionIndex];
-
-        if (!isCorrect) {
-          // Deterministic confusion patterns for clinical realism
-          if (q.questionId === 'bio-q3') {
-            // Mistaking Daughter for another family member 'Pooja Baruah'
-            selectedOptionIndex = 1;
-            selectedText = q.options[1];
-          } else if (q.questionId === 'bio-q4') {
-            // Mistaking Son's job
-            selectedOptionIndex = 0;
-            selectedText = q.options[0];
-          } else {
-            // Pick an alternate index
-            const wrongIndices = [0, 1, 2, 3].filter(idx => idx !== q.correctOptionIndex);
-            selectedOptionIndex = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
-            selectedText = q.options[selectedOptionIndex];
-          }
-        }
-
-        const latencyMs = Math.round(baseLatency + (Math.random() * 400 - 200));
-        const hesitationCount = isCorrect ? Math.floor(Math.random() * 2) : Math.floor(2 + Math.random() * 4);
-        const selectedPosition = selectedOptionIndex; // screen slot 0-3
-
-        seedTrials.push({
-          trialId: `seed-trial-${sIdx}-${qIndexInSession}`,
-          sessionId: sessionId,
-          patientId: patientId,
-          timestamp: trialTime,
-          questionId: q.questionId,
-          relationTier: q.relationTier,
-          selectedOptionIndex: selectedOptionIndex,
-          correctOptionIndex: q.correctOptionIndex,
-          isCorrect: isCorrect,
-          selectedText: selectedText,
-          correctText: q.options[q.correctOptionIndex],
-          latencyMs: latencyMs,
-          hesitationCount: hesitationCount,
-          selectedPosition: selectedPosition
-        });
-      });
-    });
-
-    await db.biographical_trials.bulkAdd(seedTrials);
   }
 
   // Seed ASHA door-to-door triage visits

@@ -330,7 +330,8 @@ def get_longitudinal_summary(db: Session, patient_id: Union[int, str], days: int
 
     sessions: List[ShapeGameSession] = db.query(ShapeGameSession).filter(
         ShapeGameSession.patient_id == db_patient_id,
-        ShapeGameSession.started_at >= cutoff
+        ShapeGameSession.started_at >= cutoff,
+        ShapeGameSession.status == "COMPLETED"
     ).order_by(ShapeGameSession.started_at.asc()).all()
 
     baseline = db.query(ShapeGameBaseline).filter(ShapeGameBaseline.patient_id == db_patient_id).first()
@@ -462,12 +463,26 @@ def get_longitudinal_summary(db: Session, patient_id: Union[int, str], days: int
 
     avg_solve_time = (
         round(statistics.mean([s.median_solve_time_ms for s in sessions if s.median_solve_time_ms > 0]), 0)
-        if sessions else 0
+        if sessions and any(s.median_solve_time_ms > 0 for s in sessions) else 0
     )
     avg_independence = (
         round(statistics.mean([s.independence_score for s in sessions]), 1)
         if sessions else 0
     )
+    avg_accuracy = (
+        round(statistics.mean([s.accuracy_pct for s in sessions if s.accuracy_pct is not None]), 1)
+        if sessions and any(s.accuracy_pct is not None for s in sessions) else 0.0
+    )
+    median_solve_time = (
+        round(statistics.median([s.median_solve_time_ms for s in sessions if s.median_solve_time_ms > 0]), 0)
+        if sessions and any(s.median_solve_time_ms > 0 for s in sessions) else 0.0
+    )
+    median_latency = (
+        round(statistics.median([s.median_latency_ms for s in sessions if s.median_latency_ms > 0]), 0)
+        if sessions and any(s.median_latency_ms > 0 for s in sessions) else 0.0
+    )
+    jitters = [a.tremor_jitter_proxy for a in attempts if a.tremor_jitter_proxy and a.tremor_jitter_proxy > 0]
+    median_jitter = round(statistics.median(jitters), 1) if jitters else 0.0
 
     return {
         "patientId": patient_id,
@@ -478,7 +493,11 @@ def get_longitudinal_summary(db: Session, patient_id: Union[int, str], days: int
             "sessionsThisWeek": sessions_this_week,
             "totalSessionsInRange": len(sessions),
             "averageIndependenceScore": avg_independence,
+            "overallAccuracyPct": avg_accuracy,
             "averageSolveTimeMs": avg_solve_time,
+            "medianSolveTimeMs": median_solve_time,
+            "medianLatencyMs": median_latency,
+            "medianJitterPx": median_jitter,
             "activeAlertsCount": len(alerts),
             "baselineSolveTimeMs": baseline.baseline_solve_time_ms if baseline else 3500.0,
             "baselineLatencyMs": baseline.baseline_latency_ms if baseline else 950.0,

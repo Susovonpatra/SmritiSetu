@@ -28,13 +28,13 @@ class ShapeGameSession(Base):
     ended_at = Column(DateTime, nullable=True)
     total_duration_ms = Column(Float, default=0.0)
     rounds_completed = Column(Integer, default=0)
-    independence_score = Column(Float, default=100.0) # % shapes placed with 0 hints
-    accuracy_pct = Column(Float, default=100.0)       # first-attempt correct %
+    independence_score = Column(Float, default=0.0) # % shapes placed with 0 hints
+    accuracy_pct = Column(Float, default=0.0)       # first-attempt correct %
     median_latency_ms = Column(Float, default=0.0)
     mean_latency_ms = Column(Float, default=0.0)
     median_solve_time_ms = Column(Float, default=0.0)
     fatigue_index = Column(Float, default=1.0)        # late solve time / early solve time
-    engagement_score = Column(Float, default=100.0)
+    engagement_score = Column(Float, default=0.0)
     client_version = Column(String(20), default="1.0.0")
 
     rounds = relationship("ShapeGameRound", back_populates="session", cascade="all, delete-orphan")

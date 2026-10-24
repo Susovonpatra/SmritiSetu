@@ -108,6 +108,9 @@ export function BiographicalRecognitionGame({ patientId = 1, onExitToRest, diale
         hesitationCount: hesitationCount,
         selectedPosition: slotIndex
       });
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'biographical' } }));
+      }
     } catch (err) {
       console.warn('Telemetry log failed silently:', err);
     }

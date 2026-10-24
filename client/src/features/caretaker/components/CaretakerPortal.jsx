@@ -8,8 +8,6 @@ import { CaretakerAuthCard } from './CaretakerAuthCard';
 import { CaretakerHeader } from './CaretakerHeader';
 import { CaretakerTabsNav } from './CaretakerTabsNav';
 import { CaretakerProfileTab } from './tabs/CaretakerProfileTab';
-import { ClinicalTelemetryTab } from './tabs/ClinicalTelemetryTab';
-import { ShapeGameAnalyticsTab } from './tabs/ShapeGameAnalyticsTab';
 import { PatientSecurityTab } from './tabs/PatientSecurityTab';
 
 export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }) {
@@ -63,12 +61,12 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
   const {
     patternAnalytics,
     biographicalAnalytics,
-    routineAnalytics,
+    shapeAnalytics,
     unifiedTimeline,
     driftMetrics,
     isLoading: isAnalyticsLoading,
     refetch: refetchAnalytics
-  } = useCaretakerAnalytics(patientProfile?.id || 1, caretakerUser);
+  } = useCaretakerAnalytics(patientProfile?.id || 1, activeTab);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Populate profile form whenever patientProfile loads/changes
@@ -253,24 +251,17 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
           />
         )}
 
-        {(activeTab === 'analytics' || activeTab === 'telemetry' || activeTab === 'biographical_analytics') && (
+        {(activeTab === 'analytics' || activeTab === 'telemetry' || activeTab === 'biographical_analytics' || activeTab === 'shape_analytics') && (
           <UnifiedAnalyticsDashboard
             displayPatientName={displayPatientName}
             driftMetrics={driftMetrics}
             patternAnalytics={patternAnalytics}
             biographicalAnalytics={biographicalAnalytics}
-            routineAnalytics={routineAnalytics}
+            shapeAnalytics={shapeAnalytics}
             unifiedTimeline={unifiedTimeline}
             isLoading={isAnalyticsLoading}
             onRefresh={refetchAnalytics}
             onOpenReportModal={() => setIsReportModalOpen(true)}
-          />
-        )}
-
-        {activeTab === 'shape_analytics' && (
-          <ShapeGameAnalyticsTab
-            patientId={patientProfile?.id || 1}
-            displayPatientName={displayPatientName}
           />
         )}
 
