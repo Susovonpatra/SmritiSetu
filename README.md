@@ -60,6 +60,9 @@ npm run build:frontend
 ## 📚 Documentation
 
 Detailed documentation is available in the [`docs/`](./docs/) directory:
+- [Component Architecture Guide](./docs/component-architecture.md)
+- [Feature List & Capabilities Matrix](./docs/feature-list.md)
 - [Architecture Guide](./docs/architecture.md)
 - [Coding Conventions & Style Guide](./docs/conventions.md)
 - [API Reference (v1)](./docs/api.md)
+- [Match the Shapes Technical Guide](./docs/README_SHAPE_GAME.md)

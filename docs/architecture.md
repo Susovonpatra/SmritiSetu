@@ -80,3 +80,13 @@ High-footprint views (`CaretakerPortal`, `PatientPortal`, `IVRSimulator`, `AshaM
 - **High-Contrast Palette**: 7:1+ contrast ratios designed specifically for aging eyes.
 - **Large Touch Targets**: Minimum 48px × 48px hit areas for geriatric motor tremor accommodation.
 - **Sensory Localization**: Dual visual + auditory feedback with native language TTS calibrated at 0.88x geriatric acoustic rate.
+
+---
+
+## 5. Related Documentation
+- [Component Architecture Guide](./component-architecture.md): Deep-dive into UI component hierarchies, domain boundaries, and data flow pipelines.
+- [Feature List & Capabilities Matrix](./feature-list.md): Comprehensive functional breakdown across cognitive games, clinical telemetry, public health, and accessibility.
+- [API Reference (v1)](./api.md): REST endpoints, request/response models, and error codes.
+- [Coding Conventions & Style Guide](./conventions.md): Architectural rules, styling conventions, and linting guidelines.
+- [Match the Shapes Technical Guide](./README_SHAPE_GAME.md): Detailed shape catalog, difficulty tiers, and hint escalation engine.
+
