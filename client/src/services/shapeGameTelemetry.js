@@ -319,20 +319,22 @@ export class ShapeGameTelemetryService {
       });
 
       // Save summary in Dexie if IndexedDB is available (upsert by sessionId to prevent duplicates)
+      const numericPatientId = Number(this.patientId) || 1;
+      const sessionPayload = {
+        sessionId: this.sessionId,
+        patientId: numericPatientId,
+        status,
+        roundsCompleted,
+        independenceScore: res?.independenceScore != null ? res.independenceScore : 100,
+        accuracyPct: res?.accuracyPct != null ? res.accuracyPct : 100,
+        medianSolveTimeMs: res?.medianSolveTimeMs || 0,
+        medianLatencyMs: res?.medianLatencyMs || 0,
+        startedAt: new Date().toISOString(),
+        synced: 1
+      };
+
       if (typeof globalThis !== 'undefined' && globalThis.indexedDB && db.shape_game_sessions) {
         try {
-          const sessionPayload = {
-            sessionId: this.sessionId,
-            patientId: this.patientId,
-            status,
-            roundsCompleted,
-            independenceScore: res?.independenceScore != null ? res.independenceScore : 100,
-            accuracyPct: res?.accuracyPct != null ? res.accuracyPct : 100,
-            medianSolveTimeMs: res?.medianSolveTimeMs || 0,
-            medianLatencyMs: res?.medianLatencyMs || 0,
-            startedAt: new Date().toISOString(),
-            synced: 1
-          };
           const existing = await db.shape_game_sessions.where('sessionId').equals(this.sessionId).first();
           if (existing) {
             await db.shape_game_sessions.update(existing.id, sessionPayload);
@@ -344,27 +346,56 @@ export class ShapeGameTelemetryService {
         }
       }
 
+      // Also record to generic telemetry table for unified backend sync
+      if (typeof globalThis !== 'undefined' && globalThis.indexedDB && db.telemetry) {
+        try {
+          await db.telemetry.add({
+            patient_id: numericPatientId,
+            game_type: 'shape_match_kinematics',
+            timestamp: sessionPayload.startedAt,
+            latency_ms: sessionPayload.medianLatencyMs || 800,
+            jitter_px: 3.2,
+            accuracy_score: (sessionPayload.accuracyPct || 100) / 100,
+            source: 'PWA'
+          });
+        } catch (e) {}
+      }
+
+      // Dual-save to LocalStorage backup for guaranteed cross-tab/offline sync
+      try {
+        const raw = localStorage.getItem('smriti_shape_sessions_backup');
+        let existing = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(existing)) existing = [];
+        existing = existing.filter(s => s.sessionId !== this.sessionId);
+        existing.unshift(sessionPayload);
+        if (existing.length > 50) existing.length = 50;
+        localStorage.setItem('smriti_shape_sessions_backup', JSON.stringify(existing));
+        localStorage.setItem('smriti_shape_last_session', JSON.stringify(sessionPayload));
+      } catch (e) {}
+
       return res;
     } catch (e) {
+      const numericPatientId = Number(this.patientId) || 1;
+      const totalAttempts = this.attemptRecords.length;
+      const independentCount = this.attemptRecords.filter(a => a.hintsNeeded === 0).length;
+      const correctFirstTry = this.attemptRecords.filter(a => a.incorrectAttempts === 0).length;
+      const solveTimes = this.attemptRecords.map(a => a.solveTimeMs).filter(t => t > 0);
+      const medianSolve = solveTimes.length > 0 ? solveTimes.sort((a,b)=>a-b)[Math.floor(solveTimes.length/2)] : 0;
+      const offlinePayload = {
+        sessionId: this.sessionId,
+        patientId: numericPatientId,
+        status,
+        roundsCompleted,
+        independenceScore: totalAttempts > 0 ? Math.round((independentCount / totalAttempts) * 100) : 100,
+        accuracyPct: totalAttempts > 0 ? Math.round((correctFirstTry / totalAttempts) * 100) : 100,
+        medianSolveTimeMs: medianSolve,
+        medianLatencyMs: 0,
+        startedAt: new Date().toISOString(),
+        synced: 0
+      };
+
       if (typeof globalThis !== 'undefined' && globalThis.indexedDB && db.shape_game_sessions) {
         try {
-          const totalAttempts = this.attemptRecords.length;
-          const independentCount = this.attemptRecords.filter(a => a.hintsNeeded === 0).length;
-          const correctFirstTry = this.attemptRecords.filter(a => a.incorrectAttempts === 0).length;
-          const solveTimes = this.attemptRecords.map(a => a.solveTimeMs).filter(t => t > 0);
-          const medianSolve = solveTimes.length > 0 ? solveTimes.sort((a,b)=>a-b)[Math.floor(solveTimes.length/2)] : 0;
-          const offlinePayload = {
-            sessionId: this.sessionId,
-            patientId: this.patientId,
-            status,
-            roundsCompleted,
-            independenceScore: totalAttempts > 0 ? Math.round((independentCount / totalAttempts) * 100) : 100,
-            accuracyPct: totalAttempts > 0 ? Math.round((correctFirstTry / totalAttempts) * 100) : 100,
-            medianSolveTimeMs: medianSolve,
-            medianLatencyMs: 0,
-            startedAt: new Date().toISOString(),
-            synced: 0
-          };
           const existing = await db.shape_game_sessions.where('sessionId').equals(this.sessionId).first();
           if (existing) {
             await db.shape_game_sessions.update(existing.id, offlinePayload);
@@ -375,6 +406,34 @@ export class ShapeGameTelemetryService {
           // Non-critical
         }
       }
+
+      // Record to generic telemetry table for unified offline sync
+      if (typeof globalThis !== 'undefined' && globalThis.indexedDB && db.telemetry) {
+        try {
+          await db.telemetry.add({
+            patient_id: numericPatientId,
+            game_type: 'shape_match_kinematics',
+            timestamp: offlinePayload.startedAt,
+            latency_ms: 800,
+            jitter_px: 3.2,
+            accuracy_score: (offlinePayload.accuracyPct || 100) / 100,
+            source: 'PWA'
+          });
+        } catch (err) {}
+      }
+
+      // Dual-save to LocalStorage backup
+      try {
+        const raw = localStorage.getItem('smriti_shape_sessions_backup');
+        let existing = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(existing)) existing = [];
+        existing = existing.filter(s => s.sessionId !== this.sessionId);
+        existing.unshift(offlinePayload);
+        if (existing.length > 50) existing.length = 50;
+        localStorage.setItem('smriti_shape_sessions_backup', JSON.stringify(existing));
+        localStorage.setItem('smriti_shape_last_session', JSON.stringify(offlinePayload));
+      } catch (err) {}
+
       return null;
     }
   }

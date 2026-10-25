@@ -80,19 +80,34 @@ export function Navbar({
     'Caretaker';
   const patientDisplayName = patientSession?.patient_name || patientProfile?.name || 'Patient';
 
+  const currentModeBadge = () => {
+    switch (currentView) {
+      case 'patient_portal':
+        return { label: 'Companion Mode', icon: 'spa' };
+      case 'caretaker_portal':
+        return { label: 'Clinical Hub', icon: 'monitoring' };
+      case 'asha':
+        return { label: 'ASHA Triage', icon: 'medical_services' };
+      default:
+        return { label: 'SmritiSetu Health', icon: 'spa' };
+    }
+  };
+
+  const mode = currentModeBadge();
+
   return (
     <>
-      {/* ── TOP HEADER / NAVBAR (Slides out smoothly when scrolling down) ── */}
+      {/* ── TOP HEADER / NAVBAR (Stitch Warm Clinical Geriatric) ── */}
       <header
         className={`sticky top-0 z-40 w-full transition-all duration-300 ease-in-out ${
           isScrolled
             ? '-translate-y-full opacity-0 pointer-events-none'
-            : 'translate-y-0 opacity-100 bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-sm'
+            : 'translate-y-0 opacity-100 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_1px_8px_rgba(0,0,0,0.04)]'
         }`}
       >
         {/* Top Minimalist Bar */}
-        <div className="bg-slate-900 text-slate-200 px-3 sm:px-4 py-1.5 sm:py-2 border-b border-slate-800">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 flex-wrap">
+        <div className="bg-primary text-primary-fixed px-3 sm:px-4 py-1 sm:py-1.5 border-b border-primary-container">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 flex-wrap text-xs">
             {/* Left: Pure IP Region Indicator */}
             <div className="flex items-center gap-2">
               <DementiaLanguageToggle showRegionOnly />
@@ -100,7 +115,6 @@ export function Navbar({
 
             {/* Right: DPDP Consent & Sync Status */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Show language toggle on top bar only when patient is logged in */}
               {patientSession && (
                 <div className="hidden xs:block">
                   <DementiaLanguageToggle showToggleOnly />
@@ -109,14 +123,14 @@ export function Navbar({
 
               <button
                 onClick={onOpenConsent}
-                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[11px] sm:text-xs font-semibold transition-all border cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-headline font-bold transition-all border cursor-pointer ${
                   consentSigned
-                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700/60 hover:bg-emerald-900/90'
-                    : 'bg-amber-950/80 text-amber-300 border-amber-700/60 hover:bg-amber-900/90 animate-pulse'
+                    ? 'bg-primary-container text-primary-fixed border-primary-fixed/40'
+                    : 'bg-tertiary-container text-tertiary-fixed border-tertiary-fixed/40 animate-pulse'
                 }`}
                 title="DPDP Consent Status"
               >
-                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <span className="material-symbols-outlined text-[14px]">lock</span>
                 <span className="truncate max-w-[120px] sm:max-w-none">
                   {consentSigned ? t('nav.consentSigned') : t('nav.signConsent')}
                 </span>
@@ -126,8 +140,8 @@ export function Navbar({
         </div>
 
         {/* Main Navigation Bar */}
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Brand Identity - Navigates to Landing Page */}
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-4">
+          {/* Brand Identity - Stitch Spa Icon & SmritiSetu Logo */}
           <div
             onClick={() => handleNavClick('landing')}
             role="button"
@@ -138,96 +152,110 @@ export function Navbar({
                 handleNavClick('landing');
               }
             }}
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer group select-none min-w-0"
+            className="flex items-center gap-2.5 cursor-pointer group select-none min-w-0"
             title="SmritiSetu Home"
             aria-label="SmritiSetu Home"
           >
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-900 text-white flex items-center justify-center font-bold text-base sm:text-xl shadow-sm group-hover:scale-105 transition-transform border border-emerald-600/40 shrink-0">
-              {regionInfo.nativeName ? regionInfo.nativeName.substring(0, 2) : 'ସ୍ମୃ'}
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary-container text-on-primary flex items-center justify-center shrink-0 shadow-[0_2px_8px_-2px_rgba(26,37,48,0.1)] group-hover:scale-105 transition-transform">
+              <span className="material-symbols-outlined text-[26px] sm:text-[28px]">spa</span>
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-base sm:text-xl font-bold tracking-tight text-slate-900 leading-tight font-serif truncate">
-                  {regionInfo.nativeName || 'ସ୍ମୃତିସେତୁ'}
-                </span>
-                <span className="text-sm sm:text-base font-extrabold text-emerald-700 tracking-tight">
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="font-headline text-lg sm:text-xl text-primary font-bold tracking-tight truncate">
                   SmritiSetu
                 </span>
+                <div className="w-5 h-5 rounded-full bg-primary-fixed flex items-center justify-center text-primary" title={isOnline ? 'Online Sync Active' : 'Offline Storage Active'}>
+                  <span className="material-symbols-outlined text-[13px]">{isOnline ? 'cloud_done' : 'sync_saved_locally'}</span>
+                </div>
               </div>
-              <p className="text-[10px] sm:text-[11px] font-medium text-slate-500 tracking-wide truncate hidden xs:block">
-                {t('brandSubtitle')}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <span className="font-headline text-[11px] uppercase tracking-wider text-secondary font-bold truncate">
+                  {mode.label}
+                </span>
+                <span className="text-outline text-[10px]">•</span>
+                <span className="font-headline text-[11px] text-on-surface-variant font-medium">
+                  {dialect.toUpperCase()}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Right Action Header Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* Quick SOS Helpline Button */}
+            <a
+              href="tel:+919435012345"
+              aria-label="Emergency Helpline"
+              className="min-w-[42px] sm:min-w-[48px] h-10 sm:h-11 px-2.5 rounded-xl bg-error text-on-error flex items-center justify-center gap-1 shadow-sm active:scale-95 transition-transform"
+              title="Senior Emergency Helpline"
+            >
+              <span className="material-symbols-outlined text-[20px]">emergency</span>
+              <span className="font-headline text-xs font-bold hidden sm:inline">SOS</span>
+            </a>
+
             {/* 1. If Patient is Logged In */}
             {patientSession ? (
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
-                <div className="hidden sm:flex px-3 py-1.5 bg-emerald-50 text-emerald-950 border border-emerald-200 rounded-xl text-xs font-bold items-center gap-1.5 max-w-[160px] truncate">
-                  <Heart className="w-3.5 h-3.5 text-emerald-600 fill-emerald-600 shrink-0" />
-                  <span className="truncate">Patient: {patientDisplayName}</span>
+              <div className="flex items-center gap-2">
+                <div className="hidden sm:flex px-3 py-1 bg-surface-container text-primary border border-outline-variant/30 rounded-xl text-xs font-headline font-bold items-center gap-1.5 max-w-[160px] truncate">
+                  <span className="material-symbols-outlined text-[16px] text-primary">person</span>
+                  <span className="truncate">{patientDisplayName}</span>
                 </div>
 
                 <button
                   onClick={signOutPatient}
-                  className="px-2.5 sm:px-3.5 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  className="px-3 py-1.5 bg-surface-container hover:bg-error-container text-on-surface hover:text-on-error-container rounded-xl text-xs font-headline font-bold transition flex items-center gap-1 cursor-pointer border border-outline-variant/30"
                   title="Exit Patient Session"
                 >
-                  <LogOut className="w-3.5 h-3.5 shrink-0" />
+                  <span className="material-symbols-outlined text-[16px]">logout</span>
                   <span className="hidden xs:inline">Exit</span>
                 </button>
               </div>
             ) : caretakerUser ? (
               /* 2. If Caretaker is Logged In */
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleNavClick('patient_portal')}
-                  className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-emerald-700 hover:bg-emerald-800 text-white border border-emerald-600 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="px-3 py-1.5 sm:py-2 bg-primary hover:bg-primary-container text-on-primary rounded-xl text-xs font-headline font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
                   title="Launch Patient Portal"
                 >
-                  <Heart className="w-3.5 h-3.5 fill-emerald-200 text-emerald-200 shrink-0" />
-                  <span className="hidden sm:inline">Launch Patient View</span>
-                  <span className="sm:hidden">Patient View</span>
+                  <span className="material-symbols-outlined text-[18px]">spa</span>
+                  <span className="hidden sm:inline">Patient View</span>
                 </button>
 
-                <div className="hidden md:flex px-3 py-1.5 bg-indigo-50 text-indigo-950 border border-indigo-200 rounded-xl text-xs font-bold items-center gap-1.5 max-w-[150px] truncate">
-                  <Shield className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <div className="hidden md:flex px-3 py-1 bg-surface-container text-on-surface border border-outline-variant/30 rounded-xl text-xs font-headline font-bold items-center gap-1.5 max-w-[150px] truncate">
+                  <span className="material-symbols-outlined text-[16px] text-primary">verified_user</span>
                   <span className="truncate">{caretakerDisplayName}</span>
                 </div>
 
                 <button
                   onClick={signOutCaretaker}
-                  className="px-2.5 sm:px-3 py-1.5 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                  className="px-2.5 sm:px-3 py-1.5 bg-surface-container hover:bg-error-container text-on-surface hover:text-on-error-container rounded-xl text-xs font-headline font-bold transition flex items-center gap-1 cursor-pointer border border-outline-variant/30"
                   title="Sign Out"
                 >
-                  <LogOut className="w-3.5 h-3.5 shrink-0" />
+                  <span className="material-symbols-outlined text-[16px]">logout</span>
                   <span className="hidden xs:inline">Sign Out</span>
                 </button>
               </div>
             ) : (
-              /* 3. If Guest / New Visitor: Prominent Login / Access Portals Button */
-              <div className="flex items-center gap-1.5 sm:gap-2.5">
-                <button
-                  onClick={() => onOpenAuthModal && onOpenAuthModal('caretaker')}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2.5 bg-slate-900 hover:bg-indigo-950 text-white font-bold text-xs rounded-xl shadow-md border border-slate-800 transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <LogIn className="w-3.5 h-3.5 text-indigo-300 shrink-0" />
-                  <span className="hidden sm:inline">Login / Access Portals</span>
-                  <span className="sm:hidden">Portals</span>
-                </button>
-              </div>
+              /* 3. If Guest / New Visitor */
+              <button
+                onClick={() => onOpenAuthModal && onOpenAuthModal('caretaker')}
+                className="px-3 sm:px-4 py-2 bg-primary hover:bg-primary-container text-on-primary font-headline font-bold text-xs rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[18px]">login</span>
+                <span className="hidden sm:inline">Login / Access Portals</span>
+                <span className="sm:hidden">Portals</span>
+              </button>
             )}
 
             {/* Menu Drawer Toggle */}
             <button
               onClick={() => setIsDrawerOpen(true)}
-              className="p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+              className="p-2 sm:p-2.5 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface border border-outline-variant/30 transition-colors cursor-pointer"
               title="Open Navigation Menu"
               aria-label="Open Navigation Menu"
             >
-              <Menu className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              <span className="material-symbols-outlined text-[20px]">menu</span>
             </button>
           </div>
         </div>
@@ -429,6 +457,24 @@ export function Navbar({
 
                   <button
                     type="button"
+                    onClick={() => handleNavClick('exercises')}
+                    className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                      currentView === 'exercises'
+                        ? 'bg-orange-600 text-white shadow-sm'
+                        : 'hover:bg-orange-50 text-slate-700 hover:text-orange-950'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[18px] text-secondary">shapes</span>
+                      <span>Shape Match &amp; Cognitive Games</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-100 text-orange-800">
+                      Tier 2
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => handleNavClick('asha')}
                     className={`w-full p-3 rounded-xl text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer ${
                       currentView === 'asha'
@@ -532,6 +578,86 @@ export function Navbar({
           </div>
         </div>
       )}
+
+      {/* ── STITCH UNIFIED BOTTOM TAB NAVIGATION BAR ── */}
+      <nav
+        aria-label="Portal Navigation"
+        className="fixed bottom-0 left-0 right-0 z-40 pb-safe bg-surface/95 backdrop-blur-xl border-t border-outline-variant/30 shadow-[0_-2px_12px_rgba(0,0,0,0.05)]"
+      >
+        <div className="flex justify-around items-center h-16 sm:h-20 px-2 max-w-lg mx-auto">
+          {/* 1. Companion */}
+          <button
+            onClick={() => handleNavClick('patient_portal')}
+            className={`flex flex-col items-center justify-center gap-1 min-w-[64px] h-14 transition-colors cursor-pointer ${
+              currentView === 'patient_portal'
+                ? 'text-primary font-bold'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span
+              className="material-symbols-outlined text-[24px]"
+              style={{ fontVariationSettings: currentView === 'patient_portal' ? "'FILL' 1" : "'FILL' 0" }}
+            >
+              home
+            </span>
+            <span className="font-headline text-[11px]">Companion</span>
+          </button>
+
+          {/* 2. Exercises */}
+          <button
+            onClick={() => handleNavClick('exercises')}
+            className={`flex flex-col items-center justify-center gap-1 min-w-[64px] h-14 transition-colors cursor-pointer ${
+              currentView === 'exercises'
+                ? 'text-primary font-bold'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span
+              className="material-symbols-outlined text-[24px]"
+              style={{ fontVariationSettings: currentView === 'exercises' ? "'FILL' 1" : "'FILL' 0" }}
+            >
+              psychology
+            </span>
+            <span className="font-headline text-[11px]">Exercises</span>
+          </button>
+
+          {/* 3. Analytics */}
+          <button
+            onClick={() => handleNavClick('caretaker_portal')}
+            className={`flex flex-col items-center justify-center gap-1 min-w-[64px] h-14 transition-colors cursor-pointer ${
+              currentView === 'caretaker_portal'
+                ? 'text-primary font-bold'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span
+              className="material-symbols-outlined text-[24px]"
+              style={{ fontVariationSettings: currentView === 'caretaker_portal' ? "'FILL' 1" : "'FILL' 0" }}
+            >
+              monitoring
+            </span>
+            <span className="font-headline text-[11px]">Analytics</span>
+          </button>
+
+          {/* 4. ASHA Triage */}
+          <button
+            onClick={() => handleNavClick('asha')}
+            className={`flex flex-col items-center justify-center gap-1 min-w-[64px] h-14 transition-colors cursor-pointer ${
+              currentView === 'asha'
+                ? 'text-primary font-bold'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <span
+              className="material-symbols-outlined text-[24px]"
+              style={{ fontVariationSettings: currentView === 'asha' ? "'FILL' 1" : "'FILL' 0" }}
+            >
+              medical_services
+            </span>
+            <span className="font-headline text-[11px]">ASHA Triage</span>
+          </button>
+        </div>
+      </nav>
     </>
   );
 }

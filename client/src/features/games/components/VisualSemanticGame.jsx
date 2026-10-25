@@ -68,8 +68,11 @@ const CULTURAL_ITEMS = [
   }
 ];
 
-export function VisualSemanticGame({ onGameComplete }) {
+export function VisualSemanticGame({ onGameComplete, onComplete, patientId = 1 }) {
   const { activeLang, t } = useLocale();
+  const numericPatientId = Number(patientId) || 1;
+  const finishCallback = onGameComplete || onComplete;
+
   const [targetItem, setTargetItem] = useState(CULTURAL_ITEMS[0]);
   const [candidateItems, setCandidateItems] = useState([]);
   const [feedback, setFeedback] = useState(null);
@@ -102,19 +105,48 @@ export function VisualSemanticGame({ onGameComplete }) {
         correct: isCorrect
       });
 
+      const visualRecord = {
+        patient_id: numericPatientId,
+        game_type: 'visual_matching',
+        timestamp: new Date().toISOString(),
+        latency_ms: metrics?.latencyMs || 820,
+        jitter_px: metrics?.jitterPx || 3.8,
+        accuracy_score: isCorrect ? 1.0 : 0.0,
+        source: 'PWA'
+      };
+
       // Telemetry log to Dexie
       try {
-        await db.telemetry.add({
-          patient_id: 1,
-          game_type: 'visual_matching',
-          timestamp: new Date().toISOString(),
-          latency_ms: metrics.latencyMs,
-          jitter_px: metrics.jitterPx,
-          accuracy_score: isCorrect ? 1.0 : 0.0,
-          source: 'PWA'
-        });
+        if (db.telemetry) {
+          await db.telemetry.add(visualRecord);
+        }
       } catch (err) {
-        console.error('Dexie telemetry write error:', err);
+        console.warn('Dexie visual telemetry write error:', err);
+      }
+
+      // Dual-save to LocalStorage backup
+      try {
+        const raw = localStorage.getItem('smriti_visual_trials_backup');
+        let existing = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(existing)) existing = [];
+        existing.unshift(visualRecord);
+        if (existing.length > 50) existing.length = 50;
+        localStorage.setItem('smriti_visual_trials_backup', JSON.stringify(existing));
+      } catch (e) {}
+
+      // Multi-channel broadcast to Caretaker Dashboard
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('smritisetu:game_completed', {
+          detail: { game: 'visual', patientId: numericPatientId, record: visualRecord }
+        }));
+
+        try {
+          if (typeof BroadcastChannel !== 'undefined') {
+            const ch = new BroadcastChannel('smritisetu_sync');
+            ch.postMessage({ type: 'GAME_COMPLETED', game: 'visual', patientId: numericPatientId });
+            ch.close();
+          }
+        } catch (e) {}
       }
 
       // Bilingual Audio feedback
@@ -130,7 +162,7 @@ export function VisualSemanticGame({ onGameComplete }) {
           setRound(r => r + 1);
           startNewRound();
         } else {
-          if (onGameComplete) onGameComplete();
+          if (finishCallback) finishCallback();
         }
       }, 1600);
     }

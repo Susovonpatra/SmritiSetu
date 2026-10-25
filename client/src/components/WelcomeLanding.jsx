@@ -101,6 +101,10 @@ export function WelcomeLanding({ onOpenAuthModal }) {
                 <span>PatternTrace™ 3×3 adaptive visuospatial working memory game</span>
               </li>
               <li className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>Tier 2 Shape Match™ fine motor kinematics &amp; tremor tracking</span>
+              </li>
+              <li className="flex items-center gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>Today's structured care &amp; hydration routine schedule</span>
               </li>

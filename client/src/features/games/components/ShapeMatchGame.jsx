@@ -466,7 +466,14 @@ export function ShapeMatchGame({
           });
         }
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'shape' } }));
+          window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'shape', patientId } }));
+          try {
+            if (typeof BroadcastChannel !== 'undefined') {
+              const ch = new BroadcastChannel('smritisetu_sync');
+              ch.postMessage({ type: 'GAME_COMPLETED', game: 'shape', patientId });
+              ch.close();
+            }
+          } catch (e) {}
         }
       }, 1000);
     }
@@ -497,7 +504,14 @@ export function ShapeMatchGame({
         roundsCompleted: currentRoundIndex + (isComplete ? 1 : 0)
       });
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'shape' } }));
+        window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'shape', patientId } }));
+        try {
+          if (typeof BroadcastChannel !== 'undefined') {
+            const ch = new BroadcastChannel('smritisetu_sync');
+            ch.postMessage({ type: 'GAME_COMPLETED', game: 'shape', patientId });
+            ch.close();
+          }
+        } catch (e) {}
       }
     }
     onExitToRest();

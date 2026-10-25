@@ -91,6 +91,7 @@ function SmritiSetuApp() {
     const titles = {
       landing: 'SmritiSetu | AI Cognitive & Memory Platform for Elderly Dementia',
       patient_portal: 'Patient Companion Portal | SmritiSetu',
+      exercises: 'Cognitive Exercises & Shape Match | SmritiSetu',
       caretaker_portal: 'Caretaker Clinical Hub | SmritiSetu',
       asha: 'ASHA Door-to-Door Triage Network | SmritiSetu',
       ivr: '2G Feature Phone IVR Simulator | SmritiSetu',
@@ -114,7 +115,7 @@ function SmritiSetuApp() {
   const dialect = regionInfo.englishName || 'Odia';
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-200 overflow-x-hidden w-full max-w-full">
+    <div className="min-h-screen bg-surface text-on-surface flex flex-col font-sans selection:bg-primary-fixed selection:text-primary overflow-x-hidden w-full max-w-full pb-16 sm:pb-20">
       {/* Emergency Motion Alert Banner (HTML5 devicemotion >25 m/s^2) */}
       <MotionAlertBanner
         isAlertActive={isAlertActive}
@@ -148,7 +149,7 @@ function SmritiSetuApp() {
       />
 
       {/* Main Page Body Router */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-8 min-w-0">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 min-w-0">
         <Suspense fallback={<LoadingSpinner message="Loading portal view..." />}>
           {/* 1. Welcoming Public Landing Page (Default for new users / guest mode) */}
           {currentView === 'landing' && (
@@ -157,10 +158,13 @@ function SmritiSetuApp() {
             </ErrorBoundary>
           )}
 
-          {/* 2. Dedicated Patient Companion Portal */}
-          {currentView === 'patient_portal' && (
+          {/* 2. Dedicated Patient Companion Portal & Cognitive Exercises */}
+          {(currentView === 'patient_portal' || currentView === 'exercises') && (
             <ErrorBoundary title="Patient Companion Portal Error">
-              <PatientPortal onExitToHome={() => setCurrentView('landing')} />
+              <PatientPortal
+                initialGame={currentView === 'exercises' ? 'visual' : null}
+                onExitToHome={() => setCurrentView('landing')}
+              />
             </ErrorBoundary>
           )}
 
@@ -196,7 +200,7 @@ function SmritiSetuApp() {
           )}
 
           {/* 7. Dedicated 404 Route Fallback */}
-          {!['landing', 'patient_portal', 'caretaker_portal', 'asha', 'ivr', 'pitch'].includes(currentView) && (
+          {!['landing', 'patient_portal', 'exercises', 'caretaker_portal', 'asha', 'ivr', 'pitch'].includes(currentView) && (
             <ErrorBoundary title="404 Page Error">
               <NotFoundView
                 onNavigateHome={() => setCurrentView('landing')}

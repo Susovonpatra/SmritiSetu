@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDualAuth } from '@/features/auth/context/DualAuthContext';
 import { PatternTraceReportModal } from '@/features/games/components/PatternTraceReportModal';
+import { ClinicalReportModal } from '@/features/caretaker/components/ClinicalReportModal';
 import { BiographicalQuestionManager } from '@/features/caretaker/components/BiographicalQuestionManager';
 import { UnifiedAnalyticsDashboard } from '@/features/caretaker/components/UnifiedAnalyticsDashboard';
 import { useCaretakerAnalytics } from '../hooks/useCaretakerAnalytics';
@@ -62,6 +63,7 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
     patternAnalytics,
     biographicalAnalytics,
     shapeAnalytics,
+    routineAnalytics,
     unifiedTimeline,
     driftMetrics,
     isLoading: isAnalyticsLoading,
@@ -254,10 +256,14 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
         {(activeTab === 'analytics' || activeTab === 'telemetry' || activeTab === 'biographical_analytics' || activeTab === 'shape_analytics') && (
           <UnifiedAnalyticsDashboard
             displayPatientName={displayPatientName}
+            displayPatientAge={displayPatientAge}
+            displayLocality={displayLocality}
+            displayAbhaId={patientProfile?.abha_id || '91-4523-8821-0021'}
             driftMetrics={driftMetrics}
             patternAnalytics={patternAnalytics}
             biographicalAnalytics={biographicalAnalytics}
             shapeAnalytics={shapeAnalytics}
+            routineAnalytics={routineAnalytics}
             unifiedTimeline={unifiedTimeline}
             isLoading={isAnalyticsLoading}
             onRefresh={refetchAnalytics}
@@ -286,10 +292,25 @@ export function CaretakerPortal({ onNavigateToPatientPortal, onOpenTeleconsult }
           <BiographicalQuestionManager patientId={patientProfile?.id || 1} />
         )}
 
-        <PatternTraceReportModal
+        <ClinicalReportModal
           isOpen={isReportModalOpen}
           onClose={() => setIsReportModalOpen(false)}
-          patient={{ id: 1, name: displayPatientName, age: displayPatientAge, abha_id: patientProfile?.abha_id || '' }}
+          initialType="consolidated"
+          patient={{
+            id: 1,
+            name: displayPatientName,
+            age: displayPatientAge,
+            abha_id: patientProfile?.abha_id || '91-4523-8821-0021',
+            locality: displayLocality
+          }}
+          analytics={{
+            biographicalAnalytics,
+            patternAnalytics,
+            shapeAnalytics,
+            routineAnalytics,
+            driftMetrics,
+            unifiedTimeline
+          }}
         />
       </div>
     );

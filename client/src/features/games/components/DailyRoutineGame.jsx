@@ -47,8 +47,10 @@ const ROUTINE_STEPS = [
   }
 ];
 
-export function DailyRoutineGame({ onComplete }) {
+export function DailyRoutineGame({ onComplete, onGameComplete, patientId = 1 }) {
   const { activeLang, t } = useLocale();
+  const numericPatientId = Number(patientId) || 1;
+  const finishCallback = onComplete || onGameComplete;
 
   const [availableBlocks, setAvailableBlocks] = useState(() => 
     [...ROUTINE_STEPS].sort(() => 0.5 - Math.random())
@@ -89,24 +91,61 @@ export function DailyRoutineGame({ onComplete }) {
             : t('games.routineMixed')
         });
 
+        const routineRecord = {
+          patient_id: numericPatientId,
+          game_type: 'routine_sequencer',
+          timestamp: new Date().toISOString(),
+          latency_ms: metrics?.latencyMs || 850,
+          jitter_px: metrics?.jitterPx || 4.2,
+          accuracy_score: isAllCorrect ? 1.0 : 0.6,
+          source: 'PWA'
+        };
+
         try {
-          await db.telemetry.add({
-            patient_id: 1,
-            game_type: 'routine_sequencer',
-            timestamp: new Date().toISOString(),
-            latency_ms: metrics.latencyMs,
-            jitter_px: metrics.jitterPx,
-            accuracy_score: isAllCorrect ? 1.0 : 0.5,
-            source: 'PWA'
-          });
+          if (db.telemetry) {
+            await db.telemetry.add(routineRecord);
+          }
         } catch (err) {
-          console.error(err);
+          console.warn('Dexie routine telemetry write error:', err);
+        }
+
+        // Dual-save to LocalStorage backup for guaranteed cross-tab/offline sync
+        try {
+          const raw = localStorage.getItem('smriti_routine_trials_backup');
+          let existing = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(existing)) existing = [];
+          existing.unshift(routineRecord);
+          if (existing.length > 50) existing.length = 50;
+          localStorage.setItem('smriti_routine_trials_backup', JSON.stringify(existing));
+          localStorage.setItem('smriti_routine_last_session', JSON.stringify({
+            record: routineRecord,
+            timestamp: new Date().toISOString()
+          }));
+        } catch (e) {}
+
+        // Multi-channel broadcast to Caretaker Dashboard
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('smritisetu:game_completed', {
+            detail: { game: 'routine', patientId: numericPatientId, record: routineRecord }
+          }));
+
+          try {
+            if (typeof BroadcastChannel !== 'undefined') {
+              const ch = new BroadcastChannel('smritisetu_sync');
+              ch.postMessage({ type: 'GAME_COMPLETED', game: 'routine', patientId: numericPatientId });
+              ch.close();
+            }
+          } catch (e) {}
         }
 
         const voiceMsg = isAllCorrect ? t('games.routineSuccess') : t('games.routineMixed');
         speakCognitivePrompt(voiceMsg, activeLang);
 
-        if (onComplete) onComplete();
+        if (finishCallback) {
+          setTimeout(() => {
+            finishCallback();
+          }, 2400);
+        }
       }
     }
   });

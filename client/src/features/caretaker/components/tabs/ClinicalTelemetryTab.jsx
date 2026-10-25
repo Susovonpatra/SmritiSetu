@@ -7,6 +7,7 @@ export function ClinicalTelemetryTab({
   patternAnalytics,
   biographicalAnalytics,
   shapeAnalytics,
+  routineAnalytics,
   unifiedTimeline,
   displayPatientName,
   onOpenReportModal,
@@ -20,6 +21,7 @@ export function ClinicalTelemetryTab({
       patternAnalytics={patternAnalytics}
       biographicalAnalytics={biographicalAnalytics}
       shapeAnalytics={shapeAnalytics}
+      routineAnalytics={routineAnalytics}
       unifiedTimeline={unifiedTimeline && unifiedTimeline.length > 0 ? unifiedTimeline : analyticsData}
       isLoading={isLoading}
       onRefresh={onRefresh}
@@ -27,3 +29,5 @@ export function ClinicalTelemetryTab({
     />
   );
 }
+
+export default ClinicalTelemetryTab;

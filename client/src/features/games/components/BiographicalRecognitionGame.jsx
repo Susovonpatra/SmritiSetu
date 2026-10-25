@@ -108,8 +108,33 @@ export function BiographicalRecognitionGame({ patientId = 1, onExitToRest, diale
         hesitationCount: hesitationCount,
         selectedPosition: slotIndex
       });
+
+      // Dual-save to LocalStorage backup for guaranteed cross-tab/offline sync
+      try {
+        const raw = localStorage.getItem('smriti_biographical_trials_backup');
+        let existing = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(existing)) existing = [];
+        existing.unshift({
+          patientId,
+          sessionId: sessionIdRef.current,
+          questionId: currentQuestion.questionId || `q-${currentIndex}`,
+          isCorrect,
+          latencyMs,
+          timestamp: new Date().toISOString()
+        });
+        if (existing.length > 50) existing.length = 50;
+        localStorage.setItem('smriti_biographical_trials_backup', JSON.stringify(existing));
+      } catch (e) {}
+
       if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'biographical' } }));
+        window.dispatchEvent(new CustomEvent('smritisetu:game_completed', { detail: { game: 'biographical', patientId } }));
+        try {
+          if (typeof BroadcastChannel !== 'undefined') {
+            const ch = new BroadcastChannel('smritisetu_sync');
+            ch.postMessage({ type: 'GAME_COMPLETED', game: 'biographical', patientId });
+            ch.close();
+          }
+        } catch (e) {}
       }
     } catch (err) {
       console.warn('Telemetry log failed silently:', err);

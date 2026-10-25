@@ -12,6 +12,7 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
   const [patternAnalytics, setPatternAnalytics] = useState(null);
   const [biographicalAnalytics, setBiographicalAnalytics] = useState(null);
   const [shapeAnalytics, setShapeAnalytics] = useState(null);
+  const [routineAnalytics, setRoutineAnalytics] = useState(null);
   const [unifiedTimeline, setUnifiedTimeline] = useState([]);
   const [driftMetrics, setDriftMetrics] = useState({
     drift_percent: 18.4,
@@ -159,76 +160,121 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
       // Check local Dexie shape sessions ONLY if backend summary is empty/offline
       if (!shapeData) {
         try {
+          let localSessions = [];
           if (db.shape_game_sessions) {
-            const localSessions = await db.shape_game_sessions
-              .where('patientId')
-              .equals(Number(patientId) || 1)
-              .toArray();
+            // 1. Try numeric patientId
+            try {
+              const byNum = await db.shape_game_sessions
+                .where('patientId')
+                .equals(Number(patientId) || 1)
+                .toArray();
+              if (byNum && byNum.length > 0) localSessions = byNum;
+            } catch (e) {}
 
-            // Deduplicate by sessionId and filter test/seed artifacts
-            const uniqueMap = new Map();
-            localSessions.forEach(s => {
-              if (s && s.sessionId && typeof s.sessionId === 'string' &&
-                  !s.sessionId.startsWith('seed-') &&
-                  !s.sessionId.startsWith('test-') &&
-                  !s.sessionId.startsWith('e2e-')) {
-                uniqueMap.set(s.sessionId, s);
+            // 2. Try string patientId
+            if (localSessions.length === 0) {
+              try {
+                const byStr = await db.shape_game_sessions
+                  .where('patientId')
+                  .equals(String(patientId))
+                  .toArray();
+                if (byStr && byStr.length > 0) localSessions = byStr;
+              } catch (e) {}
+            }
+
+            // 3. Fallback: query all and filter leniently
+            if (localSessions.length === 0) {
+              try {
+                const all = await db.shape_game_sessions.toArray();
+                if (all && all.length > 0) {
+                  const filtered = all.filter(s =>
+                    s.patientId == patientId ||
+                    String(s.patientId) === String(patientId) ||
+                    s.patient_id == patientId ||
+                    !s.patientId
+                  );
+                  localSessions = filtered.length > 0 ? filtered : all;
+                }
+              } catch (e) {}
+            }
+          }
+
+          // 4. LocalStorage backup fallback
+          if (!localSessions || localSessions.length === 0) {
+            try {
+              const raw = localStorage.getItem('smriti_shape_sessions_backup');
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  localSessions = parsed;
+                }
+              }
+            } catch (e) {}
+          }
+
+          // Deduplicate by sessionId and filter test/seed artifacts
+          const uniqueMap = new Map();
+          localSessions.forEach(s => {
+            if (s && s.sessionId && typeof s.sessionId === 'string' &&
+                !s.sessionId.startsWith('seed-') &&
+                !s.sessionId.startsWith('test-') &&
+                !s.sessionId.startsWith('e2e-')) {
+              uniqueMap.set(s.sessionId, s);
+            }
+          });
+          const validLocalSessions = Array.from(uniqueMap.values());
+
+          if (validLocalSessions.length > 0) {
+            const total = validLocalSessions.length;
+            const avgInd = Math.round(validLocalSessions.reduce((acc, s) => acc + (s.independenceScore ?? 100), 0) / total);
+            const validAccSessions = validLocalSessions.filter(s => s.accuracyPct != null);
+            const avgAcc = validAccSessions.length > 0
+              ? Math.round(validAccSessions.reduce((acc, s) => acc + s.accuracyPct, 0) / validAccSessions.length)
+              : 100;
+            const validSolveTimes = validLocalSessions.map(s => s.medianSolveTimeMs).filter(t => t > 0);
+            const medianSolve = validSolveTimes.length > 0
+              ? validSolveTimes.sort((a, b) => a - b)[Math.floor(validSolveTimes.length / 2)]
+              : 0;
+            const lastSession = validLocalSessions[validLocalSessions.length - 1];
+
+            shapeData = {
+              patientId,
+              rangeDays: 30,
+              metrics: {
+                lastSessionDate: lastSession.startedAt ? new Date(lastSession.startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today',
+                sessionsThisWeek: validLocalSessions.length,
+                totalSessionsInRange: validLocalSessions.length,
+                averageIndependenceScore: avgInd,
+                overallAccuracyPct: avgAcc,
+                medianSolveTimeMs: medianSolve,
+                medianLatencyMs: 0,
+                medianJitterPx: 0
+              },
+              shapeRankings: [],
+              confusionPairs: [],
+              activeAlerts: [],
+              timeOfDayDistribution: []
+            };
+
+            validLocalSessions.forEach(s => {
+              if (!s.startedAt) return;
+              const dateKey = new Date(s.startedAt).toISOString().slice(0, 10);
+              const indScore = Math.round(s.independenceScore ?? 100);
+              const accScore = Math.round(s.accuracyPct ?? 100);
+              const solveTime = Math.round(s.medianSolveTimeMs ?? 0);
+              const existing = shapeTrendMap.get(dateKey);
+              if (!existing) {
+                shapeTrendMap.set(dateKey, {
+                  accuracy: accScore,
+                  independence: indScore,
+                  solveTimeMs: solveTime
+                });
+              } else {
+                existing.independence = Math.round((existing.independence + indScore) / 2);
+                existing.accuracy = Math.round((existing.accuracy + accScore) / 2);
+                if (solveTime > 0) existing.solveTimeMs = Math.round((existing.solveTimeMs + solveTime) / 2);
               }
             });
-            const validLocalSessions = Array.from(uniqueMap.values());
-
-            if (validLocalSessions.length > 0) {
-              const total = validLocalSessions.length;
-              const avgInd = Math.round(validLocalSessions.reduce((acc, s) => acc + (s.independenceScore ?? 100), 0) / total);
-              const validAccSessions = validLocalSessions.filter(s => s.accuracyPct != null);
-              const avgAcc = validAccSessions.length > 0
-                ? Math.round(validAccSessions.reduce((acc, s) => acc + s.accuracyPct, 0) / validAccSessions.length)
-                : 100;
-              const validSolveTimes = validLocalSessions.map(s => s.medianSolveTimeMs).filter(t => t > 0);
-              const medianSolve = validSolveTimes.length > 0
-                ? validSolveTimes.sort((a, b) => a - b)[Math.floor(validSolveTimes.length / 2)]
-                : 0;
-              const lastSession = validLocalSessions[validLocalSessions.length - 1];
-
-              shapeData = {
-                patientId,
-                rangeDays: 30,
-                metrics: {
-                  lastSessionDate: lastSession.startedAt ? new Date(lastSession.startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today',
-                  sessionsThisWeek: validLocalSessions.length,
-                  totalSessionsInRange: validLocalSessions.length,
-                  averageIndependenceScore: avgInd,
-                  overallAccuracyPct: avgAcc,
-                  medianSolveTimeMs: medianSolve,
-                  medianLatencyMs: 0,
-                  medianJitterPx: 0
-                },
-                shapeRankings: [],
-                confusionPairs: [],
-                activeAlerts: [],
-                timeOfDayDistribution: []
-              };
-
-              validLocalSessions.forEach(s => {
-                if (!s.startedAt) return;
-                const dateKey = new Date(s.startedAt).toISOString().slice(0, 10);
-                const indScore = Math.round(s.independenceScore ?? 100);
-                const accScore = Math.round(s.accuracyPct ?? 100);
-                const solveTime = Math.round(s.medianSolveTimeMs ?? 0);
-                const existing = shapeTrendMap.get(dateKey);
-                if (!existing) {
-                  shapeTrendMap.set(dateKey, {
-                    accuracy: accScore,
-                    independence: indScore,
-                    solveTimeMs: solveTime
-                  });
-                } else {
-                  existing.independence = Math.round((existing.independence + indScore) / 2);
-                  existing.accuracy = Math.round((existing.accuracy + accScore) / 2);
-                  if (solveTime > 0) existing.solveTimeMs = Math.round((existing.solveTimeMs + solveTime) / 2);
-                }
-              });
-            }
           }
         } catch (err) {
           console.warn('Local shape sessions lookup error:', err);
@@ -257,11 +303,74 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
       }
       setShapeAnalytics(shapeData);
 
-      // 4. Check if ANY game has actually been played
+      // 4. Fetch Daily Routine Sequencer Analytics (Game 4)
+      let routineData = null;
+      const routineTrendMap = new Map();
+      try {
+        let routineRecords = [];
+        if (db.telemetry) {
+          try {
+            routineRecords = await db.telemetry.where('game_type').equals('routine_sequencer').toArray();
+          } catch (e) {}
+        }
+
+        // LocalStorage backup fallback
+        if (!routineRecords || routineRecords.length === 0) {
+          try {
+            const raw = localStorage.getItem('smriti_routine_trials_backup');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed) && parsed.length > 0) routineRecords = parsed;
+            }
+          } catch (e) {}
+        }
+
+        if (routineRecords && routineRecords.length > 0) {
+          const validRecords = routineRecords.filter(r =>
+            r.patient_id == patientId ||
+            String(r.patient_id) === String(patientId) ||
+            !r.patient_id
+          );
+          const pool = validRecords.length > 0 ? validRecords : routineRecords;
+          const totalSessions = pool.length;
+          const totalAcc = pool.reduce((acc, r) => acc + (r.accuracy_score != null ? Math.round(r.accuracy_score * 100) : 100), 0);
+          const meanAcc = Math.round(totalAcc / totalSessions);
+          const meanLatency = Math.round(pool.reduce((acc, r) => acc + (r.latency_ms || 850), 0) / totalSessions);
+          const lastRecord = pool[pool.length - 1];
+
+          routineData = {
+            totalSessions,
+            overallAccuracyPct: meanAcc,
+            averageLatencyMs: meanLatency,
+            lastSessionDate: lastRecord?.timestamp ? new Date(lastRecord.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'Today'
+          };
+
+          pool.forEach(r => {
+            if (!r.timestamp) return;
+            const dateKey = new Date(r.timestamp).toISOString().slice(0, 10);
+            const acc = r.accuracy_score != null ? Math.round(r.accuracy_score * 100) : 100;
+            const latency = r.latency_ms || 850;
+            const existing = routineTrendMap.get(dateKey);
+            if (!existing) {
+              routineTrendMap.set(dateKey, { accuracy: acc, avgLatency: latency, count: 1 });
+            } else {
+              existing.accuracy = Math.round((existing.accuracy + acc) / 2);
+              existing.avgLatency = Math.round((existing.avgLatency + latency) / 2);
+              existing.count += 1;
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Routine analytics loading error:', err);
+      }
+      setRoutineAnalytics(routineData);
+
+      // 5. Check if ANY game has actually been played
       const bioTotal = bioSummary?.totalTrials || 0;
       const ptTotal = patternData?.totalTrials || 0;
       const shapeTotal = shapeData?.metrics?.totalSessionsInRange || 0;
-      const hasAnyGameData = bioTotal > 0 || ptTotal > 0 || shapeTotal > 0;
+      const routineTotal = routineData?.totalSessions || 0;
+      const hasAnyGameData = bioTotal > 0 || ptTotal > 0 || shapeTotal > 0 || routineTotal > 0;
 
       if (!hasAnyGameData) {
         // Completely empty initial state until first game is played
@@ -310,7 +419,8 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
       const allActiveDates = new Set([
         ...bioTrendMap.keys(),
         ...patternTrendMap.keys(),
-        ...shapeTrendMap.keys()
+        ...shapeTrendMap.keys(),
+        ...routineTrendMap.keys()
       ]);
 
       const sortedDates = Array.from(allActiveDates).sort();
@@ -321,6 +431,7 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
         const bioDay = bioTrendMap.get(dateIso);
         const ptDay = patternTrendMap.get(dateIso);
         const shapeDay = shapeTrendMap.get(dateIso);
+        const routineDay = routineTrendMap.get(dateIso);
 
         const familyAccuracy = bioDay ? bioDay.accuracy : null;
         const familyLatencyMs = bioDay ? bioDay.avgLatency : null;
@@ -332,16 +443,21 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
         const shapeIndependence = shapeDay ? shapeDay.independence : null;
         const shapeSolveTimeMs = shapeDay ? shapeDay.solveTimeMs : null;
 
+        const routineAccuracy = routineDay ? routineDay.accuracy : null;
+        const routineLatencyMs = routineDay ? routineDay.avgLatency : null;
+
         const scores = [];
         if (familyAccuracy != null) scores.push(familyAccuracy);
         if (patternAccuracy != null) scores.push(patternAccuracy);
         if (shapeAccuracy != null) scores.push(shapeAccuracy);
+        if (routineAccuracy != null) scores.push(routineAccuracy);
         const compositeScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
 
         const speeds = [];
         if (familyLatencyMs != null) speeds.push(familyLatencyMs);
         if (patternLatencyMs != null) speeds.push(patternLatencyMs);
         if (shapeSolveTimeMs != null) speeds.push(shapeSolveTimeMs);
+        if (routineLatencyMs != null) speeds.push(routineLatencyMs);
         const compositeSpeedMs = speeds.length > 0 ? Math.round(speeds.reduce((a, b) => a + b, 0) / speeds.length) : null;
 
         return {
@@ -351,10 +467,12 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
           patternAccuracy,
           shapeAccuracy,
           shapeIndependence,
+          routineAccuracy,
           compositeScore,
           familySpeedSec: familyLatencyMs != null && familyLatencyMs > 0 ? Number((familyLatencyMs / 1000).toFixed(2)) : null,
           patternSpeedSec: patternLatencyMs != null && patternLatencyMs > 0 ? Number((patternLatencyMs / 1000).toFixed(2)) : null,
           shapeSpeedSec: shapeSolveTimeMs != null && shapeSolveTimeMs > 0 ? Number((shapeSolveTimeMs / 1000).toFixed(2)) : null,
+          routineSpeedSec: routineLatencyMs != null && routineLatencyMs > 0 ? Number((routineLatencyMs / 1000).toFixed(2)) : null,
           compositeSpeedSec: compositeSpeedMs != null && compositeSpeedMs > 0 ? Number((compositeSpeedMs / 1000).toFixed(2)) : null,
           latency_ms: compositeSpeedMs,
           accuracy_pct: compositeScore,
@@ -435,6 +553,7 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
     patternAnalytics,
     biographicalAnalytics,
     shapeAnalytics,
+    routineAnalytics,
     unifiedTimeline,
     driftMetrics,
     isLoading,

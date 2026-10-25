@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDualAuth } from '@/features/auth/context/DualAuthContext';
 import { useLocale } from '@/features/localization/context/LocaleContext';
 import { DementiaLanguageToggle } from '@/features/localization/components/DementiaLanguageToggle';
@@ -8,91 +8,142 @@ import { ShapeMatchGame } from '@/features/games/components/ShapeMatchGame';
 import { DailyRoutineGame } from '@/features/games/components/DailyRoutineGame';
 import { BiographicalRecognitionGame } from '@/features/games/components/BiographicalRecognitionGame';
 import { FEATURE_FLAGS } from '@/config/features';
-import {
-  Heart,
-  KeyRound,
-  Mail,
-  ArrowRight,
-  LogOut,
-  AlertCircle,
-  Brain,
-  Calendar,
-  Layers,
-  Shapes,
-  Sun,
-  Sunset,
-  Moon,
-  MapPin,
-  User
-} from 'lucide-react';
 
 function getTimeBasedGreeting(patientName = '', lang = 'en') {
   const hour = new Date().getHours();
   let period = 'morning';
-  let Icon = Sun;
+  let periodLabel = 'Shokal • Morning';
 
   if (hour >= 4 && hour < 12) {
     period = 'morning';
-    Icon = Sun;
+    periodLabel = 'Shokal • Morning';
   } else if (hour >= 12 && hour < 17) {
     period = 'afternoon';
-    Icon = Sunset;
+    periodLabel = 'Bikel • Afternoon';
   } else {
     period = 'evening';
-    Icon = Moon;
+    periodLabel = 'Shondhya • Evening';
   }
 
   const hasName = Boolean(patientName && patientName.trim());
-  const trimmedName = hasName ? patientName.trim() : '';
+  const trimmedName = hasName ? patientName.trim() : 'Dadu';
 
   const greetings = {
     or: {
-      morning: hasName ? `ଶୁଭ ସକାଳ, ${trimmedName}` : 'ଶୁଭ ସକାଳ',
-      afternoon: hasName ? `ଶୁଭ ଅପରାହ୍ନ, ${trimmedName}` : 'ଶୁଭ ଅପରାହ୍ନ',
-      evening: hasName ? `ଶୁଭ ସନ୍ଧ୍ୟା, ${trimmedName}` : 'ଶୁଭ ସନ୍ଧ୍ୟା'
+      morning: `ଶୁଭ ସକାଳ, ${trimmedName}`,
+      afternoon: `ଶୁଭ ଅପରାହ୍ନ, ${trimmedName}`,
+      evening: `ଶୁଭ ସନ୍ଧ୍ୟା, ${trimmedName}`
     },
     gu: {
-      morning: hasName ? `શુભ સવાર, ${trimmedName}` : 'શુભ સવાર',
-      afternoon: hasName ? `શુભ બપોર, ${trimmedName}` : 'શુભ બપોર',
-      evening: hasName ? `શુભ સાંજ, ${trimmedName}` : 'શુભ સાંજ'
+      morning: `શુભ સવાર, ${trimmedName}`,
+      afternoon: `શુભ બપોર, ${trimmedName}`,
+      evening: `શુભ સાંજ, ${trimmedName}`
     },
     as: {
-      morning: hasName ? `শুভ প্ৰভাত, ${trimmedName}` : 'শুভ প্ৰভাত',
-      afternoon: hasName ? `শুভ অপৰাহ্ণ, ${trimmedName}` : 'শুভ অপৰাহ্ণ',
-      evening: hasName ? `শুভ সন্ধিয়া, ${trimmedName}` : 'শুভ সন্ধিয়া'
+      morning: `শুভ প্ৰভাত, ${trimmedName}`,
+      afternoon: `শুভ অপৰাহ্ণ, ${trimmedName}`,
+      evening: `শুভ সন্ধিয়া, ${trimmedName}`
     },
     en: {
-      morning: hasName ? `Good Morning, ${trimmedName}` : 'Good Morning',
-      afternoon: hasName ? `Good Afternoon, ${trimmedName}` : 'Good Afternoon',
-      evening: hasName ? `Good Evening, ${trimmedName}` : 'Good Evening'
+      morning: `Shubho Shokal, ${trimmedName}`,
+      afternoon: `Good Afternoon, ${trimmedName}`,
+      evening: `Good Evening, ${trimmedName}`
     }
   };
 
   const selectedMap = greetings[lang] || greetings.en;
-  const text = selectedMap[period] || (hasName ? `Good Day, ${trimmedName}` : 'Good Day');
+  const text = selectedMap[period] || `Shubho Shokal, ${trimmedName}`;
 
-  return { text, period, Icon };
+  return { text, period, periodLabel };
 }
 
-export function PatientPortal({ onExitToHome }) {
+export function PatientPortal({ onExitToHome, initialGame = null }) {
   const { patientSession, patientProfile, patientLogin, signOutPatient } = useDualAuth();
   const { activeLang, regionInfo, t } = useLocale();
 
-  const [activeGameTab, setActiveGameTab] = useState('biographical'); // 'biographical' | 'pattern' | 'visual' | 'routine'
+  // Active Game State: null = Companion Home View; or 'biographical' | 'pattern' | 'visual' | 'routine'
+  const [activeGame, setActiveGame] = useState(initialGame);
+
+  useEffect(() => {
+    if (initialGame) {
+      setActiveGame(initialGame);
+    }
+  }, [initialGame]);
+
+  // Feeling State: 'Peaceful' | 'Energetic' | 'Need Rest'
+  const [selectedFeeling, setSelectedFeeling] = useState('Peaceful');
+
+  // Routine Checklist State
+  const [checklist, setChecklist] = useState({
+    tulsiTea: true,
+    memoryExercise: false,
+    afternoonWalk: false
+  });
+
+  // Audio Voice Guide playback state
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const speechRef = useRef(null);
+
+  // Unregistered Login State
   const [caretakerEmail, setCaretakerEmail] = useState('');
   const [patientPassword, setPatientPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Dynamic Patient Profile Details
-  const patientName = patientSession?.patient_name || patientProfile?.name || '';
-  const patientAge = patientSession?.patient_age || patientProfile?.age || '';
-  const locality = patientSession?.locality || patientProfile?.locality || '';
-  const dementiaDuration = patientSession?.dementia_duration || patientProfile?.dementia_duration || '';
-  const caretakerName = patientSession?.caretaker_name || patientProfile?.caregiver_name || 'Caretaker';
+  // Dynamic Patient Profile
+  const patientName = patientSession?.patient_name || patientProfile?.name || 'Rabindra N. Ghosh';
+  const patientAge = patientSession?.patient_age || patientProfile?.age || '74';
+  const locality = patientSession?.locality || patientProfile?.locality || 'Bhubaneswar';
+  const caretakerName = patientSession?.caretaker_name || patientProfile?.caregiver_name || 'Meera';
+  const caretakerPhone = patientProfile?.caregiver_phone || '+919876543210';
+
+  const [showSignInForm, setShowSignInForm] = useState(false);
 
   const greetingData = getTimeBasedGreeting(patientName, activeLang);
-  const GreetingIcon = greetingData.Icon;
+
+  // Today formatted string
+  const todayDateString = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long'
+  });
+
+  // 0.88x Gentle Voice Speech Player
+  const handlePlayVoiceGuide = useCallback(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    if (isPlayingAudio) {
+      window.speechSynthesis.cancel();
+      setIsPlayingAudio(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const message = `${greetingData.text}. Today is ${todayDateString}. You are safe at home in ${locality} with ${caretakerName}. Take your time today, there is no rush.`;
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.rate = 0.88; // Gentle geriatric pacing
+    utterance.pitch = 1.0;
+
+    if (activeLang === 'or') utterance.lang = 'or-IN';
+    else if (activeLang === 'gu') utterance.lang = 'gu-IN';
+    else if (activeLang === 'as') utterance.lang = 'as-IN';
+    else utterance.lang = 'en-IN';
+
+    utterance.onstart = () => setIsPlayingAudio(true);
+    utterance.onend = () => setIsPlayingAudio(false);
+    utterance.onerror = () => setIsPlayingAudio(false);
+
+    speechRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  }, [greetingData.text, todayDateString, locality, caretakerName, activeLang, isPlayingAudio]);
+
+  useEffect(() => {
+    return () => {
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   const handlePatientSubmit = async (e) => {
     e.preventDefault();
@@ -113,317 +164,634 @@ export function PatientPortal({ onExitToHome }) {
     if (onExitToHome) onExitToHome();
   };
 
-  // ── AUTHENTICATED PATIENT COMPANION PAGE ──
-  if (patientSession) {
+  // If a game is active, render the full-screen exercise view with back navigation
+  if (activeGame) {
     return (
-      <div className="w-full max-w-5xl mx-auto space-y-6 sm:space-y-8 font-sans pb-12">
-        {/* Top Header Card: Real-Time Dynamic Greeting ("Good Morning, {patientName}") & Regional Language Switcher */}
-        <div className="bg-slate-900 text-white rounded-3xl p-5 sm:p-8 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center md:justify-between gap-5 sm:gap-6">
-          <div className="flex items-start sm:items-center gap-3.5 sm:gap-4">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
-              <GreetingIcon className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-400" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                <span className="inline-block px-2.5 py-0.5 bg-emerald-500/10 text-emerald-300 rounded-full text-[11px] sm:text-xs font-semibold border border-emerald-500/20">
-                  Patient Companion Portal
+      <div className="w-full max-w-4xl mx-auto space-y-4 pb-12 font-sans">
+        {/* Navigation Bar to return to companion home & switch games directly */}
+        <div className="flex flex-wrap items-center justify-between bg-surface-container-low p-3.5 sm:p-4 rounded-2xl shadow-sm border border-outline-variant/30 gap-3">
+          <button
+            onClick={() => setActiveGame(null)}
+            className="flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-surface-container-lowest text-primary hover:bg-surface-container font-headline font-bold text-xs sm:text-sm shadow-sm active:scale-95 transition-all cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+            <span>Companion Home</span>
+          </button>
+
+          {/* Quick Switcher Between All 4 Cognitive Exercises */}
+          <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+            <button
+              onClick={() => setActiveGame('biographical')}
+              className={`px-3 py-1.5 rounded-xl font-headline text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                activeGame === 'biographical'
+                  ? 'bg-primary text-on-primary shadow-sm'
+                  : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container'
+              }`}
+            >
+              1. Family Memory
+            </button>
+            <button
+              onClick={() => setActiveGame('pattern')}
+              className={`px-3 py-1.5 rounded-xl font-headline text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                activeGame === 'pattern'
+                  ? 'bg-primary text-on-primary shadow-sm'
+                  : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container'
+              }`}
+            >
+              2. PatternTrace
+            </button>
+            <button
+              onClick={() => setActiveGame('visual')}
+              className={`px-3 py-1.5 rounded-xl font-headline text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                activeGame === 'visual'
+                  ? 'bg-secondary text-on-secondary shadow-sm ring-2 ring-secondary/40'
+                  : 'bg-secondary-fixed text-secondary hover:bg-secondary-fixed-dim'
+              }`}
+            >
+              3. Shape Match
+            </button>
+            <button
+              onClick={() => setActiveGame('routine')}
+              className={`px-3 py-1.5 rounded-xl font-headline text-xs font-bold transition-all cursor-pointer shrink-0 ${
+                activeGame === 'routine'
+                  ? 'bg-primary text-on-primary shadow-sm'
+                  : 'bg-surface-container-lowest text-on-surface hover:bg-surface-container'
+              }`}
+            >
+              4. Daily Routine
+            </button>
+          </div>
+        </div>
+
+        {activeGame === 'pattern' && (
+          <PatternTraceGame
+            patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
+            onComplete={() => setActiveGame(null)}
+            onExitToRest={() => setActiveGame(null)}
+          />
+        )}
+
+        {activeGame === 'biographical' && (
+          <BiographicalRecognitionGame
+            patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
+            dialect={regionInfo.englishName || 'Odia'}
+            onExitToRest={() => setActiveGame(null)}
+          />
+        )}
+
+        {activeGame === 'visual' && (
+          FEATURE_FLAGS.SHAPE_GAME_ENABLED ? (
+            <ShapeMatchGame
+              patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
+              dialect={regionInfo.englishName || 'Assamese'}
+              onExitToRest={() => setActiveGame(null)}
+            />
+          ) : (
+            <VisualSemanticGame
+              patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
+              dialect={regionInfo.englishName || 'Odia'}
+              onGameComplete={() => setActiveGame(null)}
+              onComplete={() => setActiveGame(null)}
+            />
+          )
+        )}
+
+        {activeGame === 'routine' && (
+          <DailyRoutineGame
+            patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
+            dialect={regionInfo.englishName || 'Odia'}
+            onGameComplete={() => setActiveGame(null)}
+            onComplete={() => setActiveGame(null)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // ── PATIENT COMPANION PORTAL (STITCH NEW UI) ──
+  if (!showSignInForm) {
+    const completedStepsCount = Object.values(checklist).filter(Boolean).length;
+
+    return (
+      <div className="w-full max-w-2xl mx-auto flex flex-col space-y-6 pb-20 font-body text-on-surface">
+        {/* 1. Welcome Banner with Warm Sun Illustration & Gentle Audio Dialect Guide */}
+        <section className="w-full bg-surface-container-low rounded-2xl p-5 shadow-sm relative overflow-hidden border border-outline-variant/30">
+          <div className="flex flex-col gap-3 relative z-10">
+            {/* Top Row: Dialect audio guide pill & Morning Indicator */}
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container text-primary">
+                <span className="material-symbols-outlined text-[20px] text-tertiary-fixed-dim" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  wb_sunny
                 </span>
-                <span className="text-[11px] sm:text-xs text-slate-400 font-medium truncate">
-                  • Caretaker: <strong className="text-emerald-300">{caretakerName}</strong>
+                <span className="font-headline text-xs font-semibold tracking-wide text-on-surface">
+                  {greetingData.periodLabel}
                 </span>
               </div>
-              {/* Dynamic Personalized Time-Based Greeting */}
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white mt-1 leading-tight">
-                {greetingData.text}
-              </h1>
-              {/* Patient Identity Pill Displaying Name & Age */}
-              {(patientName || patientAge || locality) && (
-                <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                  {patientName && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950/80 text-emerald-300 text-xs font-bold border border-emerald-700/60">
-                      <User className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>{patientName}</span>
-                    </span>
-                  )}
-                  {patientAge && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700">
-                      <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                      <span>Age {patientAge}</span>
-                    </span>
-                  )}
-                  {locality && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-xs font-medium border border-slate-700">
-                      <MapPin className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                      <span className="truncate max-w-[180px]">{locality}</span>
-                    </span>
-                  )}
+
+              {/* Voice Guide Trigger Button */}
+              <button
+                onClick={handlePlayVoiceGuide}
+                aria-label="Listen to morning audio guide in gentle 0.88x voice"
+                className={`min-h-[46px] px-3.5 py-1.5 rounded-xl text-primary flex items-center gap-2 active:scale-95 transition-all shadow-sm cursor-pointer ${
+                  isPlayingAudio ? 'bg-primary-fixed border border-primary/40' : 'bg-surface-container-highest hover:bg-surface-container-high'
+                }`}
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[24px] text-primary">
+                  {isPlayingAudio ? 'pause_circle' : 'volume_up'}
+                </span>
+                <div className="flex flex-col text-left">
+                  <span className="font-headline text-[12px] font-bold text-primary">0.88x Gentle Voice</span>
+                  <span className="text-[10px] text-on-surface-variant">
+                    {isPlayingAudio ? 'Playing instructions...' : 'Tap to listen'}
+                  </span>
                 </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800 shrink-0">
-            {/* Regional Language Toggle for Patient */}
-            <div className="bg-slate-800 p-1 rounded-2xl border border-slate-700">
-              <DementiaLanguageToggle showToggleOnly />
+              </button>
             </div>
 
-            {/* Exit Portal Button */}
-            <button
-              onClick={handleSignOut}
-              className="px-3.5 py-2 sm:px-4 sm:py-2.5 bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-200 text-xs font-bold rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer shrink-0"
-              title="Exit Patient Companion"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Exit</span>
-            </button>
-          </div>
-        </div>
-
-        {/* ── 0. PATIENT ORIENTATION & REASSURANCE IDENTITY CARD ── */}
-        <div className="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white rounded-3xl p-5 sm:p-7 border-2 border-emerald-200/90 shadow-md space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-emerald-200/60">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center font-black text-lg shrink-0 shadow-sm">
-                🧓
+            {/* Personalized Dignified Greeting */}
+            <div className="flex items-center gap-4 mt-1">
+              <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 shadow-md ring-2 ring-primary-fixed">
+                <img
+                  className="w-full h-full object-cover"
+                  alt={`Warm portrait photograph of ${patientName}`}
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfc4lbp1ww-QFAmEDXw75iZP1oBLACHHfz9lvHVodEQ_fveBXHsB5JdEPDcytRiBtBC3pYq4_tQMHI9IgkbbtlZ7C8rwQGJlS3S2rKe_b9PZBFMjpeYYrJEnwgRS3IkfSwfAJ_Vi4SgtSCSr6zvDA9bmangA8xLBtADE6GKKvco4vIdEUoW9zcjT0Mq16sr801bACuPtrtNAL8ZfNI5vU-cCXHnS2wRq4QjcRv01U"
+                />
               </div>
-              <div>
-                <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
-                  Welcome Home{patientName ? `, ${patientName}` : ''}
-                </h2>
-                <p className="text-xs text-slate-600">
-                  {locality ? (
-                    <>You are at home in <strong className="text-slate-800">{locality}</strong>. Your daily exercises and care plan are ready.</>
-                  ) : (
-                    <>Welcome to your daily health &amp; cognitive companion. Your exercises and care plan are ready.</>
-                  )}
+              <div className="flex flex-col min-w-0">
+                <h1 className="font-headline text-2xl sm:text-3xl text-primary tracking-tight font-bold truncate">
+                  {greetingData.text}
+                </h1>
+                <p className="text-sm sm:text-base text-on-surface-variant mt-0.5">
+                  Today is {todayDateString}
                 </p>
               </div>
             </div>
 
-            <span className="px-3 py-1 bg-emerald-200/80 text-emerald-900 rounded-full font-extrabold text-xs shrink-0">
-              Personalized Companion
+            {/* Gentle reassurance callout */}
+            <div className="mt-1 px-3.5 py-2.5 rounded-xl bg-surface-container-lowest/90 backdrop-blur-sm flex items-center gap-2.5 border border-outline-variant/20">
+              <span className="material-symbols-outlined text-secondary text-[22px] shrink-0">spa</span>
+              <span className="text-sm sm:text-base text-on-surface font-medium leading-relaxed">
+                You are safe at home in <strong className="text-primary font-bold">{locality}</strong> with {caretakerName}. Take your time today.
+              </span>
+            </div>
+          </div>
+
+          {/* Decorative Soft Morning Sun Glow SVG (Lightweight background art) */}
+          <div className="absolute -right-10 -bottom-10 pointer-events-none opacity-20">
+            <svg fill="none" height="220" viewBox="0 0 200 200" width="220" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="100" fill="#FDBA45" r="70"></circle>
+              <circle cx="100" cy="100" r="92" stroke="#FDBA45" strokeDasharray="8 8" strokeWidth="4"></circle>
+            </svg>
+          </div>
+        </section>
+
+        {/* 2. Quick Daily Feeling & Mood Check-in */}
+        <section className="w-full flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-headline text-lg sm:text-xl text-primary font-bold">
+              How are you feeling now?
+            </h2>
+            <span className="text-xs text-on-surface-variant font-medium">Tap one</span>
+          </div>
+
+          <div aria-label="Daily emotional feeling check-in" className="grid grid-cols-3 gap-3" role="radiogroup">
+            {/* Peaceful Option */}
+            <button
+              aria-checked={selectedFeeling === 'Peaceful'}
+              className={`min-h-[96px] p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 text-center transition-all cursor-pointer border ${
+                selectedFeeling === 'Peaceful'
+                  ? 'bg-primary-fixed border-primary/40 ring-2 ring-primary/30'
+                  : 'bg-surface-container-lowest border-outline-variant/30 hover:bg-surface-container'
+              }`}
+              onClick={() => setSelectedFeeling('Peaceful')}
+              role="radio"
+              type="button"
+            >
+              <span className="w-12 h-12 rounded-full bg-primary-fixed text-primary flex items-center justify-center">
+                <span className="material-symbols-outlined text-[30px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  sentiment_satisfied
+                </span>
+              </span>
+              <span className="font-headline text-xs sm:text-sm text-primary font-bold">Peaceful</span>
+            </button>
+
+            {/* Energetic Option */}
+            <button
+              aria-checked={selectedFeeling === 'Energetic'}
+              className={`min-h-[96px] p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 text-center transition-all cursor-pointer border ${
+                selectedFeeling === 'Energetic'
+                  ? 'bg-tertiary-fixed border-tertiary/40 ring-2 ring-tertiary/30'
+                  : 'bg-surface-container-lowest border-outline-variant/30 hover:bg-surface-container'
+              }`}
+              onClick={() => setSelectedFeeling('Energetic')}
+              role="radio"
+              type="button"
+            >
+              <span className="w-12 h-12 rounded-full bg-tertiary-fixed text-tertiary flex items-center justify-center">
+                <span className="material-symbols-outlined text-[30px]">local_florist</span>
+              </span>
+              <span className="font-headline text-xs sm:text-sm text-on-surface font-semibold">Energetic</span>
+            </button>
+
+            {/* Need Rest Option */}
+            <button
+              aria-checked={selectedFeeling === 'Need Rest'}
+              className={`min-h-[96px] p-3 rounded-2xl shadow-sm flex flex-col items-center justify-center gap-2 text-center transition-all cursor-pointer border ${
+                selectedFeeling === 'Need Rest'
+                  ? 'bg-secondary-fixed border-secondary/40 ring-2 ring-secondary/30'
+                  : 'bg-surface-container-lowest border-outline-variant/30 hover:bg-surface-container'
+              }`}
+              onClick={() => setSelectedFeeling('Need Rest')}
+              role="radio"
+              type="button"
+            >
+              <span className="w-12 h-12 rounded-full bg-secondary-fixed text-secondary flex items-center justify-center">
+                <span className="material-symbols-outlined text-[30px]">bedtime</span>
+              </span>
+              <span className="font-headline text-xs sm:text-sm text-on-surface font-semibold">Need Rest</span>
+            </button>
+          </div>
+        </section>
+
+        {/* 3. Today's Routine & Hydration Track (Large Accessible Checklist Cards) */}
+        <section className="w-full flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-[26px]">checklist</span>
+              <h2 className="font-headline text-lg sm:text-xl text-primary font-bold">
+                Today's Gentle Steps
+              </h2>
+            </div>
+            <span className="font-headline text-xs font-semibold px-3 py-1 rounded-full bg-primary-fixed text-primary">
+              {completedStepsCount} of 3 Done
             </span>
           </div>
 
-          {/* 4 Calming Orientation Tokens */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
-                Patient Name
-              </span>
-              <p className="text-sm font-extrabold text-slate-900 truncate">{patientName || 'Not Set'}</p>
+          <div className="flex flex-col gap-3">
+            {/* Step 1: Morning Tulsi Water */}
+            <div
+              onClick={() => setChecklist(prev => ({ ...prev, tulsiTea: !prev.tulsiTea }))}
+              className="w-full p-4 rounded-2xl bg-surface-container-lowest shadow-sm flex items-center justify-between gap-3 border border-outline-variant/30 cursor-pointer active:scale-[0.99] transition-transform"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
+                  checklist.tulsiTea ? 'bg-primary-fixed text-primary' : 'bg-surface-container text-on-surface-variant'
+                }`}>
+                  <span className="material-symbols-outlined text-[32px]" style={{ fontVariationSettings: checklist.tulsiTea ? "'FILL' 1" : "'FILL' 0" }}>
+                    {checklist.tulsiTea ? 'check_circle' : 'radio_button_unchecked'}
+                  </span>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-headline text-xs text-secondary font-bold uppercase tracking-wider">
+                    8:00 AM • {checklist.tulsiTea ? 'Completed' : 'Upcoming'}
+                  </span>
+                  <span className={`font-headline text-base sm:text-lg font-semibold truncate ${
+                    checklist.tulsiTea ? 'line-through text-outline' : 'text-on-surface'
+                  }`}>
+                    Morning Tulsi Tea &amp; Water
+                  </span>
+                  <span className="text-xs text-on-surface-variant">250ml glass taken with {caretakerName}</span>
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary shrink-0">
+                <span className="material-symbols-outlined text-[20px]">
+                  {checklist.tulsiTea ? 'done_all' : 'schedule'}
+                </span>
+              </div>
             </div>
 
-            <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
-                Age
-              </span>
-              <p className="text-sm font-extrabold text-slate-900">{patientAge ? `${patientAge} Years Old` : 'Not Set'}</p>
+            {/* Step 2: Midday Memory Exercise (Active Card with Direct Play Action) */}
+            <div className="w-full p-4 sm:p-5 rounded-2xl bg-surface-container-low shadow-md flex flex-col gap-3 border-2 border-primary/20">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-14 h-14 rounded-2xl bg-tertiary-fixed text-tertiary flex items-center justify-center shrink-0 shadow-sm">
+                    <span className="material-symbols-outlined text-[32px]">psychology</span>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-headline text-[11px] font-bold uppercase tracking-wider text-tertiary-container bg-tertiary-fixed px-2 py-0.5 rounded-md">
+                        Happening Now
+                      </span>
+                    </div>
+                    <h3 className="font-headline text-base sm:text-lg text-primary font-bold mt-0.5">
+                      Midday Memory Exercise
+                    </h3>
+                    <p className="text-xs sm:text-sm text-on-surface-variant">Family Moments &amp; PatternTrace</p>
+                  </div>
+                </div>
+                <span className="material-symbols-outlined text-primary text-[28px] animate-pulse shrink-0">
+                  radio_button_checked
+                </span>
+              </div>
+
+              <div className="w-full bg-surface-container-high rounded-xl p-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-[20px]">timer_off</span>
+                  <span className="text-xs sm:text-sm text-on-surface font-medium">No clock • Free play anytime</span>
+                </div>
+                <button
+                  onClick={() => setActiveGame('biographical')}
+                  className="font-headline text-xs sm:text-sm text-primary font-bold flex items-center gap-1 hover:underline cursor-pointer"
+                >
+                  Start Now <span className="material-symbols-outlined text-[16px]">play_circle</span>
+                </button>
+              </div>
             </div>
 
-            <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
-                Locality / Home
-              </span>
-              <p className="text-sm font-extrabold text-slate-900 truncate">{locality || 'Not Set'}</p>
-            </div>
-
-            <div className="p-3 bg-white rounded-2xl border border-emerald-100 shadow-sm min-w-0">
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase block mb-0.5">
-                Care Journey
-              </span>
-              <p className="text-sm font-extrabold text-emerald-800 truncate">{dementiaDuration || 'Not Set'}</p>
+            {/* Step 3: Courtyard Garden Walk */}
+            <div
+              onClick={() => setChecklist(prev => ({ ...prev, afternoonWalk: !prev.afternoonWalk }))}
+              className="w-full p-4 rounded-2xl bg-surface-container-lowest shadow-sm flex items-center justify-between gap-3 border border-outline-variant/30 cursor-pointer active:scale-[0.99] transition-transform"
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${
+                  checklist.afternoonWalk ? 'bg-primary-fixed text-primary' : 'bg-surface-container text-on-surface-variant'
+                }`}>
+                  <span className="material-symbols-outlined text-[32px]">nature_people</span>
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-headline text-xs text-on-surface-variant font-bold uppercase tracking-wider">
+                    3:30 PM • {checklist.afternoonWalk ? 'Completed' : 'Upcoming'}
+                  </span>
+                  <h3 className={`font-headline text-base sm:text-lg font-semibold truncate ${
+                    checklist.afternoonWalk ? 'line-through text-outline' : 'text-on-surface'
+                  }`}>
+                    Courtyard Garden Walk
+                  </h3>
+                  <span className="text-xs text-on-surface-variant">Gentle 15 minutes fresh air with walking stick</span>
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center text-on-surface-variant shrink-0">
+                <span className="material-symbols-outlined text-[20px]">
+                  {checklist.afternoonWalk ? 'done_all' : 'schedule'}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* ── 1. TODAY'S CARE SCHEDULE (Dementia-Friendly, Clear, Calming) ── */}
-        <div className="bg-white rounded-3xl p-5 sm:p-8 border-2 border-slate-200/90 shadow-md space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center font-bold shrink-0">
-                <Calendar className="w-5 h-5" />
+        {/* 4. Exercise Quick Tabs & Catalog */}
+        <section className="w-full flex flex-col gap-3" id="exercises-section">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary text-[26px]">psychology</span>
+              <h2 className="font-headline text-lg sm:text-xl text-primary font-bold">
+                Prescribed Cognitive Exercises
+              </h2>
+            </div>
+            <span className="font-headline text-xs text-on-surface-variant font-medium">4 Active Games</span>
+          </div>
+
+          {/* Quick Filter Buttons */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button
+              onClick={() => setActiveGame('biographical')}
+              className="p-3 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 hover:bg-primary-fixed hover:border-primary/40 flex items-center gap-2 text-left shadow-sm transition-all cursor-pointer active:scale-95"
+            >
+              <div className="w-9 h-9 rounded-xl bg-primary-fixed text-primary flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[20px]">family_restroom</span>
               </div>
-              <div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-slate-900">
-                  Today's Care Schedule for {patientName}
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Personalized care routine synchronized with caretaker {caretakerName}
-                </p>
+              <div className="min-w-0">
+                <span className="font-headline text-xs font-bold text-primary block truncate">1. Family</span>
+                <span className="text-[10px] text-on-surface-variant block truncate">Face Recall</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveGame('pattern')}
+              className="p-3 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 hover:bg-primary-fixed hover:border-primary/40 flex items-center gap-2 text-left shadow-sm transition-all cursor-pointer active:scale-95"
+            >
+              <div className="w-9 h-9 rounded-xl bg-primary-fixed text-primary flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[20px]">gesture</span>
+              </div>
+              <div className="min-w-0">
+                <span className="font-headline text-xs font-bold text-primary block truncate">2. PatternTrace</span>
+                <span className="text-[10px] text-on-surface-variant block truncate">Working Memory</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveGame('visual')}
+              className="p-3 rounded-2xl bg-secondary-fixed/50 border border-secondary/40 hover:bg-secondary-fixed flex items-center gap-2 text-left shadow-sm transition-all cursor-pointer active:scale-95 ring-1 ring-secondary/20"
+            >
+              <div className="w-9 h-9 rounded-xl bg-secondary-fixed text-secondary flex items-center justify-center shrink-0 shadow-sm">
+                <span className="material-symbols-outlined text-[20px]">shapes</span>
+              </div>
+              <div className="min-w-0">
+                <span className="font-headline text-xs font-bold text-secondary block truncate">3. Shape Match</span>
+                <span className="text-[10px] text-on-surface-variant block truncate">Fine Motor</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setActiveGame('routine')}
+              className="p-3 rounded-2xl bg-surface-container-lowest border border-outline-variant/30 hover:bg-primary-fixed hover:border-primary/40 flex items-center gap-2 text-left shadow-sm transition-all cursor-pointer active:scale-95"
+            >
+              <div className="w-9 h-9 rounded-xl bg-tertiary-fixed text-tertiary flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[20px]">schedule</span>
+              </div>
+              <div className="min-w-0">
+                <span className="font-headline text-xs font-bold text-primary block truncate">4. Routine</span>
+                <span className="text-[10px] text-on-surface-variant block truncate">Daily Steps</span>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        {/* 4a. Featured Cognitive Practice: Family Moments & Faces (Zero Timer Stress) */}
+        <section className="w-full bg-surface-container-lowest rounded-2xl p-5 shadow-md flex flex-col gap-4 border border-outline-variant/30" id="cognitive-card">
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-fixed text-primary">
+              <span className="material-symbols-outlined text-[18px]">verified</span>
+              <span className="font-headline text-xs font-bold">Tier 1 Core Recognition</span>
+            </div>
+            <span className="font-headline text-xs text-secondary font-bold">Active Today</span>
+          </div>
+
+          {/* Practice Image Preview with Cultural Context */}
+          <div className="relative w-full h-48 rounded-2xl overflow-hidden shadow-inner">
+            <img
+              className="w-full h-full object-cover"
+              alt="Heartwarming vintage photograph of an Indian family gathering during a festival celebration in courtyard"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuAo0iPKXER5k0GS2F1nzz6iE8jx0jpKfR3u9CAM1hBuGLlSEbwIyCUTQu6cXxLcB2nanymg2vxWk8_QhOjLaW8uGE54HV8exbuSqobssv1lMom7l5-NQekvw8JnGH3oTpqZ08_aDlTzHCmfsqX_UAkSktVslc318Tz3U01KrhJv1kCI4TIuUC-WSsmwL-nZ8F7ib84_t8Fno2CreMan4cEYknAHpPWjUFAVeBXbUxo"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/30 to-transparent flex items-end p-4">
+              <div className="text-on-primary">
+                <p className="font-headline text-lg sm:text-xl font-bold">Family Moments &amp; Faces</p>
+                <p className="text-xs sm:text-sm opacity-90">Recognize grandchildren, relatives &amp; fond memories</p>
               </div>
             </div>
+          </div>
 
-            <span className="px-3 py-1 bg-amber-100 text-amber-900 rounded-full font-bold text-xs">
-              Active Routine
+          {/* Reassurance Banner */}
+          <div className="flex items-center gap-3 p-3.5 rounded-xl bg-surface-container-low text-primary">
+            <div className="w-9 h-9 rounded-full bg-surface-container-lowest flex items-center justify-center shrink-0 text-primary">
+              <span className="material-symbols-outlined text-[22px]">hourglass_disabled</span>
+            </div>
+            <p className="text-xs sm:text-sm font-medium text-on-surface">
+              No rush or timers here. Take all the time you need. Each memory is a celebration.
+            </p>
+          </div>
+
+          {/* Accessible 64px Giant Primary Start Button */}
+          <button
+            onClick={() => setActiveGame('biographical')}
+            aria-label="Start practicing Family Moments and Faces exercise now"
+            className="w-full min-h-[64px] px-6 py-4 rounded-2xl bg-primary text-on-primary flex items-center justify-center gap-3 shadow-md hover:bg-primary-container active:scale-[0.98] transition-all cursor-pointer"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[28px]">play_circle</span>
+            <span className="font-headline text-base sm:text-lg font-bold">
+              Start Family Practice • ଆରମ୍ଭ କରନ୍ତୁ
             </span>
+          </button>
+        </section>
+
+        {/* 4b. Match the Shapes & Motor Game Card (Tier 2 Kinematics & Motor) */}
+        <section className="w-full bg-surface-container-lowest rounded-2xl p-5 shadow-md flex flex-col gap-3.5 border-2 border-secondary/30">
+          <div className="flex items-center justify-between">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary-fixed text-secondary">
+              <span className="material-symbols-outlined text-[18px]">shapes</span>
+              <span className="font-headline text-xs font-bold">Tier 2 • Fine Motor &amp; Tremor</span>
+            </div>
+            <span className="font-headline text-xs text-primary font-bold">Kinematic Scoring Active</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-1">
-            {/* Morning Hydration */}
-            <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center justify-between gap-3">
-              <div className="space-y-0.5 min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-800 block">
-                  Morning • 8:00 AM
-                </span>
-                <h3 className="text-sm font-bold text-emerald-950 truncate">
-                  Morning Hydration &amp; Tea
-                </h3>
-                <p className="text-xs text-emerald-700">Warm water, fresh fruit &amp; medicine</p>
-              </div>
-              <span className="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
-                ✓
-              </span>
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-secondary-fixed text-secondary flex items-center justify-center shrink-0 shadow-sm">
+              <span className="material-symbols-outlined text-[36px]">category</span>
             </div>
-
-            {/* Prescribed Memory Game */}
-            <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex items-center justify-between gap-3">
-              <div className="space-y-0.5 min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-indigo-800 block">
-                  Midday • 11:30 AM
-                </span>
-                <h3 className="text-sm font-bold text-indigo-950 truncate">
-                  PatternTrace Memory Play
-                </h3>
-                <p className="text-xs text-indigo-700">Gentle visuospatial puzzle session</p>
-              </div>
-              <span className="px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-900 text-[10px] font-bold shrink-0">
-                Now Playing
-              </span>
-            </div>
-
-            {/* Afternoon Stroll */}
-            <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center justify-between gap-3">
-              <div className="space-y-0.5 min-w-0">
-                <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-800 block">
-                  Afternoon • 4:30 PM
-                </span>
-                <h3 className="text-sm font-bold text-amber-950 truncate">
-                  Gentle Courtyard Stroll
-                </h3>
-                <p className="text-xs text-amber-800">15 minutes fresh air in {locality.split(',')[0] || 'the garden'}</p>
-              </div>
-              <span className="text-[10px] font-bold uppercase text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded shrink-0">
-                Scheduled
-              </span>
+            <div className="flex flex-col min-w-0">
+              <h3 className="font-headline text-lg sm:text-xl text-primary font-bold">
+                Match the Shapes &amp; Motor
+              </h3>
+              <p className="text-xs sm:text-sm text-on-surface-variant mt-1 leading-relaxed">
+                Drag geometric and traditional cultural shapes into matching slots. Measures fine motor stability, hand jitter kinematics, and cognitive association.
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* ── 2. PRESCRIBED COGNITIVE GAMES SECTION ── */}
-        <div className="space-y-4">
-          {/* Game Switcher Tabs */}
-          <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-slate-200/80 rounded-2xl border border-slate-300 shadow-inner">
-            <button
-              onClick={() => setActiveGameTab('biographical')}
-              className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
-                activeGameTab === 'biographical'
-                  ? 'bg-emerald-800 text-white shadow border border-emerald-900'
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
-              }`}
-            >
-              <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'biographical' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-              <span className="truncate">1. Family Memory</span>
-            </button>
+          <button
+            onClick={() => setActiveGame('visual')}
+            aria-label="Start practicing Match the Shapes game"
+            className="w-full min-h-[56px] px-6 py-3.5 rounded-xl bg-secondary text-on-secondary flex items-center justify-center gap-2.5 shadow-md hover:bg-secondary-container hover:text-on-secondary-container active:scale-[0.98] transition-all cursor-pointer font-headline text-sm sm:text-base font-bold"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-[24px]">play_circle</span>
+            <span>Play Shape Match • ଆକୃତି ମେଳାନ୍ତୁ</span>
+          </button>
+        </section>
 
-            <button
-              onClick={() => setActiveGameTab('pattern')}
-              className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
-                activeGameTab === 'pattern'
-                  ? 'bg-indigo-900 text-white shadow border border-indigo-950'
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
-              }`}
-            >
-              <Layers className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'pattern' ? 'text-indigo-300' : 'text-indigo-700'}`} />
-              <span className="truncate">2. PatternTrace</span>
-            </button>
-
-            <button
-              onClick={() => setActiveGameTab('visual')}
-              className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
-                activeGameTab === 'visual'
-                  ? 'bg-emerald-800 text-white shadow border border-emerald-900'
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
-              }`}
-            >
-              <Shapes className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'visual' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-              <span className="truncate">
-                {FEATURE_FLAGS.SHAPE_GAME_ENABLED ? '3. Match the Shapes' : '3. Picture Match'}
+        {/* 5. PatternTrace Tactile Paths Tile */}
+        <section className="w-full bg-surface-container-low rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3 border border-outline-variant/30">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-14 h-14 rounded-2xl bg-primary-fixed text-primary flex items-center justify-center shrink-0 shadow-sm">
+              <span className="material-symbols-outlined text-[30px]">gesture</span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-headline text-base sm:text-lg text-primary font-bold truncate">
+                PatternTrace™ Tactile Paths
               </span>
-            </button>
+              <span className="text-xs sm:text-sm text-on-surface-variant">Trace gentle Kolam designs &amp; working memory dots</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveGame('pattern')}
+            className="min-h-[52px] min-w-[72px] px-4 rounded-xl bg-surface-container-lowest text-primary font-headline text-sm font-bold shadow-sm hover:bg-primary-fixed active:scale-95 flex items-center justify-center shrink-0 cursor-pointer border border-outline-variant/20"
+            type="button"
+          >
+            Play
+          </button>
+        </section>
 
-            <button
-              onClick={() => setActiveGameTab('routine')}
-              className={`py-2.5 sm:py-3 px-2 sm:px-3 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
-                activeGameTab === 'routine'
-                  ? 'bg-emerald-800 text-white shadow border border-emerald-900'
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
-              }`}
+        {/* 5b. Daily Living & Routine Sequencing Tile */}
+        <section className="w-full bg-surface-container-low rounded-2xl p-4 sm:p-5 shadow-sm flex items-center justify-between gap-3 border border-outline-variant/30">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-14 h-14 rounded-2xl bg-tertiary-fixed text-tertiary flex items-center justify-center shrink-0 shadow-sm">
+              <span className="material-symbols-outlined text-[30px]">calendar_month</span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="font-headline text-base sm:text-lg text-primary font-bold truncate">
+                Daily Living &amp; Routine Sequence
+              </span>
+              <span className="text-xs sm:text-sm text-on-surface-variant">Sequence everyday steps (tea, walk, medicine) calmly</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveGame('routine')}
+            className="min-h-[52px] min-w-[72px] px-4 rounded-xl bg-surface-container-lowest text-primary font-headline text-sm font-bold shadow-sm hover:bg-primary-fixed active:scale-95 flex items-center justify-center shrink-0 cursor-pointer border border-outline-variant/20"
+            type="button"
+          >
+            Play
+          </button>
+        </section>
+
+        {/* 6. Caregiver Direct Link & Emergency SOS Banner */}
+        <section className="w-full bg-surface-container-lowest rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col gap-3 border border-outline-variant/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-primary-fixed-dim inline-block animate-ping"></span>
+              <span className="font-headline text-sm sm:text-base text-primary font-bold">
+                {caretakerName} is in the next room
+              </span>
+            </div>
+            <span className="text-xs text-on-surface-variant font-medium">{locality} home</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <a
+              aria-label={`Call primary family caretaker ${caretakerName}`}
+              className="min-h-[64px] px-4 rounded-xl bg-surface-container-low text-primary flex items-center justify-center gap-2.5 active:scale-95 transition-transform shadow-sm border border-outline-variant/20"
+              href={`tel:${caretakerPhone}`}
             >
-              <Calendar className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 ${activeGameTab === 'routine' ? 'text-emerald-300' : 'text-emerald-700'}`} />
-              <span className="truncate">4. Daily Routine</span>
-            </button>
+              <span className="material-symbols-outlined text-[26px] text-primary">call</span>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="font-headline text-xs sm:text-sm font-bold text-primary truncate">Call {caretakerName}</span>
+                <span className="text-[11px] text-on-surface-variant">Quick Dial</span>
+              </div>
+            </a>
+
+            <a
+              aria-label="Emergency senior medical helpline 108"
+              className="min-h-[64px] px-4 rounded-xl bg-error-container text-on-error-container flex items-center justify-center gap-2.5 active:scale-95 transition-transform shadow-sm"
+              href="tel:108"
+            >
+              <span className="material-symbols-outlined text-[26px] text-error">emergency</span>
+              <div className="flex flex-col text-left">
+                <span className="font-headline text-xs sm:text-sm font-bold text-on-error-container">Help 108</span>
+                <span className="text-[11px] text-on-error-container">Medical Assist</span>
+              </div>
+            </a>
           </div>
+        </section>
 
-          {/* Active Game Renderer */}
-          <div className="pt-2">
-            {activeGameTab === 'biographical' && (
-              <BiographicalRecognitionGame
-                patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
-                dialect={regionInfo.englishName || 'Odia'}
-                onExitToRest={onExitToHome}
-              />
-            )}
-
-            {activeGameTab === 'pattern' && (
-              <PatternTraceGame
-                patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
-                onComplete={() => setActiveGameTab('biographical')}
-                onExitToRest={onExitToHome}
-              />
-            )}
-
-            {activeGameTab === 'visual' && (
-              FEATURE_FLAGS.SHAPE_GAME_ENABLED ? (
-                <ShapeMatchGame
-                  patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
-                  dialect={regionInfo.englishName || 'Assamese'}
-                  onExitToRest={onExitToHome}
-                />
-              ) : (
-                <VisualSemanticGame
-                  dialect={regionInfo.englishName || 'Odia'}
-                  onGameComplete={() => setActiveGameTab('routine')}
-                />
-              )
-            )}
-
-            {activeGameTab === 'routine' && (
-              <DailyRoutineGame
-                dialect={regionInfo.englishName || 'Odia'}
-                onGameComplete={() => setActiveGameTab('biographical')}
-              />
-            )}
-          </div>
+        {/* 7. Grounding Thought / Calming Quote */}
+        <div className="w-full text-center py-2 px-4">
+          <p className="text-base sm:text-lg text-on-surface-variant italic font-serif">
+            "ସବୁଠାରୁ ବଡ଼ ଶକ୍ତି ହେଉଛି ଆମର ଶାନ୍ତି।"
+          </p>
+          <p className="font-headline text-xs text-outline mt-1 font-medium">
+            "The greatest strength is our quiet inner peace."
+          </p>
         </div>
       </div>
     );
   }
 
-  // ── UNREGISTERED / SIGN IN VIEW FOR PATIENT ──
+  // ── UNREGISTERED / SIGN IN VIEW FOR PATIENT (STITCH WARM DESIGN) ──
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-3xl border-2 border-slate-200/90 shadow-xl p-6 sm:p-8 space-y-6 my-6">
+    <div className="w-full max-w-md mx-auto bg-surface-container-lowest rounded-3xl border border-outline-variant/40 shadow-xl p-6 sm:p-8 space-y-6 my-6 font-body">
       <div className="text-center">
-        <div className="w-14 h-14 bg-emerald-50 text-emerald-700 rounded-2xl mx-auto flex items-center justify-center mb-3 border border-emerald-100 shadow-sm">
-          <Heart className="w-7 h-7 fill-emerald-700" />
+        <div className="w-16 h-16 bg-primary-fixed text-primary rounded-2xl mx-auto flex items-center justify-center mb-3 shadow-sm">
+          <span className="material-symbols-outlined text-[32px]">spa</span>
         </div>
-        <h2 className="text-2xl font-black text-slate-900">
+        <h2 className="font-headline text-2xl font-bold text-primary">
           Patient Companion Sign In
         </h2>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs sm:text-sm text-on-surface-variant mt-1.5 leading-relaxed">
           {patientName ? (
-            <>Sign in to enter the personalized companion portal for <strong className="text-emerald-800">{patientName} {patientAge ? `(Age ${patientAge})` : ''}</strong>.</>
+            <>Sign in to enter the personalized companion portal for <strong className="text-primary font-bold">{patientName} (Age {patientAge})</strong>.</>
           ) : (
             <>Sign in with your caretaker credentials to enter your daily companion portal.</>
           )}
@@ -431,56 +799,68 @@ export function PatientPortal({ onExitToHome }) {
       </div>
 
       {errorMsg && (
-        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-semibold flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+        <div className="p-3.5 bg-error-container text-on-error-container rounded-xl text-xs font-semibold flex items-center gap-2">
+          <span className="material-symbols-outlined text-[20px] text-error shrink-0">error</span>
           <span>{errorMsg}</span>
         </div>
       )}
 
       <form onSubmit={handlePatientSubmit} className="space-y-4">
         <div>
-          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+          <label className="block font-headline text-[11px] font-bold text-on-surface-variant uppercase mb-1">
             Caretaker's Email Address
           </label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+            <span className="material-symbols-outlined text-outline absolute left-3.5 top-3 text-[20px]">mail</span>
             <input
               type="email"
               required
               value={caretakerEmail}
               onChange={(e) => setCaretakerEmail(e.target.value)}
-              placeholder="Caretaker Email Address"
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition"
+              placeholder="caretaker@example.com"
+              className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl py-3 pl-11 pr-4 text-xs sm:text-sm text-on-surface focus:border-primary focus:bg-surface-container-lowest focus:outline-none transition"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+          <label className="block font-headline text-[11px] font-bold text-on-surface-variant uppercase mb-1">
             Patient Access Password
           </label>
           <div className="relative">
-            <KeyRound className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+            <span className="material-symbols-outlined text-outline absolute left-3.5 top-3 text-[20px]">lock</span>
             <input
               type="password"
               required
               value={patientPassword}
               onChange={(e) => setPatientPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 pl-10 pr-4 text-xs font-medium text-slate-900 focus:border-emerald-600 focus:bg-white focus:outline-none transition"
+              className="w-full bg-surface-container-low border border-outline-variant/60 rounded-xl py-3 pl-11 pr-4 text-xs sm:text-sm text-on-surface focus:border-primary focus:bg-surface-container-lowest focus:outline-none transition"
             />
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs py-3 px-4 rounded-xl shadow flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
-        >
-          <span>{loading ? 'Verifying...' : (patientName ? `Sign In as ${patientName}` : 'Sign In to Companion')}</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex flex-col gap-2 pt-1">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full min-h-[52px] bg-primary hover:bg-primary-container text-on-primary font-headline font-bold text-sm rounded-xl shadow flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
+          >
+            <span>{loading ? 'Verifying...' : (patientName ? `Sign In as ${patientName}` : 'Sign In to Companion')}</span>
+            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowSignInForm(false)}
+            className="w-full py-2.5 text-xs font-headline font-semibold text-on-surface-variant hover:text-on-surface hover:underline cursor-pointer"
+          >
+            Return to Companion Portal
+          </button>
+        </div>
       </form>
     </div>
   );
 }
+
+export default PatientPortal;
