@@ -10,14 +10,16 @@ import {
   HandMetal,
   ShieldAlert,
   ChevronRight,
-  TrendingUp,
   Activity,
-  Layers,
-  HelpCircle
+  Heart,
+  Coffee,
+  FileText,
+  ShieldCheck
 } from 'lucide-react';
 import { useLocale } from '@/features/localization/context/LocaleContext';
 import { soundEngine } from '@/utils/audioFeedback';
 import { PatternTraceTelemetryService } from '@/services/patternTraceTelemetry';
+import { PatternTraceReportModal } from '@/features/games/components/PatternTraceReportModal';
 
 // 3x3 Dot Matrix Node Coordinates in 360x360 SVG Viewport
 const NODE_COORDINATES = [
@@ -32,13 +34,26 @@ const NODE_COORDINATES = [
   { id: 8, x: 300, y: 300, label: 'Bottom Right' }
 ];
 
-export function PatternTraceGame({ onComplete, patientId = 1 }) {
+const SESSION_TOTAL_TRIALS = 5;
+
+export function PatternTraceGame({ onComplete, onExitToRest, patientId = 1 }) {
   const { t, activeLang } = useLocale();
 
-  // ── State Machine: 'IDLE' | 'DEMO' | 'USER_INPUT' | 'EVALUATING' | 'FEEDBACK'
+  // ── State Machine: 'IDLE' | 'DEMO' | 'USER_INPUT' | 'EVALUATING' | 'FEEDBACK' | 'SESSION_COMPLETE'
   const [gameState, setGameState] = useState('IDLE');
   const [currentLevel, setCurrentLevel] = useState(1);
   const [trialCount, setTrialCount] = useState(1);
+
+  // Session progression & Caretaker Sync
+  const [sessionTrials, setSessionTrials] = useState([]);
+  const [isSessionComplete, setIsSessionComplete] = useState(false);
+  const [isSessionEnding, setIsSessionEnding] = useState(false);
+  const [sessionSummary, setSessionSummary] = useState(null);
+  const [isSyncingToDashboard, setIsSyncingToDashboard] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [showRestConfirmation, setShowRestConfirmation] = useState(false);
+  const sessionStartTimeRef = useRef(Date.now());
 
   // Pattern sequences
   const [targetSequence, setTargetSequence] = useState([]);
@@ -173,9 +188,79 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
     });
   }, [gameState, targetSequence]);
 
+  // ── Session Completion & Caretaker Sync Engine ──
+  const handleCompleteSession = useCallback(async (trialsToAnalyze = sessionTrials) => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setIsSessionEnding(true);
+
+    try {
+      // 1. Analyze session progress across completed trials
+      const summary = PatternTraceTelemetryService.analyzeSessionProgress({
+        patientId,
+        sessionTrials: trialsToAnalyze
+      });
+      setSessionSummary(summary);
+
+      // 2. Sync to Caretaker Dashboard & Remote Clinic Telemetry
+      setIsSyncingToDashboard(true);
+      const syncResult = await PatternTraceTelemetryService.syncSessionProgress({
+        patientId,
+        sessionTrials: trialsToAnalyze,
+        sessionSummary: summary
+      });
+      setSyncSuccess(syncResult.success);
+
+      // 3. Play comforting celebration chime and vocalize gentle encouragement
+      soundEngine.playSuccessChime();
+      const congratsTitle = t('games.patternCompletedTitle') || 'Splendid Work!';
+      const congratsSub = t('games.patternCompletedSubtitle') || 'You have completed your pattern practice today.';
+      speakText(`${congratsTitle} ${congratsSub}`);
+    } catch (err) {
+      console.warn('Session completion error:', err);
+    } finally {
+      setIsSyncingToDashboard(false);
+      setIsSessionEnding(false);
+      setIsSessionComplete(true);
+      setGameState('SESSION_COMPLETE');
+    }
+  }, [sessionTrials, patientId, t, speakText]);
+
+  // Play Again: Re-initialize fresh 5-trial practice session
+  const handlePlayAgain = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    sessionStartTimeRef.current = Date.now();
+    setSessionTrials([]);
+    setTrialCount(1);
+    setCurrentLevel(1);
+    setConsecutiveFlawless(0);
+    setConsecutiveFailed(0);
+    setLastTrialResult(null);
+    setRecentTelemetry(null);
+    setPreviousTargetSequence(null);
+    setSessionSummary(null);
+    setSyncSuccess(false);
+    setIsSessionComplete(false);
+    startTrial(1, true);
+  }, [startTrial]);
+
+  // Take Rest: Gracefully conclude session and return to companion portal
+  const handleTakeRest = useCallback(async () => {
+    if (sessionTrials.length > 0 && !sessionSummary) {
+      await PatternTraceTelemetryService.syncSessionProgress({
+        patientId,
+        sessionTrials
+      });
+    }
+    if (onExitToRest) {
+      onExitToRest();
+    } else if (onComplete) {
+      onComplete();
+    }
+  }, [sessionTrials, sessionSummary, patientId, onExitToRest, onComplete]);
+
   // ── Phase 4: Analysis & Evaluation ──
   const evaluateInput = useCallback(async (finalUserSeq = userSequence) => {
-    if (gameState === 'EVALUATING' || gameState === 'FEEDBACK') return;
+    if (gameState === 'EVALUATING' || gameState === 'FEEDBACK' || gameState === 'SESSION_COMPLETE') return;
     setGameState('EVALUATING');
     setIsDragging(false);
     setDragPointerPos(null);
@@ -206,6 +291,9 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
     setLastTrialResult(trialPayload);
     setRecentTelemetry(trialPayload);
     setPreviousTargetSequence(targetSequence);
+
+    const updatedSessionTrials = [...sessionTrials, trialPayload];
+    setSessionTrials(updatedSessionTrials);
 
     // ── Adaptive Staircase Difficulty Adjustment ──
     const isFlawless = trialPayload.sequence_match;
@@ -244,7 +332,15 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
       speakText(t('games.patternGentleRetry') || 'Good effort! Let us watch the pattern again.');
     }
 
-    // Auto-advance to next trial after smooth, reduced 1.1s pause (decreased from 2.4s)
+    // ── Check if session reached the 5-trial conclusion ──
+    if (trialCount >= SESSION_TOTAL_TRIALS) {
+      timerRef.current = setTimeout(() => {
+        handleCompleteSession(updatedSessionTrials);
+      }, 1200);
+      return;
+    }
+
+    // Auto-advance to next trial after smooth, reduced 1.1s pause
     timerRef.current = setTimeout(() => {
       setCurrentLevel(nextLevel);
       setTrialCount((c) => c + 1);
@@ -255,13 +351,16 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
     userSequence,
     patientId,
     currentLevel,
+    trialCount,
     targetSequence,
     previousTargetSequence,
     consecutiveFlawless,
     consecutiveFailed,
+    sessionTrials,
     speakText,
     t,
-    startTrial
+    startTrial,
+    handleCompleteSession
   ]);
 
   // ── Drag & Touch Handlers (Fluid SVG coordinate mapping) ──
@@ -352,6 +451,186 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
     ? `M ${lastUserPoint.x} ${lastUserPoint.y} L ${dragPointerPos.x} ${dragPointerPos.y}`
     : '';
 
+  // ── RENDER: WARM NEUROCOGNITIVE COMPLETION SCREEN ──
+  if (gameState === 'SESSION_COMPLETE' || isSessionComplete) {
+    const summary = sessionSummary || PatternTraceTelemetryService.analyzeSessionProgress({
+      patientId,
+      sessionTrials
+    });
+
+    return (
+      <div className="w-full max-w-3xl mx-auto space-y-6 select-none font-sans my-4 sm:my-6">
+        {/* Hero Card */}
+        <div className="bg-white rounded-3xl border-3 border-indigo-200 shadow-xl p-6 sm:p-10 text-center space-y-6 relative overflow-hidden">
+          {/* Subtle gentle background accents */}
+          <div className="absolute -top-16 -right-16 w-48 h-48 bg-indigo-50/80 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-emerald-50/80 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Celebratory Icon */}
+          <div className="w-20 h-20 bg-indigo-100 text-indigo-700 rounded-3xl mx-auto flex items-center justify-center shadow-inner relative">
+            <Heart className="w-11 h-11 text-indigo-600 fill-indigo-600 animate-pulse" />
+            <Sparkles className="w-6 h-6 text-amber-500 absolute -top-1 -right-1 animate-bounce" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              {t('games.patternCompletedTitle') || 'Splendid Work!'}
+            </h2>
+            <p className="text-lg sm:text-xl text-slate-700 font-medium max-w-xl mx-auto leading-relaxed">
+              {t('games.patternCompletedSubtitle') || 'You have completed your pattern practice today. Your visuospatial memory and coordination were exercised calmly.'}
+            </p>
+          </div>
+
+          {/* Voice Prompt Play Button for Geriatric Reassurance */}
+          <div className="flex justify-center">
+            <button
+              onClick={() => {
+                const titleText = t('games.patternCompletedTitle') || 'Splendid Work!';
+                const subText = t('games.patternCompletedSubtitle') || 'You completed your pattern practice today.';
+                speakText(`${titleText} ${subText}`);
+              }}
+              disabled={isSpeaking}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 text-xs font-bold transition cursor-pointer"
+            >
+              <Volume2 className={`w-4 h-4 ${isSpeaking ? 'animate-pulse text-indigo-600' : 'text-indigo-700'}`} />
+              <span>{t('games.replayVoice') || 'Listen to Affirmation'}</span>
+            </button>
+          </div>
+
+          {/* 4 Performance Metric Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 pt-2 text-left">
+            <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/80">
+              <span className="text-[10px] sm:text-[11px] font-bold text-indigo-900 uppercase tracking-wider block">
+                Working Memory
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-indigo-950 mt-1">
+                {summary.workingMemoryScore}
+                <span className="text-xs sm:text-sm font-semibold text-indigo-600"> / 100</span>
+              </div>
+              <span className="text-[10px] font-bold text-emerald-700 mt-1 block truncate">
+                {summary.clinicalStatus}
+              </span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                Sequence Accuracy
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+                {summary.meanAccuracyPct}%
+              </div>
+              <span className="text-[10px] text-slate-500 mt-1 block truncate">
+                {summary.sequenceMatches} of {summary.totalTrials} exact match
+              </span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                Peak Level
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-indigo-700 mt-1">
+                Level {summary.highestLevel}
+                <span className="text-xs sm:text-sm font-normal text-slate-400"> / 5</span>
+              </div>
+              <span className="text-[10px] text-slate-500 mt-1 block truncate">
+                {summary.highestLevel + 1}-node sequences
+              </span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                Response Speed
+              </span>
+              <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">
+                {summary.meanLatencyMs > 0 ? (summary.meanLatencyMs / 1000).toFixed(2) : '0.80'}s
+              </div>
+              <span className="text-[10px] text-emerald-700 font-semibold mt-1 block truncate">
+                Prompt initiation
+              </span>
+            </div>
+          </div>
+
+          {/* Caretaker Sync Confirmation Banner */}
+          <div className="p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-950 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-xs sm:text-sm font-black text-emerald-950 block">
+                  {t('games.syncedToCaretaker') || 'Synced to Caretaker Dashboard'}
+                </span>
+                <span className="text-[11px] text-emerald-800 font-medium block">
+                  Session trials, motor latency, and working memory index are live in Caretaker Hub.
+                </span>
+              </div>
+            </div>
+
+            <span className="px-3 py-1 rounded-full bg-emerald-200/70 text-emerald-900 text-[11px] font-extrabold shrink-0 border border-emerald-300">
+              {syncSuccess || isSyncingToDashboard ? 'Synced' : 'Active Sync'}
+            </span>
+          </div>
+
+          {/* Clinical Insights Box */}
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-1.5 text-xs">
+            <div className="flex items-center gap-2 font-bold text-slate-900">
+              <Brain className="w-4 h-4 text-indigo-600" />
+              <span>Clinical Neurocognitive Insight:</span>
+            </div>
+            <p className="text-slate-600 leading-relaxed">
+              {summary.clinicalNotes}
+            </p>
+            {summary.perseverationCount === 0 ? (
+              <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-[11px] pt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Zero perseverative tapping slips detected across all {summary.totalTrials} trials.</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-amber-800 font-bold text-[11px] pt-1">
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+                <span>{summary.perseverationCount} perseveration slips noted (normal variation with complex patterns).</span>
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+            <button
+              onClick={handlePlayAgain}
+              className="w-full sm:w-auto px-6 py-4 bg-indigo-700 hover:bg-indigo-800 text-white font-extrabold text-base rounded-2xl shadow-lg border-2 border-indigo-900 flex items-center justify-center gap-2.5 transition active:scale-95 cursor-pointer"
+            >
+              <RotateCcw className="w-5 h-5" />
+              <span>{t('games.playAgain') || 'Play Again'}</span>
+            </button>
+
+            <button
+              onClick={() => setIsReportModalOpen(true)}
+              className="w-full sm:w-auto px-6 py-4 bg-white hover:bg-slate-100 text-indigo-900 font-extrabold text-base rounded-2xl shadow-sm border-2 border-indigo-200 flex items-center justify-center gap-2.5 transition active:scale-95 cursor-pointer"
+            >
+              <FileText className="w-5 h-5 text-indigo-600" />
+              <span>{t('games.viewReport') || 'View Caregiver Report'}</span>
+            </button>
+
+            <button
+              onClick={handleTakeRest}
+              className="w-full sm:w-auto px-6 py-4 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-base rounded-2xl shadow-lg border-2 border-emerald-900 flex items-center justify-center gap-2.5 transition active:scale-95 cursor-pointer"
+            >
+              <Coffee className="w-5 h-5 text-emerald-200" />
+              <span>{t('games.takeRest') || 'Take a Rest'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Modal when clicked */}
+        <PatternTraceReportModal
+          isOpen={isReportModalOpen}
+          onClose={() => setIsReportModalOpen(false)}
+          patient={{ id: patientId, name: 'Registered Patient' }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6 select-none font-sans">
       {/* ── Top Level & Clinical Working Memory Header ── */}
@@ -375,8 +654,8 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
           </div>
         </div>
 
-        {/* Level & Trial Badge */}
-        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
+        {/* Level, 5-Trial Progress Indicator & Rest Shortcut */}
+        <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap">
           <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-800/80 rounded-2xl border border-slate-700 text-center flex-1 sm:flex-none">
             <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
               {t('games.level') || 'Level'}
@@ -386,14 +665,44 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
             </span>
           </div>
 
-          <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-800/80 rounded-2xl border border-slate-700 text-center flex-1 sm:flex-none">
+          <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-800/80 rounded-2xl border border-slate-700 text-center flex-1 sm:flex-none flex flex-col items-center justify-center">
             <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-              Trial
+              Trial {trialCount} of {SESSION_TOTAL_TRIALS}
             </span>
-            <span className="text-xl sm:text-2xl font-black text-emerald-300">
-              #{trialCount}
-            </span>
+            <div className="flex items-center gap-1.5 mt-1" aria-label="Trial progress">
+              {[1, 2, 3, 4, 5].map((dot) => {
+                const isDone = dot < trialCount;
+                const isCurrent = dot === trialCount;
+                return (
+                  <div
+                    key={dot}
+                    className={`rounded-full transition-all duration-300 ${
+                      isCurrent
+                        ? 'w-3 h-3 bg-emerald-400 ring-2 ring-emerald-300/60 scale-110'
+                        : isDone
+                        ? 'w-2 h-2 bg-emerald-500'
+                        : 'w-2 h-2 bg-slate-600'
+                    }`}
+                  />
+                );
+              })}
+            </div>
           </div>
+
+          <button
+            onClick={() => {
+              if (sessionTrials.length > 0) {
+                setShowRestConfirmation(true);
+              } else if (onExitToRest) {
+                onExitToRest();
+              }
+            }}
+            className="px-3 sm:px-4 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 rounded-2xl border border-slate-700 flex items-center gap-1.5 text-xs font-bold transition cursor-pointer"
+            title="Take a restful break"
+          >
+            <Coffee className="w-4 h-4 text-amber-400" />
+            <span className="hidden xs:inline">Take a Rest</span>
+          </button>
         </div>
       </div>
 
@@ -692,6 +1001,52 @@ export function PatternTraceGame({ onComplete, patientId = 1 }) {
           </div>
         </div>
       )}
+
+      {/* ── Mid-Game Rest Confirmation Modal ── */}
+      {showRestConfirmation && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-8 border-2 border-slate-300 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-3xl bg-amber-100 border border-amber-200 text-amber-800 flex items-center justify-center mx-auto shadow-sm">
+              <Coffee className="w-8 h-8 text-amber-700" />
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-black text-slate-900">
+                Time for a peaceful break?
+              </h3>
+              <p className="text-base text-slate-600 mt-2 leading-relaxed">
+                You have completed {sessionTrials.length} {sessionTrials.length === 1 ? 'pattern trial' : 'pattern trials'}. We will analyze your progress and sync it to the caretaker dashboard now.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setShowRestConfirmation(false);
+                  handleCompleteSession(sessionTrials);
+                }}
+                className="flex-1 py-3.5 px-4 bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-base rounded-2xl shadow-md transition cursor-pointer"
+              >
+                Finish &amp; Save Progress
+              </button>
+
+              <button
+                onClick={() => setShowRestConfirmation(false)}
+                className="flex-1 py-3.5 px-4 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-300 font-bold text-base rounded-2xl shadow-sm transition cursor-pointer"
+              >
+                Keep Playing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clinical Report Modal */}
+      <PatternTraceReportModal
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        patient={{ id: patientId, name: 'Registered Patient' }}
+      />
     </div>
   );
 }

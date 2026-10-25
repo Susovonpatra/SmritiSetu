@@ -1010,7 +1010,7 @@ export function UnifiedAnalyticsDashboard({
       {selectedGameView === 'pattern' && (
         <div className="space-y-6 sm:space-y-8">
           {!hasPtData ? (
-            <div className="bg-white rounded-3xl p-8 sm:p-12 border-2 border-slate-200/90 shadow-md text-center space-y-3">
+            <div className="bg-white rounded-3xl p-8 sm:p-12 border-2 border-slate-200/90 shadow-md text-center space-y-4">
               <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center mx-auto border border-indigo-200">
                 <Layers className="w-7 h-7" />
               </div>
@@ -1018,6 +1018,18 @@ export function UnifiedAnalyticsDashboard({
               <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
                 Play PatternTrace™ Memory in the Patient Portal to begin tracking working memory staircase progression, node accuracy, and motor latency.
               </p>
+              {onRefresh && (
+                <div className="pt-2">
+                  <button
+                    onClick={onRefresh}
+                    disabled={isLoading}
+                    className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs rounded-xl border border-indigo-200 shadow-sm inline-flex items-center gap-2 transition cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-indigo-600 ${isLoading ? 'animate-spin' : ''}`} />
+                    <span>Check for New Trials</span>
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -1036,9 +1048,15 @@ export function UnifiedAnalyticsDashboard({
                     </p>
                   </div>
 
-                  <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 text-xs font-bold border border-indigo-300">
-                    Current Level {ptCurrentLevel} (Max {ptMaxLevel})
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full bg-indigo-100 text-indigo-900 text-xs font-bold border border-indigo-300">
+                      Current Level {ptCurrentLevel} (Max {ptMaxLevel})
+                    </span>
+                    <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold border border-emerald-300 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>{patternAnalytics?.totalTrials || 0} Trials Synced</span>
+                    </span>
+                  </div>
                 </div>
 
                 <div className="h-56 w-full">
@@ -1094,6 +1112,119 @@ export function UnifiedAnalyticsDashboard({
                   </div>
                 </div>
               </div>
+
+              {/* Working Memory Composite & Clinical Interpretation */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Working Memory Index
+                    </span>
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <span className="text-4xl font-black text-indigo-900">
+                        {patternAnalytics?.compositeScore || 0}
+                      </span>
+                      <span className="text-xs text-slate-500 font-bold">/ 100</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-600">
+                    Weighted across sequence recall, motor initiation speed, and perseveration avoidance.
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 bg-white rounded-3xl p-5 border-2 border-slate-200 shadow-sm flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                        Clinical Cognitive Status
+                      </span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                        patternAnalytics?.clinicalBadgeColor === 'emerald' ? 'bg-emerald-100 text-emerald-900 border-emerald-300' :
+                        patternAnalytics?.clinicalBadgeColor === 'amber' ? 'bg-amber-100 text-amber-900 border-amber-300' :
+                        'bg-rose-100 text-rose-900 border-rose-300'
+                      }`}>
+                        {patternAnalytics?.clinicalStatus || 'Stable'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                      {patternAnalytics?.clinicalNotes || 'Visuospatial working memory trajectory is within healthy parameters.'}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span className="text-slate-500">
+                      Peak Span: <strong>Level {patternAnalytics?.maxLevelAchieved || 1}</strong>
+                    </span>
+                    <button
+                      onClick={onOpenReportModal}
+                      className="font-bold text-indigo-700 hover:text-indigo-900 underline cursor-pointer"
+                    >
+                      View Full Clinical Report →
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Table of Recorded Trials */}
+              {patternAnalytics?.trials && patternAnalytics.trials.length > 0 && (
+                <div className="bg-white rounded-3xl p-5 sm:p-7 border-2 border-slate-200 shadow-sm space-y-3">
+                  <h4 className="text-sm sm:text-base font-black text-slate-900">
+                    Recent PatternTrace™ Trials
+                  </h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-200 text-slate-500 uppercase font-bold text-[10px]">
+                          <th className="py-2.5 px-3">Trial ID</th>
+                          <th className="py-2.5 px-3">Level</th>
+                          <th className="py-2.5 px-3 text-center">Sequence Match</th>
+                          <th className="py-2.5 px-3 text-center">Spatial Match</th>
+                          <th className="py-2.5 px-3 text-center">Latency</th>
+                          <th className="py-2.5 px-3">Perseveration</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {patternAnalytics.trials.slice(0, 8).map((tr, idx) => (
+                          <tr key={tr.trial_id || idx} className="hover:bg-slate-50/70">
+                            <td className="py-2.5 px-3 font-mono text-[11px] text-slate-600">
+                              {tr.trial_id ? tr.trial_id.slice(-8) : `#${idx + 1}`}
+                            </td>
+                            <td className="py-2.5 px-3 font-bold text-indigo-950">
+                              Level {tr.level || 1}
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              {tr.sequence_match ? (
+                                <span className="text-emerald-700 font-bold">✓ Match</span>
+                              ) : (
+                                <span className="text-slate-400">Partial</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              {tr.spatial_match ? (
+                                <span className="text-emerald-700 font-bold">✓ Grid</span>
+                              ) : (
+                                <span className="text-slate-400">-</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-semibold text-slate-700">
+                              {tr.initiation_latency_ms || 800}ms
+                            </td>
+                            <td className="py-2.5 px-3">
+                              {tr.perseveration_detected ? (
+                                <span className="px-2 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] font-bold">
+                                  Prior Pattern Repetition
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 text-[10px]">None</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

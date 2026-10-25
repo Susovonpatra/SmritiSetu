@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from './client.js';
 
 export const telemetryApi = {
   getDrift: (patientId = 1) =>

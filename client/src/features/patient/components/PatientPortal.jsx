@@ -370,7 +370,7 @@ export function PatientPortal({ onExitToHome }) {
           <div className="pt-2">
             {activeGameTab === 'biographical' && (
               <BiographicalRecognitionGame
-                patientId={patientSession?.id || patientProfile?.id || 1}
+                patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
                 dialect={regionInfo.englishName || 'Odia'}
                 onExitToRest={onExitToHome}
               />
@@ -378,15 +378,16 @@ export function PatientPortal({ onExitToHome }) {
 
             {activeGameTab === 'pattern' && (
               <PatternTraceGame
-                patientId={1}
+                patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
                 onComplete={() => setActiveGameTab('biographical')}
+                onExitToRest={onExitToHome}
               />
             )}
 
             {activeGameTab === 'visual' && (
               FEATURE_FLAGS.SHAPE_GAME_ENABLED ? (
                 <ShapeMatchGame
-                  patientId={patientSession?.id || patientProfile?.id || 1}
+                  patientId={patientSession?.patient_id || patientSession?.id || patientProfile?.id || 1}
                   dialect={regionInfo.englishName || 'Assamese'}
                   onExitToRest={onExitToHome}
                 />

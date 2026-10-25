@@ -30,15 +30,12 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
       const patternData = await PatternTraceTelemetryService.getLongitudinalAnalytics(patientId);
       setPatternAnalytics(patternData);
 
-      // Group PatternTrace trials into daily trend map
+      // Group PatternTrace trials into daily trend map using resilient lookup
       const patternTrendMap = new Map();
       try {
-        if (db.patterntrace_trials) {
-          const ptTrials = await db.patterntrace_trials
-            .where('patient_id')
-            .equals(Number(patientId) || 1)
-            .toArray();
+        const ptTrials = await PatternTraceTelemetryService.getTrials(patientId);
 
+        if (ptTrials && ptTrials.length > 0) {
           const ptDailyGroups = new Map();
           ptTrials.forEach(t => {
             if (!t.timestamp) return;
@@ -101,6 +98,14 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
         fatigue: bioFatigue,
         spatial: bioSpatial
       });
+
+      // Group Biographical memory trials into daily trend map
+      const bioTrendMap = new Map();
+      if (bioTrends && bioTrends.length > 0) {
+        bioTrends.forEach(bt => {
+          if (bt.dateKey) bioTrendMap.set(bt.dateKey, bt);
+        });
+      }
 
       // 3. Fetch Shape Match Progress Analytics (Game 3)
       let shapeData = null;
@@ -373,21 +378,54 @@ export function useCaretakerAnalytics(patientId = 1, trigger = null) {
     loadData();
   }, [loadData, trigger]);
 
-  // Real-time listener: refresh analytics immediately when any game is completed or window gains focus
+  // Real-time listener: refresh analytics immediately when any game is completed, tab becomes visible, or storage changes
   useEffect(() => {
     const handleGameCompleted = () => {
       loadData();
     };
 
+    const handleVisibilityChange = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        loadData();
+      }
+    };
+
+    const handleStorageChange = (e) => {
+      if (e.key && e.key.includes('smriti_')) {
+        loadData();
+      }
+    };
+
+    let channel = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        channel = new BroadcastChannel('smritisetu_sync');
+        channel.onmessage = () => {
+          loadData();
+        };
+      }
+    } catch (e) {}
+
     if (typeof window !== 'undefined') {
       window.addEventListener('smritisetu:game_completed', handleGameCompleted);
       window.addEventListener('focus', handleGameCompleted);
+      window.addEventListener('storage', handleStorageChange);
+    }
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
     }
 
     return () => {
+      if (channel) {
+        channel.close();
+      }
       if (typeof window !== 'undefined') {
         window.removeEventListener('smritisetu:game_completed', handleGameCompleted);
         window.removeEventListener('focus', handleGameCompleted);
+        window.removeEventListener('storage', handleStorageChange);
+      }
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
       }
     };
   }, [loadData]);

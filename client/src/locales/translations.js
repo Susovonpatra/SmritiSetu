@@ -69,7 +69,13 @@ export const TRANSLATIONS = {
       patternGentleRetry: 'ଭଲ ପ୍ରୟାସ! ଆସନ୍ତୁ ପୁନର୍ବାର ଦେଖିବା।',
       clearPattern: 'ସଫା କରନ୍ତୁ',
       submitPattern: 'ଯାଞ୍ଚ କରନ୍ତୁ',
-      level: 'ସ୍ତର'
+      level: 'ସ୍ତର',
+      patternCompletedTitle: 'ଚମତ୍କାର କାର୍ଯ୍ୟ!',
+      patternCompletedSubtitle: 'ଆପଣ ଆଜିର ସମସ୍ତ ପ୍ୟାଟର୍ଣ୍ଣ ଅଭ୍ୟାସ ସଫଳତାର ସହ ସମ୍ପୂର୍ଣ୍ଣ କରିଛନ୍ତି।',
+      playAgain: 'ଆଉ ଥରେ ଖେଳନ୍ତୁ',
+      takeRest: 'ଟିକେ ବିଶ୍ରାମ ନିଅନ୍ତୁ',
+      viewReport: 'କ୍ଲିନିକାଲ୍ ରିପୋର୍ଟ ଦେଖନ୍ତୁ',
+      syncedToCaretaker: 'ଯତ୍ନକାରୀ ଡ୍ୟାସବୋର୍ଡ ସହିତ ସିଙ୍କ୍ ହୋଇଛି'
     },
     // Memory Vault
     vault: {
@@ -186,7 +192,13 @@ export const TRANSLATIONS = {
       patternGentleRetry: 'સારો પ્રયાસ! ચાલો ફરીથી પેટર્ન જોઈએ.',
       clearPattern: 'સાફ કરો',
       submitPattern: 'તપાસો',
-      level: 'સ્તર'
+      level: 'સ્તર',
+      patternCompletedTitle: 'અદ્ભુત કાર્ય!',
+      patternCompletedSubtitle: 'તમે આજના બધા પેટર્ન અભ્યાસ સફળતાપૂર્વક પૂર્ણ કર્યા છે.',
+      playAgain: 'ફરીથી રમો',
+      takeRest: 'આરામ કરો',
+      viewReport: 'ક્લિનિકલ રિપોર્ટ જુઓ',
+      syncedToCaretaker: 'સંભાળકર્તા ડેશબોર્ડ સાથે સિંક થયેલ છે'
     },
     vault: {
       title: 'પારિવારિક સ્મૃતિ ભંડાર',
@@ -299,7 +311,13 @@ export const TRANSLATIONS = {
       patternGentleRetry: 'ভাল প্ৰয়াস! আহক পুনৰ চাওঁ।',
       clearPattern: 'মচি পেলাওক',
       submitPattern: 'পৰীক্ষা কৰক',
-      level: 'স্তৰ'
+      level: 'স্তৰ',
+      patternCompletedTitle: 'অপূৰ্ব কাম!',
+      patternCompletedSubtitle: 'আপুনি আজিৰ সকলো পেটাৰ্ণ অভ্যাস সফলতাৰে সম্পূৰ্ণ কৰিলে।',
+      playAgain: 'পুনৰ খেলক',
+      takeRest: 'অলপ জিৰণি লওক',
+      viewReport: 'চিকিৎসা প্ৰতিবেদন চাওক',
+      syncedToCaretaker: 'শুশ্ৰূষাকাৰী ডেচব’ৰ্ডত সংলগ্ন কৰা হৈছে'
     },
     vault: {
       title: 'পৰিয়ালৰ স্মৃতি ভঁৰাল',
@@ -412,7 +430,13 @@ export const TRANSLATIONS = {
       patternGentleRetry: 'Good effort! Let us watch the pattern again.',
       clearPattern: 'Clear',
       submitPattern: 'Check Pattern',
-      level: 'Level'
+      level: 'Level',
+      patternCompletedTitle: 'Splendid Work!',
+      patternCompletedSubtitle: 'You have completed your pattern practice today. Your visuospatial memory and coordination were exercised calmly.',
+      playAgain: 'Play Again',
+      takeRest: 'Take a Rest',
+      viewReport: 'View Caregiver Report',
+      syncedToCaretaker: 'Synced to Caretaker Dashboard'
     },
     vault: {
       title: 'Family Memory Vault',
